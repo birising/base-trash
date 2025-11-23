@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Údržba obce Běloky</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Údržba obce Běloky</div>
+    <button id="menuToggle" class="menu-button" aria-label="Otevřít menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside id="sidebar" class="sidebar">
+      <nav class="nav">
+        <div class="nav-title">Zobrazení</div>
+        <button class="nav-item active" data-category="kose">Koše</button>
+        <button class="nav-item" data-category="lampy">Lampy</button>
+        <button class="nav-item" data-category="kontejnery">Kontejnery s posypem</button>
+      </nav>
+      <div class="sidebar-footer">
+        <p>Tip: klikněte na marker pro detail.</p>
+      </div>
+    </aside>
+    <main class="content">
+      <div id="map" aria-label="Mapa údržby obce Běloky"></div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>

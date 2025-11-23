@@ -25,7 +25,7 @@ body {
     radial-gradient(circle at 80% 0%, rgba(255, 138, 76, 0.06), transparent 40%),
     var(--bg-light);
   color: var(--text-main);
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -74,7 +74,9 @@ body {
   grid-template-columns: 260px 1fr;
   flex: 1;
   margin-top: 64px;
-  min-height: calc(100vh - 64px);
+  min-height: 0;
+  height: calc(100vh - 64px);
+  overflow: hidden;
 }
 
 .sidebar {
@@ -224,12 +226,14 @@ body {
     radial-gradient(circle at 80% 0%, rgba(255, 138, 76, 0.08), transparent 45%),
     linear-gradient(145deg, #0c1626, #0d182b);
   display: flex;
+  min-height: 0;
+  overflow: hidden;
 }
 
 #map {
   width: 100%;
-  height: calc(100vh - 64px);
-  min-height: 360px;
+  height: 100%;
+  min-height: 320px;
   flex: 1;
   background: linear-gradient(180deg, #0b1423, #0f1d31);
   border-top: 1px solid var(--border);

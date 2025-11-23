@@ -156,6 +156,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const defaultView = [50.1322, 14.222];
   map.setView(defaultView, 16);
 
+  map.whenReady(() => refreshMapSize(0));
+
   function refreshMapSize(delay = 120) {
     setTimeout(() => map.invalidateSize(), delay);
   }

@@ -98,9 +98,9 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const iconColors = {
-    kose: "#22c55e",
-    lampy: "#eab308",
-    kontejnery: "#38bdf8",
+    kose: "#34e39f",
+    lampy: "#f28c38",
+    kontejnery: "#4ab7ff",
   };
 
   const layers = {

@@ -64,167 +64,180 @@ const dataLampy = [
   { lat: 50.130743, lng: 14.220386, name: "lampa", description: null, category: "lampy" },
 ];
 
-const map = L.map("map", {
-  zoomControl: false,
-  attributionControl: false,
-});
-
-const baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: "© OpenStreetMap přispěvatelé",
-});
-baseLayer.addTo(map);
-
-const toolbarZoom = L.control.zoom({ position: "topright" });
-toolbarZoom.addTo(map);
-
-const defaultView = [50.1322, 14.222];
-map.setView(defaultView, 16);
-
-function refreshMapSize(delay = 120) {
-  setTimeout(() => map.invalidateSize(), delay);
+function showMapError(message) {
+  const mapContainer = document.getElementById("map");
+  if (!mapContainer) return;
+  mapContainer.innerHTML = `<div class="map-error">${message}</div>`;
 }
 
-const iconColors = {
-  kose: "#22c55e",
-  lampy: "#eab308",
-  kontejnery: "#38bdf8",
-};
-
-const layers = {
-  kose: L.layerGroup(),
-  lampy: L.layerGroup(),
-  kontejnery: L.layerGroup(),
-};
-
-function createMarker({ lat, lng, name }, color) {
-  const circle = L.circleMarker([lat, lng], {
-    radius: 8,
-    color,
-    weight: 2,
-    fillColor: color,
-    fillOpacity: 0.85,
-  });
-  circle.bindPopup(`<strong>${name}</strong>`);
-  return circle;
-}
-
-function populateLayer(category) {
-  layers[category].clearLayers();
-  let source = [];
-  if (category === "kose") source = dataKose;
-  if (category === "lampy") source = dataLampy;
-  if (category === "kontejnery") source = dataKontejnery;
-
-  source.forEach((item) => {
-    const marker = createMarker(item, iconColors[category]);
-    marker.addTo(layers[category]);
-  });
-}
-
-populateLayer("kose");
-populateLayer("lampy");
-populateLayer("kontejnery");
-
-Object.values(layers).forEach((layer) => layer.addTo(map));
-
-function setActiveCategory(category) {
-  Object.entries(layers).forEach(([key, layer]) => {
-    if (key === category) {
-      map.addLayer(layer);
-    } else {
-      map.removeLayer(layer);
-    }
-  });
-
-  const activeButton = document.querySelector('.nav-item.active');
-  if (activeButton) activeButton.classList.remove('active');
-  const targetButton = document.querySelector(`.nav-item[data-category="${category}"]`);
-  if (targetButton) targetButton.classList.add('active');
-
-  const activeData =
-    category === "kose" ? dataKose : category === "lampy" ? dataLampy : dataKontejnery;
-  const coords = activeData.map((item) => [item.lat, item.lng]);
-  if (coords.length) {
-    const bounds = L.latLngBounds(coords);
-    map.fitBounds(bounds, { padding: [24, 24] });
+window.addEventListener("DOMContentLoaded", () => {
+  if (!window.L) {
+    showMapError("Mapový modul se nepodařilo načíst. Zkuste obnovit stránku.");
+    return;
   }
 
-  refreshMapSize();
-}
+  const map = L.map("map", {
+    zoomControl: false,
+    attributionControl: false,
+  });
 
-function setupSidebarToggle() {
-  const sidebar = document.getElementById("sidebar");
-  const menuToggle = document.getElementById("menuToggle");
-  const backdrop = document.createElement("div");
-  backdrop.className = "overlay-backdrop";
-  document.body.appendChild(backdrop);
+  const baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "© OpenStreetMap přispěvatelé",
+  });
+  baseLayer.addTo(map);
 
-  function ensureInitialState() {
-    if (window.innerWidth <= 960) {
-      sidebar.classList.add("sidebar-hidden");
-    } else {
+  const toolbarZoom = L.control.zoom({ position: "topright" });
+  toolbarZoom.addTo(map);
+
+  const defaultView = [50.1322, 14.222];
+  map.setView(defaultView, 16);
+
+  function refreshMapSize(delay = 120) {
+    setTimeout(() => map.invalidateSize(), delay);
+  }
+
+  const iconColors = {
+    kose: "#22c55e",
+    lampy: "#eab308",
+    kontejnery: "#38bdf8",
+  };
+
+  const layers = {
+    kose: L.layerGroup(),
+    lampy: L.layerGroup(),
+    kontejnery: L.layerGroup(),
+  };
+
+  function createMarker({ lat, lng, name }, color) {
+    const circle = L.circleMarker([lat, lng], {
+      radius: 8,
+      color,
+      weight: 2,
+      fillColor: color,
+      fillOpacity: 0.85,
+    });
+    circle.bindPopup(`<strong>${name}</strong>`);
+    return circle;
+  }
+
+  function populateLayer(category) {
+    layers[category].clearLayers();
+    let source = [];
+    if (category === "kose") source = dataKose;
+    if (category === "lampy") source = dataLampy;
+    if (category === "kontejnery") source = dataKontejnery;
+
+    source.forEach((item) => {
+      const marker = createMarker(item, iconColors[category]);
+      marker.addTo(layers[category]);
+    });
+  }
+
+  populateLayer("kose");
+  populateLayer("lampy");
+  populateLayer("kontejnery");
+
+  Object.values(layers).forEach((layer) => layer.addTo(map));
+
+  function setActiveCategory(category) {
+    Object.entries(layers).forEach(([key, layer]) => {
+      if (key === category) {
+        map.addLayer(layer);
+      } else {
+        map.removeLayer(layer);
+      }
+    });
+
+    const activeButton = document.querySelector('.nav-item.active');
+    if (activeButton) activeButton.classList.remove('active');
+    const targetButton = document.querySelector(`.nav-item[data-category="${category}"]`);
+    if (targetButton) targetButton.classList.add('active');
+
+    const activeData =
+      category === "kose" ? dataKose : category === "lampy" ? dataLampy : dataKontejnery;
+    const coords = activeData.map((item) => [item.lat, item.lng]);
+    if (coords.length) {
+      const bounds = L.latLngBounds(coords);
+      map.fitBounds(bounds, { padding: [24, 24] });
+    }
+
+    refreshMapSize();
+  }
+
+  function setupSidebarToggle() {
+    const sidebar = document.getElementById("sidebar");
+    const menuToggle = document.getElementById("menuToggle");
+    const backdrop = document.createElement("div");
+    backdrop.className = "overlay-backdrop";
+    document.body.appendChild(backdrop);
+
+    function ensureInitialState() {
+      if (window.innerWidth <= 960) {
+        sidebar.classList.add("sidebar-hidden");
+      } else {
+        sidebar.classList.remove("sidebar-hidden");
+      }
+    }
+
+    function openSidebar() {
+      document.body.classList.add("overlay-visible");
       sidebar.classList.remove("sidebar-hidden");
+      menuToggle.setAttribute("aria-expanded", "true");
+      refreshMapSize();
     }
-  }
 
-  function openSidebar() {
-    document.body.classList.add("overlay-visible");
-    sidebar.classList.remove("sidebar-hidden");
-    menuToggle.setAttribute("aria-expanded", "true");
-    refreshMapSize();
-  }
-
-  function closeSidebar() {
-    document.body.classList.remove("overlay-visible");
-    sidebar.classList.add("sidebar-hidden");
-    menuToggle.setAttribute("aria-expanded", "false");
-    refreshMapSize();
-  }
-
-  menuToggle.addEventListener("click", () => {
-    if (document.body.classList.contains("overlay-visible")) {
-      closeSidebar();
-    } else {
-      openSidebar();
-    }
-  });
-
-  backdrop.addEventListener("click", closeSidebar);
-
-  const mediaQuery = window.matchMedia("(min-width: 961px)");
-  mediaQuery.addEventListener("change", (e) => {
-    if (e.matches) {
+    function closeSidebar() {
       document.body.classList.remove("overlay-visible");
-      sidebar.classList.remove("sidebar-hidden");
+      sidebar.classList.add("sidebar-hidden");
       menuToggle.setAttribute("aria-expanded", "false");
       refreshMapSize();
-    } else {
-      sidebar.classList.add("sidebar-hidden");
-      refreshMapSize();
     }
-  });
 
-  ensureInitialState();
-}
-
-function initNav() {
-  const buttons = document.querySelectorAll(".nav-item");
-  buttons.forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const category = btn.dataset.category;
-      setActiveCategory(category);
-      if (window.innerWidth <= 960) {
-        document.body.classList.remove("overlay-visible");
-        document.getElementById("sidebar").classList.add("sidebar-hidden");
-        document.getElementById("menuToggle").setAttribute("aria-expanded", "false");
+    menuToggle.addEventListener("click", () => {
+      if (document.body.classList.contains("overlay-visible")) {
+        closeSidebar();
+      } else {
+        openSidebar();
       }
-    })
-  );
-}
+    });
 
-setActiveCategory("kose");
-setupSidebarToggle();
-initNav();
-refreshMapSize(0);
-window.addEventListener("resize", () => refreshMapSize(80));
+    backdrop.addEventListener("click", closeSidebar);
+
+    const mediaQuery = window.matchMedia("(min-width: 961px)");
+    mediaQuery.addEventListener("change", (e) => {
+      if (e.matches) {
+        document.body.classList.remove("overlay-visible");
+        sidebar.classList.remove("sidebar-hidden");
+        menuToggle.setAttribute("aria-expanded", "false");
+        refreshMapSize();
+      } else {
+        sidebar.classList.add("sidebar-hidden");
+        refreshMapSize();
+      }
+    });
+
+    ensureInitialState();
+  }
+
+  function initNav() {
+    const buttons = document.querySelectorAll(".nav-item");
+    buttons.forEach((btn) =>
+      btn.addEventListener("click", () => {
+        const category = btn.dataset.category;
+        setActiveCategory(category);
+        if (window.innerWidth <= 960) {
+          document.body.classList.remove("overlay-visible");
+          document.getElementById("sidebar").classList.add("sidebar-hidden");
+          document.getElementById("menuToggle").setAttribute("aria-expanded", "false");
+        }
+      })
+    );
+  }
+
+  setActiveCategory("kose");
+  setupSidebarToggle();
+  initNav();
+  refreshMapSize(0);
+  window.addEventListener("resize", () => refreshMapSize(80));
+});

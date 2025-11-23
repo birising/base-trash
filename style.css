@@ -134,6 +134,18 @@ body {
   flex: 1;
 }
 
+.map-error {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 15px;
+  padding: 16px;
+  text-align: center;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+}
+
 .leaflet-container {
   font-family: inherit;
 }

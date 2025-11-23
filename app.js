@@ -109,6 +109,14 @@ window.addEventListener("DOMContentLoaded", () => {
     kontejnery: L.layerGroup(),
   };
 
+  const counters = {
+    kose: document.getElementById("countKose"),
+    lampy: document.getElementById("countLampy"),
+    kontejnery: document.getElementById("countKontejnery"),
+  };
+
+  const categoryLabel = document.getElementById("activeCategoryLabel");
+
   function createMarker({ lat, lng, name }, color) {
     const circle = L.circleMarker([lat, lng], {
       radius: 8,
@@ -138,6 +146,14 @@ window.addEventListener("DOMContentLoaded", () => {
   populateLayer("lampy");
   populateLayer("kontejnery");
 
+  function updateCounters() {
+    if (counters.kose) counters.kose.textContent = dataKose.length;
+    if (counters.lampy) counters.lampy.textContent = dataLampy.length;
+    if (counters.kontejnery) counters.kontejnery.textContent = dataKontejnery.length;
+  }
+
+  updateCounters();
+
   Object.values(layers).forEach((layer) => layer.addTo(map));
 
   function setActiveCategory(category) {
@@ -154,12 +170,22 @@ window.addEventListener("DOMContentLoaded", () => {
     const targetButton = document.querySelector(`.nav-item[data-category="${category}"]`);
     if (targetButton) targetButton.classList.add('active');
 
+    const activeStat = document.querySelector('.stat-card.active');
+    if (activeStat) activeStat.classList.remove('active');
+    const targetStat = document.querySelector(`.stat-card[data-category="${category}"]`);
+    if (targetStat) targetStat.classList.add('active');
+
     const activeData =
       category === "kose" ? dataKose : category === "lampy" ? dataLampy : dataKontejnery;
     const coords = activeData.map((item) => [item.lat, item.lng]);
     if (coords.length) {
       const bounds = L.latLngBounds(coords);
-      map.fitBounds(bounds, { padding: [24, 24] });
+      map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+    }
+
+    if (categoryLabel) {
+      const labelText = category === "kose" ? "Koše" : category === "lampy" ? "Lampy" : "Kontejnery";
+      categoryLabel.textContent = `${labelText}`;
     }
 
     refreshMapSize();
@@ -221,18 +247,20 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function initNav() {
-    const buttons = document.querySelectorAll(".nav-item");
-    buttons.forEach((btn) =>
-      btn.addEventListener("click", () => {
-        const category = btn.dataset.category;
-        setActiveCategory(category);
-        if (window.innerWidth <= 960) {
-          document.body.classList.remove("overlay-visible");
-          document.getElementById("sidebar").classList.add("sidebar-hidden");
-          document.getElementById("menuToggle").setAttribute("aria-expanded", "false");
-        }
-      })
-    );
+    const buttonSelectors = [".nav-item", ".stat-card"];
+    buttonSelectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((btn) =>
+        btn.addEventListener("click", () => {
+          const category = btn.dataset.category;
+          setActiveCategory(category);
+          if (window.innerWidth <= 960) {
+            document.body.classList.remove("overlay-visible");
+            document.getElementById("sidebar").classList.add("sidebar-hidden");
+            document.getElementById("menuToggle").setAttribute("aria-expanded", "false");
+          }
+        })
+      );
+    });
   }
 
   setActiveCategory("kose");

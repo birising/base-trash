@@ -281,6 +281,29 @@ body {
   font-family: inherit;
 }
 
+.popup-details {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.popup-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.popup-details span {
+  color: var(--text-muted);
+}
+
+.popup-details strong {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
 /* Overlay mode for mobile */
 .overlay-visible .sidebar {
   position: fixed;

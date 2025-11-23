@@ -1,11 +1,74 @@
 const dataKose = [
-  { lat: 50.130144, lng: 14.219936, name: "Kos plenej", description: null, category: "kos" },
-  { lat: 50.128687, lng: 14.221423, name: "Kos", description: null, category: "kos" },
-  { lat: 50.129602, lng: 14.221984, name: "Kos", description: null, category: "kos" },
-  { lat: 50.132469, lng: 14.220607, name: "Kos", description: null, category: "kos" },
-  { lat: 50.132801, lng: 14.220461, name: "Kos", description: null, category: "kos" },
-  { lat: 50.133472, lng: 14.225753, name: "Kos", description: null, category: "kos" },
-  { lat: 50.132557, lng: 14.220691, name: "kos", description: null, category: "kos" },
+  {
+    lat: 50.130144,
+    lng: 14.219936,
+    name: "Koš plný",
+    description: null,
+    category: "kos",
+    fillLevel: 92,
+    lastUpdated: "2024-05-12 08:15",
+    batteryLevel: 34,
+  },
+  {
+    lat: 50.128687,
+    lng: 14.221423,
+    name: "Koš",
+    description: null,
+    category: "kos",
+    fillLevel: 38,
+    lastUpdated: "2024-05-12 09:02",
+    batteryLevel: 78,
+  },
+  {
+    lat: 50.129602,
+    lng: 14.221984,
+    name: "Koš",
+    description: null,
+    category: "kos",
+    fillLevel: 56,
+    lastUpdated: "2024-05-11 18:41",
+    batteryLevel: 82,
+  },
+  {
+    lat: 50.132469,
+    lng: 14.220607,
+    name: "Koš",
+    description: null,
+    category: "kos",
+    fillLevel: 21,
+    lastUpdated: "2024-05-12 06:58",
+    batteryLevel: 64,
+  },
+  {
+    lat: 50.132801,
+    lng: 14.220461,
+    name: "Koš",
+    description: null,
+    category: "kos",
+    fillLevel: 49,
+    lastUpdated: "2024-05-11 22:16",
+    batteryLevel: 59,
+  },
+  {
+    lat: 50.133472,
+    lng: 14.225753,
+    name: "Koš",
+    description: null,
+    category: "kos",
+    fillLevel: 73,
+    lastUpdated: "2024-05-12 07:45",
+    batteryLevel: 41,
+  },
+  {
+    lat: 50.132557,
+    lng: 14.220691,
+    name: "Koš",
+    description: null,
+    category: "kos",
+    fillLevel: 12,
+    lastUpdated: "2024-05-12 08:55",
+    batteryLevel: 91,
+  },
 ];
 
 const dataKontejnery = [
@@ -117,7 +180,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
 
-  function createMarker({ lat, lng, name }, color) {
+  function createMarker(item, color) {
+    const { lat, lng, name } = item;
     const circle = L.circleMarker([lat, lng], {
       radius: 8,
       color,
@@ -125,7 +189,21 @@ window.addEventListener("DOMContentLoaded", () => {
       fillColor: color,
       fillOpacity: 0.85,
     });
-    circle.bindPopup(`<strong>${name}</strong>`);
+
+    let popupContent = `<strong>${name}</strong>`;
+    if (item.category === "kos") {
+      const fill = item.fillLevel != null ? `${item.fillLevel}%` : "–";
+      const battery = item.batteryLevel != null ? `${item.batteryLevel}%` : "–";
+      const updated = item.lastUpdated || "–";
+      popupContent += `
+        <div class="popup-details">
+          <div><span>Naplněnost:</span><strong>${fill}</strong></div>
+          <div><span>Poslední aktualizace:</span><strong>${updated}</strong></div>
+          <div><span>Stav baterie:</span><strong>${battery}</strong></div>
+        </div>`;
+    }
+
+    circle.bindPopup(popupContent);
     return circle;
   }
 

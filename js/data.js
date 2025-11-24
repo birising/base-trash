@@ -60,13 +60,13 @@ const fallbackKoseDefinitions = [
 ];
 
 const fallbackKoseTelemetry = [
-  { id: "K-01", fillLevel: 92, lastUpdated: "2025-05-12T08:15:00+02:00", batteryLevel: 45 },
-  { id: "K-02", fillLevel: 42, lastUpdated: "2025-05-12T06:30:00+02:00", batteryLevel: 10 },
-  { id: "K-03", fillLevel: 58, lastUpdated: "2024-11-01T07:00:00+01:00", batteryLevel: 76 },
-  { id: "K-04", fillLevel: 33, lastUpdated: "2025-05-12T09:20:00+02:00", batteryLevel: 67 },
-  { id: "K-05", fillLevel: 88, lastUpdated: "2025-05-11T21:05:00+02:00", batteryLevel: 12 },
-  { id: "K-06", fillLevel: 65, lastUpdated: "2025-05-12T07:45:00+02:00", batteryLevel: 54 },
-  { id: "K-07", fillLevel: 15, lastUpdated: "2025-05-12T08:55:00+02:00", batteryLevel: 92 },
+  { id: "K-01", fillLevel: 92, lastUpdated: "2025-05-12T08:15:00+02:00", batteryLevel: 82 },
+  { id: "K-02", fillLevel: 40, lastUpdated: "2025-05-12T06:30:00+02:00", batteryLevel: 9 },
+  { id: "K-03", fillLevel: 55, lastUpdated: "2024-10-01T07:00:00+02:00", batteryLevel: 74 },
+  { id: "K-04", fillLevel: 28, lastUpdated: "2025-05-12T09:20:00+02:00", batteryLevel: 80 },
+  { id: "K-05", fillLevel: 68, lastUpdated: "2025-05-11T21:05:00+02:00", batteryLevel: 35 },
+  { id: "K-06", fillLevel: 47, lastUpdated: "2025-05-12T07:45:00+02:00", batteryLevel: 59 },
+  { id: "K-07", fillLevel: 18, lastUpdated: "2025-05-12T08:55:00+02:00", batteryLevel: 92 },
 ];
 
 const fallbackKontejnery = [

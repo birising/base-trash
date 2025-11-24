@@ -127,6 +127,48 @@ const dataLampy = [
   { lat: 50.130743, lng: 14.220386, name: "lampa", description: null, category: "lampy" },
 ];
 
+const dataZelene = [
+  {
+    name: "Park Na Stráni",
+    description: "Tráva a okraje",
+    category: "zelen",
+    lastMowed: "2024-05-08 14:20",
+    frequency: "1× za 2 týdny",
+    coords: [
+      [50.1337, 14.2211],
+      [50.1336, 14.2222],
+      [50.1331, 14.2223],
+      [50.1332, 14.2210],
+    ],
+  },
+  {
+    name: "Alej U Potoka",
+    description: "Tráva + keře",
+    category: "zelen",
+    lastMowed: "2024-05-03 09:45",
+    frequency: "1× měsíčně",
+    coords: [
+      [50.1319, 14.2230],
+      [50.1316, 14.2242],
+      [50.1310, 14.2239],
+      [50.1314, 14.2227],
+    ],
+  },
+  {
+    name: "Náves Běloky",
+    description: "Centrální plocha",
+    category: "zelen",
+    lastMowed: "2024-05-10 07:30",
+    frequency: "Každý týden",
+    coords: [
+      [50.1328, 14.2205],
+      [50.1326, 14.2212],
+      [50.1322, 14.2210],
+      [50.1324, 14.2203],
+    ],
+  },
+];
+
 const dataHladina = [
   {
     lat: 50.1309,
@@ -204,6 +246,7 @@ window.addEventListener("DOMContentLoaded", () => {
     kose: "#34e39f",
     lampy: "#f28c38",
     kontejnery: "#4ab7ff",
+    zelen: "#7dd3fc",
     hladina: "#7c3aed",
   };
 
@@ -216,6 +259,7 @@ window.addEventListener("DOMContentLoaded", () => {
     kose: L.layerGroup(),
     lampy: L.layerGroup(),
     kontejnery: L.layerGroup(),
+    zelen: L.layerGroup(),
     hladina: L.layerGroup(),
   };
 
@@ -223,8 +267,11 @@ window.addEventListener("DOMContentLoaded", () => {
     kose: document.getElementById("countKose"),
     lampy: document.getElementById("countLampy"),
     kontejnery: document.getElementById("countKontejnery"),
+    zelen: document.getElementById("countZelen"),
     hladina: document.getElementById("countHladina"),
   };
+
+  const zelenSummary = document.getElementById("zelenSummary");
 
   const levelReading = document.getElementById("levelReading");
   const streamLevelEl = document.getElementById("streamLevel");
@@ -375,31 +422,70 @@ window.addEventListener("DOMContentLoaded", () => {
     return marker;
   }
 
+  function createPolygon(area, color) {
+    const polygon = L.polygon(area.coords, {
+      color,
+      weight: 2,
+      fillColor: color,
+      fillOpacity: 0.2,
+      dashArray: "6 4",
+    });
+
+    const subject = encodeURIComponent(`Údržba zeleně – ${area.name}`);
+    const body = encodeURIComponent(
+      `Prosím o prověření plochy: ${area.name}. Potřeba posekat / ošetřit. Děkujeme.`
+    );
+
+    const popupContent = `
+      <strong>${area.name}</strong>
+      <div class="popup-details">
+        <div><span>Poslední sečení:</span><strong>${area.lastMowed}</strong></div>
+        <div><span>Frekvence:</span><strong>${area.frequency}</strong></div>
+        <div><span>Popis:</span><strong>${area.description || "Zeleň"}</strong></div>
+      </div>
+      <div class="popup-actions">
+        <a class="popup-button" href="mailto:info@beloky.cz?subject=${subject}&body=${body}">Nahlásit posekání</a>
+      </div>
+    `;
+
+    polygon.bindPopup(popupContent);
+    return polygon;
+  }
+
   function populateLayer(category) {
     layers[category].clearLayers();
     let source = [];
     if (category === "kose") source = dataKose;
     if (category === "lampy") source = dataLampy;
     if (category === "kontejnery") source = dataKontejnery;
+    if (category === "zelen") source = dataZelene;
     if (category === "hladina") source = dataHladina;
 
     source.forEach((item) => {
-      const marker = createMarker(item, iconColors[category]);
-      marker.addTo(layers[category]);
+      const shape = category === "zelen"
+        ? createPolygon(item, iconColors[category])
+        : createMarker(item, iconColors[category]);
+      shape.addTo(layers[category]);
     });
   }
 
   populateLayer("kose");
   populateLayer("lampy");
   populateLayer("kontejnery");
+  populateLayer("zelen");
   populateLayer("hladina");
 
   function updateCounters() {
     if (counters.kose) counters.kose.textContent = dataKose.length;
     if (counters.lampy) counters.lampy.textContent = dataLampy.length;
     if (counters.kontejnery) counters.kontejnery.textContent = dataKontejnery.length;
+    if (counters.zelen) counters.zelen.textContent = dataZelene.length;
     if (counters.hladina) {
       counters.hladina.textContent = streamState.level ? streamState.level : `${dataHladina.length} senzor`;
+    }
+    if (zelenSummary) {
+      const latest = dataZelene[0]?.lastMowed || "–";
+      zelenSummary.textContent = `Poslední sečení: ${latest}`;
     }
     if (levelReading) {
       const levelText = streamState.level ? `Aktuální: ${streamState.level}` : "Načítám data senzorů…";
@@ -446,8 +532,17 @@ window.addEventListener("DOMContentLoaded", () => {
             ? dataLampy
             : category === "kontejnery"
               ? dataKontejnery
-              : dataHladina;
-      const coords = activeData.map((item) => [item.lat, item.lng]);
+              : category === "zelen"
+                ? dataZelene
+                : dataHladina;
+
+      let coords = [];
+      if (category === "zelen") {
+        coords = activeData.flatMap((area) => area.coords);
+      } else {
+        coords = activeData.map((item) => [item.lat, item.lng]);
+      }
+
       if (coords.length) {
         const bounds = L.latLngBounds(coords);
         map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
@@ -462,7 +557,9 @@ window.addEventListener("DOMContentLoaded", () => {
             ? "Lampy"
             : category === "kontejnery"
               ? "Kontejnery"
-              : "Hladina potoka";
+              : category === "zelen"
+                ? "Údržba zeleně"
+                : "Hladina potoka";
       categoryLabel.textContent = `${labelText}`;
     }
 

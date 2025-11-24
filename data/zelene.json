@@ -1,0 +1,77 @@
+[
+  {
+    "name": "Park Na Stráni",
+    "description": "Tráva a okraje",
+    "category": "zelen",
+    "lastMowed": "2024-05-08 14:20",
+    "frequency": "1× za 2 týdny",
+    "coords": [
+      [
+        50.1337,
+        14.2211
+      ],
+      [
+        50.1336,
+        14.2222
+      ],
+      [
+        50.1331,
+        14.2223
+      ],
+      [
+        50.1332,
+        14.221
+      ]
+    ]
+  },
+  {
+    "name": "Alej U Potoka",
+    "description": "Tráva + keře",
+    "category": "zelen",
+    "lastMowed": "2024-05-03 09:45",
+    "frequency": "1× měsíčně",
+    "coords": [
+      [
+        50.1319,
+        14.223
+      ],
+      [
+        50.1316,
+        14.2242
+      ],
+      [
+        50.131,
+        14.2239
+      ],
+      [
+        50.1314,
+        14.2227
+      ]
+    ]
+  },
+  {
+    "name": "Náves Běloky",
+    "description": "Centrální plocha",
+    "category": "zelen",
+    "lastMowed": "2024-05-10 07:30",
+    "frequency": "Každý týden",
+    "coords": [
+      [
+        50.1328,
+        14.2205
+      ],
+      [
+        50.1326,
+        14.2212
+      ],
+      [
+        50.1322,
+        14.221
+      ],
+      [
+        50.1324,
+        14.2203
+      ]
+    ]
+  }
+]

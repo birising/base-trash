@@ -181,8 +181,9 @@ const dataHladina = [
 ];
 
 const wasteSchedule = {
-  frequency: "Každé pondělí",
-  lastPickup: "17.11",
+  frequency: "Každých 14 dní",
+  lastPickup: "17.11.2025",
+  intervalDays: 14,
   contactEmail: "info@beloky.cz",
 };
 
@@ -317,13 +318,19 @@ window.addEventListener("DOMContentLoaded", () => {
     return parsed;
   }
 
-  function getNextMonday(reference = new Date()) {
-    const date = new Date(reference);
-    const day = date.getDay();
-    const diff = day === 1 ? 7 : (8 - day) % 7;
-    date.setDate(date.getDate() + diff);
-    date.setHours(0, 0, 0, 0);
-    return date;
+  function getNextPickupDate(lastDate, intervalDays = 14, reference = new Date()) {
+    const next = new Date(lastDate);
+    next.setHours(0, 0, 0, 0);
+    next.setDate(next.getDate() + intervalDays);
+
+    const ref = new Date(reference);
+    ref.setHours(0, 0, 0, 0);
+
+    while (next <= ref) {
+      next.setDate(next.getDate() + intervalDays);
+    }
+
+    return next;
   }
 
   function formatDate(date) {
@@ -344,11 +351,11 @@ window.addEventListener("DOMContentLoaded", () => {
     return `Za ${days} dny`;
   }
 
-  function buildUpcomingPickups(startDate, count = 4) {
+  function buildUpcomingPickups(startDate, count = 4, intervalDays = 14) {
     const list = [];
     for (let i = 0; i < count; i += 1) {
       const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i * 7);
+      date.setDate(startDate.getDate() + i * intervalDays);
       list.push(date);
     }
     return list;
@@ -579,7 +586,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!nextPickupDateEl || !nextPickupCountdownEl || !nextPickupLabelEl || !upcomingPickupsEl) return;
 
     const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
-    const nextPickupDate = getNextMonday(new Date());
+    const nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, new Date());
     const countdown = formatCountdown(nextPickupDate);
 
     nextPickupDateEl.textContent = formatDate(nextPickupDate);
@@ -588,16 +595,16 @@ window.addEventListener("DOMContentLoaded", () => {
     if (lastPickupLabelEl) lastPickupLabelEl.textContent = formatDate(lastPickupDate);
     if (nextPickupSummaryEl) nextPickupSummaryEl.textContent = `Další svoz: ${nextPickupDate.toLocaleDateString("cs-CZ")}`;
 
-    const upcoming = buildUpcomingPickups(nextPickupDate, 4);
+    const upcoming = buildUpcomingPickups(nextPickupDate, 4, wasteSchedule.intervalDays);
     upcomingPickupsEl.innerHTML = upcoming
       .map(
         (date, idx) => `
         <div class="waste-row">
           <div>
             <div class="date">${formatDate(date)}</div>
-            <div class="label">${idx === 0 ? "Příští svoz" : `${idx + 1}. týden`}</div>
+            <div class="label">${idx === 0 ? "Příští svoz" : `${idx + 1}. termín`}</div>
           </div>
-          <span class="stat-chip subtle">Pondělí</span>
+          <span class="stat-chip subtle">14 dní</span>
         </div>`
       )
       .join("");

@@ -1,0 +1,61 @@
+<aside id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <div class="eyebrow">Běloky · GIS</div>
+    <div class="headline">Správa údržby</div>
+    <p class="subtitle">Přehled odpadu, hladiny potoka, košů, lamp a zeleně v jedné obrazovce.</p>
+  </div>
+
+  <div class="summary-grid">
+    <button class="stat-card" data-category="odpad">
+      <div class="stat-top">
+        <span class="stat-label">Odvoz odpadu</span>
+        <span class="stat-chip">Plán</span>
+      </div>
+      <div class="stat-value" id="countOdpad">–</div>
+      <div class="stat-sub" id="nextPickupSummary">Každých 14 dní</div>
+    </button>
+    <button class="stat-card" data-category="hladina">
+      <div class="stat-top">
+        <span class="stat-label">Hladina potoka</span>
+        <span class="stat-chip">Live</span>
+      </div>
+      <div class="stat-value" id="countHladina">–</div>
+      <div class="stat-sub" id="levelReading">Načítám…</div>
+    </button>
+    <button class="stat-card active" data-category="kose">
+      <div class="stat-top">
+        <span class="stat-label">Koše</span>
+        <span class="stat-chip">Live</span>
+      </div>
+      <div class="stat-value" id="countKose">0</div>
+    </button>
+    <button class="stat-card" data-category="lampy">
+      <div class="stat-top">
+        <span class="stat-label">Lampy</span>
+        <span class="stat-chip">Sítě</span>
+      </div>
+      <div class="stat-value" id="countLampy">0</div>
+      <div class="stat-sub">Nahlášení závad</div>
+    </button>
+    <button class="stat-card" data-category="zelen">
+      <div class="stat-top">
+        <span class="stat-label">Údržba zeleně</span>
+        <span class="stat-chip">Plán</span>
+      </div>
+      <div class="stat-value" id="countZelen">0</div>
+      <div class="stat-sub" id="zelenSummary">Poslední sečení: –</div>
+    </button>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-title">Zobrazení</div>
+    <button class="nav-item" data-category="odpad">Odvoz komunálního odpadu</button>
+    <button class="nav-item" data-category="hladina">Hladina potoka</button>
+    <button class="nav-item active" data-category="kose">Koše</button>
+    <button class="nav-item" data-category="lampy">Lampy</button>
+    <button class="nav-item" data-category="zelen">Údržba zeleně</button>
+  </nav>
+  <div class="sidebar-footer">
+    <p>Tip: klikněte na marker pro detail.</p>
+  </div>
+</aside>

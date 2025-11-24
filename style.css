@@ -545,9 +545,11 @@ body {
 }
 
 .marker-icon.marker-lampy {
-  gap: 4px;
-  padding: 6px 8px;
-  border-radius: 10px;
+  gap: 0;
+  padding: 6px;
+  border-radius: 14px;
+  min-width: 0;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32), 0 0 0 2px var(--marker-color);
 }
 
 .marker-icon::after {
@@ -564,9 +566,11 @@ body {
 }
 
 .marker-icon.marker-lampy::after {
-  left: 14px;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 9px solid rgba(255, 255, 255, 0.9);
 }
 
 .marker-emoji {
@@ -574,7 +578,7 @@ body {
 }
 
 .marker-wrapper.marker-lampy .marker-emoji {
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .marker-label {
@@ -584,8 +588,7 @@ body {
 }
 
 .marker-wrapper.marker-lampy .marker-label {
-  font-size: 12px;
-  font-weight: 700;
+  display: none;
 }
 
 .popup-details {

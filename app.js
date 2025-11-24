@@ -257,7 +257,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const iconSizes = {
     kose: { size: [42, 46], anchor: [21, 44], popup: [0, -34] },
-    lampy: { size: [34, 38], anchor: [17, 36], popup: [0, -30] },
+    lampy: { size: [26, 30], anchor: [13, 28], popup: [0, -24] },
   };
 
   const layers = {

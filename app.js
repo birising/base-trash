@@ -243,7 +243,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const iconColors = {
-    kose: "#34e39f",
+    kose: "#1b8a63",
     lampy: "#f28c38",
     kontejnery: "#4ab7ff",
     zelen: "#7dd3fc",

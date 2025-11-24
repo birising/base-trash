@@ -207,6 +207,11 @@ window.addEventListener("DOMContentLoaded", () => {
     hladina: "#7c3aed",
   };
 
+  const iconSymbols = {
+    kose: { emoji: "🗑️", label: "Koš" },
+    lampy: { emoji: "💡", label: "Lampa" },
+  };
+
   const layers = {
     kose: L.layerGroup(),
     lampy: L.layerGroup(),
@@ -243,9 +248,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
     while (series.length > 72) series.shift();
 
-    const width = 540;
+    const width = 580;
     const height = 260;
-    const padding = 32;
+    const paddingLeft = 32;
+    const paddingRight = 68;
+    const paddingY = 32;
 
     const thresholdValues = floodThresholds.map((t) => t.value);
     const minVal = Math.min(...series, ...thresholdValues) - 4;
@@ -253,17 +260,18 @@ window.addEventListener("DOMContentLoaded", () => {
     const range = Math.max(maxVal - minVal, 1);
 
     const points = series.map((val, idx) => {
-      const x = padding + (idx / (series.length - 1)) * (width - padding * 2);
-      const y = height - padding - ((val - minVal) / range) * (height - padding * 2);
+      const x =
+        paddingLeft + (idx / (series.length - 1)) * (width - paddingLeft - paddingRight);
+      const y = height - paddingY - ((val - minVal) / range) * (height - paddingY * 2);
       return { x, y };
     });
 
     const pathD = points.map((p, idx) => `${idx === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
-    const areaD = `${pathD} L${points.at(-1).x},${height - padding} L${points[0].x},${height - padding} Z`;
+    const areaD = `${pathD} L${points.at(-1).x},${height - paddingY} L${points[0].x},${height - paddingY} Z`;
 
     const gridLines = [0.25, 0.5, 0.75].map((ratio) => {
-      const y = padding + (height - padding * 2) * ratio;
-      return `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" class="chart-grid" />`;
+      const y = paddingY + (height - paddingY * 2) * ratio;
+      return `<line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" class="chart-grid" />`;
     }).join("");
 
     chart.innerHTML = `
@@ -273,14 +281,14 @@ window.addEventListener("DOMContentLoaded", () => {
           <stop offset="100%" stop-color="#6ff0d5" stop-opacity="0" />
         </linearGradient>
       </defs>
-      <rect x="${padding}" y="${padding}" width="${width - padding * 2}" height="${height - padding * 2}" rx="12" class="chart-frame" />
+      <rect x="${paddingLeft}" y="${paddingY}" width="${width - paddingLeft - paddingRight}" height="${height - paddingY * 2}" rx="12" class="chart-frame" />
       ${gridLines}
       ${floodThresholds
         .map((t) => {
-          const y = height - padding - ((t.value - minVal) / range) * (height - padding * 2);
+          const y = height - paddingY - ((t.value - minVal) / range) * (height - paddingY * 2);
           return `
-            <line x1="${padding}" x2="${width - padding}" y1="${y}" y2="${y}" class="threshold-line" stroke="${t.color}" />
-            <text x="${width - padding + 6}" y="${y + 4}" class="threshold-label" fill="${t.color}">${t.label} · ${t.value} cm</text>
+            <line x1="${paddingLeft}" x2="${width - paddingRight}" y1="${y}" y2="${y}" class="threshold-line" stroke="${t.color}" />
+            <text x="${width - paddingRight + 10}" y="${y + 4}" class="threshold-label" fill="${t.color}">${t.label} · ${t.value} cm</text>
           `;
         })
         .join("")}
@@ -292,8 +300,7 @@ window.addEventListener("DOMContentLoaded", () => {
           const hoursAgo = points.length - 1 - idx;
           const label = idx === points.length - 1 ? "Nyní" : `-${hoursAgo}h`;
           return `
-            <circle cx="${p.x}" cy="${p.y}" r="4" class="chart-dot" />
-            ${isTick ? `<text x="${p.x}" y="${height - padding + 16}" class="chart-label">${label}</text>` : ""}
+            ${isTick ? `<text x="${p.x}" y="${height - paddingY + 16}" class="chart-label">${label}</text>` : ""}
           `;
         })
         .join("")}
@@ -301,15 +308,35 @@ window.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
+  function buildIcon(category) {
+    const symbol = iconSymbols[category];
+    if (!symbol) return null;
+    return L.divIcon({
+      className: "marker-wrapper",
+      html: `
+        <div class="marker-icon" style="--marker-color:${iconColors[category]}">
+          <span class="marker-emoji">${symbol.emoji}</span>
+          <span class="marker-label">${symbol.label}</span>
+        </div>
+      `,
+      iconSize: [42, 46],
+      iconAnchor: [21, 44],
+      popupAnchor: [0, -34],
+    });
+  }
+
   function createMarker(item, color) {
     const { lat, lng, name } = item;
-    const circle = L.circleMarker([lat, lng], {
-      radius: 8,
-      color,
-      weight: 2,
-      fillColor: color,
-      fillOpacity: 0.85,
-    });
+    const useIcon = item.category === "kose" || item.category === "lampy";
+    const marker = useIcon
+      ? L.marker([lat, lng], { icon: buildIcon(item.category) })
+      : L.circleMarker([lat, lng], {
+          radius: 8,
+          color,
+          weight: 2,
+          fillColor: color,
+          fillOpacity: 0.85,
+        });
 
     let popupContent = `<strong>${name}</strong>`;
     if (item.category === "kos") {
@@ -322,6 +349,18 @@ window.addEventListener("DOMContentLoaded", () => {
           <div><span>Poslední aktualizace:</span><strong>${updated}</strong></div>
           <div><span>Stav baterie:</span><strong>${battery}</strong></div>
         </div>`;
+    } else if (item.category === "lampy") {
+      const subject = encodeURIComponent(`Porucha lampy – ${name}`);
+      const body = encodeURIComponent(
+        "Popište závadu a případně přidejte fotku. Děkujeme!"
+      );
+      popupContent += `
+        <div class="popup-details">
+          <div><span>Stav:</span><strong>Potřebuje ověření?</strong></div>
+        </div>
+        <div class="popup-actions">
+          <a class="popup-button" href="mailto:info@beloky.cz?subject=${subject}&body=${body}">Nahlásit závadu</a>
+        </div>`;
     } else if (item.category === "hladina") {
       const levelText = streamState.level ? `${streamState.level}` : "Načítám…";
       const updatedText = streamState.updated || "–";
@@ -332,8 +371,8 @@ window.addEventListener("DOMContentLoaded", () => {
         </div>`;
     }
 
-    circle.bindPopup(popupContent);
-    return circle;
+    marker.bindPopup(popupContent);
+    return marker;
   }
 
   function populateLayer(category) {

@@ -523,11 +523,55 @@ body {
   font-family: inherit;
 }
 
-.popup-details {
-  margin-top: 8px;
-  display: grid;
+.leaflet-popup-content {
+  color: #0b1220;
+}
+
+.marker-wrapper {
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.4));
+}
+
+.marker-icon {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-  color: var(--text-muted);
+  padding: 8px 10px;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.84));
+  color: #0b1220;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  position: relative;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), 0 0 0 2px var(--marker-color);
+}
+
+.marker-icon::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 18px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 10px solid rgba(255, 255, 255, 0.9);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.marker-emoji {
+  font-size: 18px;
+}
+
+.marker-label {
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}
+
+.popup-details {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+  color: #1f2937;
   font-size: 13px;
 }
 
@@ -538,12 +582,35 @@ body {
 }
 
 .popup-details span {
-  color: var(--text-muted);
+  color: #334155;
+  font-weight: 600;
 }
 
 .popup-details strong {
-  color: var(--text-main);
-  font-weight: 700;
+  color: #0b1220;
+  font-weight: 800;
+}
+
+.popup-actions {
+  margin-top: 10px;
+}
+
+.popup-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f97316, #f59e0b);
+  color: #0b1220;
+  font-weight: 800;
+  border: none;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35);
+}
+
+.popup-button:hover {
+  filter: brightness(1.05);
 }
 
 .stat-value.live {

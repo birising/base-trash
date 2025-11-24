@@ -139,8 +139,12 @@ const dataHladina = [
 ];
 
 const streamEndpoint = "https://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
-const streamState = { level: null, updated: null, numeric: null };
 const streamHistoryBase = [35, 37, 36, 42, 40, 38];
+const streamState = {
+  level: `${streamHistoryBase.at(-1)} cm`,
+  updated: "Základní údaje",
+  numeric: streamHistoryBase.at(-1),
+};
 
 function showMapError(message) {
   const mapContainer = document.getElementById("map");
@@ -495,8 +499,9 @@ window.addEventListener("DOMContentLoaded", () => {
       const numericMatch = (valueFromText || "").match(/([0-9]+(?:[.,][0-9]+)?)/);
       streamState.numeric = numericMatch ? parseFloat(numericMatch[1].replace(",", ".")) : streamState.numeric;
     } catch (err) {
-      streamState.level = streamState.level || "Nedostupné";
+      streamState.level = streamState.level || `${streamHistoryBase.at(-1)} cm`;
       streamState.updated = streamState.updated || "Zdroj nepřístupný";
+      streamState.numeric = streamState.numeric || streamHistoryBase.at(-1);
       console.warn("Chyba při načítání hladiny", err);
     } finally {
       populateLayer("hladina");

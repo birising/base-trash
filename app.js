@@ -127,6 +127,20 @@ const dataLampy = [
   { lat: 50.130743, lng: 14.220386, name: "lampa", description: null, category: "lampy" },
 ];
 
+const dataHladina = [
+  {
+    lat: 50.1309,
+    lng: 14.2227,
+    name: "Senzor hladiny potoka",
+    description: "Běloky – úroveň vody",
+    category: "hladina",
+    sensorId: 24470,
+  },
+];
+
+const streamEndpoint = "https://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
+const streamState = { level: null, updated: null };
+
 function showMapError(message) {
   const mapContainer = document.getElementById("map");
   if (!mapContainer) return;
@@ -166,19 +180,24 @@ window.addEventListener("DOMContentLoaded", () => {
     kose: "#34e39f",
     lampy: "#f28c38",
     kontejnery: "#4ab7ff",
+    hladina: "#7c3aed",
   };
 
   const layers = {
     kose: L.layerGroup(),
     lampy: L.layerGroup(),
     kontejnery: L.layerGroup(),
+    hladina: L.layerGroup(),
   };
 
   const counters = {
     kose: document.getElementById("countKose"),
     lampy: document.getElementById("countLampy"),
     kontejnery: document.getElementById("countKontejnery"),
+    hladina: document.getElementById("countHladina"),
   };
+
+  const levelReading = document.getElementById("levelReading");
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
 
@@ -203,6 +222,14 @@ window.addEventListener("DOMContentLoaded", () => {
           <div><span>Poslední aktualizace:</span><strong>${updated}</strong></div>
           <div><span>Stav baterie:</span><strong>${battery}</strong></div>
         </div>`;
+    } else if (item.category === "hladina") {
+      const levelText = streamState.level ? `${streamState.level}` : "Načítám…";
+      const updatedText = streamState.updated || "–";
+      popupContent += `
+        <div class="popup-details">
+          <div><span>Úroveň vody:</span><strong>${levelText}</strong></div>
+          <div><span>Poslední data:</span><strong>${updatedText}</strong></div>
+        </div>`;
     }
 
     circle.bindPopup(popupContent);
@@ -215,6 +242,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (category === "kose") source = dataKose;
     if (category === "lampy") source = dataLampy;
     if (category === "kontejnery") source = dataKontejnery;
+    if (category === "hladina") source = dataHladina;
 
     source.forEach((item) => {
       const marker = createMarker(item, iconColors[category]);
@@ -225,11 +253,20 @@ window.addEventListener("DOMContentLoaded", () => {
   populateLayer("kose");
   populateLayer("lampy");
   populateLayer("kontejnery");
+  populateLayer("hladina");
 
   function updateCounters() {
     if (counters.kose) counters.kose.textContent = dataKose.length;
     if (counters.lampy) counters.lampy.textContent = dataLampy.length;
     if (counters.kontejnery) counters.kontejnery.textContent = dataKontejnery.length;
+    if (counters.hladina) {
+      counters.hladina.textContent = streamState.level ? streamState.level : `${dataHladina.length} senzor`;
+    }
+    if (levelReading) {
+      levelReading.textContent = streamState.updated
+        ? `Aktualizace: ${streamState.updated}`
+        : "Načítám data senzorů…";
+    }
   }
 
   updateCounters();
@@ -256,7 +293,13 @@ window.addEventListener("DOMContentLoaded", () => {
     if (targetStat) targetStat.classList.add('active');
 
     const activeData =
-      category === "kose" ? dataKose : category === "lampy" ? dataLampy : dataKontejnery;
+      category === "kose"
+        ? dataKose
+        : category === "lampy"
+          ? dataLampy
+          : category === "kontejnery"
+            ? dataKontejnery
+            : dataHladina;
     const coords = activeData.map((item) => [item.lat, item.lng]);
     if (coords.length) {
       const bounds = L.latLngBounds(coords);
@@ -264,7 +307,14 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     if (categoryLabel) {
-      const labelText = category === "kose" ? "Koše" : category === "lampy" ? "Lampy" : "Kontejnery";
+      const labelText =
+        category === "kose"
+          ? "Koše"
+          : category === "lampy"
+            ? "Lampy"
+            : category === "kontejnery"
+              ? "Kontejnery"
+              : "Hladina potoka";
       categoryLabel.textContent = `${labelText}`;
     }
 
@@ -343,9 +393,49 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  async function fetchStreamLevel() {
+    try {
+      const response = await fetch(streamEndpoint, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+
+      const valueCandidate =
+        doc.querySelector(".sensor-value, .value, .measurement, .card-body strong")?.textContent ||
+        doc.querySelector("[data-value]")?.getAttribute("data-value");
+      const timeCandidate =
+        doc.querySelector("time")?.textContent ||
+        doc.querySelector(".timestamp")?.textContent;
+
+      const valueFromText = (() => {
+        const match = html.match(/([0-9]+(?:[.,][0-9]+)?)\s*(cm|m)/i);
+        if (match) return `${match[1].replace(",", ".")} ${match[2]}`;
+        return valueCandidate ? valueCandidate.trim() : null;
+      })();
+
+      const timeFromText = (() => {
+        const match = html.match(/(\d{1,2}\.\d{1,2}\.\d{4}[^\d]*\d{1,2}:\d{2})/);
+        if (match) return match[1];
+        return timeCandidate ? timeCandidate.trim() : null;
+      })();
+
+      streamState.level = valueFromText || streamState.level;
+      streamState.updated = timeFromText || streamState.updated;
+    } catch (err) {
+      streamState.level = streamState.level || "Nedostupné";
+      streamState.updated = streamState.updated || "Zdroj nepřístupný";
+      console.warn("Chyba při načítání hladiny", err);
+    } finally {
+      populateLayer("hladina");
+      updateCounters();
+    }
+  }
+
   setActiveCategory("kose");
   setupSidebarToggle();
   initNav();
   refreshMapSize(0);
   window.addEventListener("resize", () => refreshMapSize(80));
+  fetchStreamLevel();
 });

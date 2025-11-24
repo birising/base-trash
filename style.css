@@ -89,6 +89,11 @@ body {
   border-right: 1px solid var(--border);
   backdrop-filter: var(--blur);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02);
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  min-height: 0;
 }
 
 .sidebar-header {

@@ -3,12 +3,49 @@ window.addEventListener("DOMContentLoaded", async () => {
     await loadIncludes();
   }
 
-  if (!window.L) {
+  const ensureLeaflet = async () => {
+    if (window.L) return true;
+    try {
+      await new Promise((resolve, reject) => {
+        const fallback = document.createElement("script");
+        fallback.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+        fallback.onload = resolve;
+        fallback.onerror = reject;
+        document.head.appendChild(fallback);
+      });
+      return !!window.L;
+    } catch (error) {
+      console.warn("Nepodařilo se načíst záložní Leaflet", error);
+      return false;
+    }
+  };
+
+  const leafletReady = await ensureLeaflet();
+  if (!leafletReady) {
     showMapError("Mapový modul se nepodařilo načíst. Zkuste obnovit stránku.");
     return;
   }
 
   await loadAllData();
+
+  let mapContainer = document.getElementById("map");
+  if (!mapContainer) {
+    // Fallback, pokud se fragmenty nenačetly – vytvoříme minimální kontejner pro mapu.
+    const mapView = document.getElementById("mapView") || document.querySelector(".content");
+    mapContainer = document.createElement("div");
+    mapContainer.id = "map";
+    mapContainer.setAttribute("aria-label", "Mapa údržby obce Běloky");
+    if (mapView) {
+      mapView.classList.add("view", "map-view");
+      mapView.appendChild(mapContainer);
+    } else {
+      const fallbackWrap = document.createElement("div");
+      fallbackWrap.id = "mapView";
+      fallbackWrap.className = "view map-view";
+      fallbackWrap.appendChild(mapContainer);
+      document.body.appendChild(fallbackWrap);
+    }
+  }
 
   const map = L.map("map", {
     zoomControl: false,

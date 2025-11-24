@@ -97,6 +97,39 @@ window.addEventListener("DOMContentLoaded", async () => {
     staleHours: 24,
   };
 
+  function formatRelativeTime(value) {
+    const ts = Date.parse(value || "");
+    if (!Number.isFinite(ts)) return "neznámé";
+    const diff = Date.now() - ts;
+    if (diff < 0) return "před chvílí";
+
+    const minutes = Math.floor(diff / (1000 * 60));
+    if (minutes < 1) return "před pár sekundami";
+    if (minutes < 60) return `před ${minutes} min`;
+
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (hours < 48) {
+      const minsText = remainingMinutes ? ` ${remainingMinutes} min` : "";
+      return `před ${hours} h${minsText}`;
+    }
+
+    const days = Math.floor(hours / 24);
+    return `před ${days} dny`;
+  }
+
+  function formatAbsoluteDate(value) {
+    const ts = Date.parse(value || "");
+    if (!Number.isFinite(ts)) return "–";
+    return new Date(ts).toLocaleString("cs-CZ", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
   function evaluateBinStatus(item) {
     const now = Date.now();
     const updatedMs = Date.parse(item.lastUpdated || "");
@@ -105,30 +138,25 @@ window.addEventListener("DOMContentLoaded", async () => {
     const isFull = typeof item.fillLevel === "number" && item.fillLevel >= BIN_THRESHOLDS.full;
     const lowBattery = typeof item.batteryLevel === "number" && item.batteryLevel < BIN_THRESHOLDS.batteryLow;
 
-    if (isStale) {
-      return {
-        color: "#ef4444",
-        severity: "critical",
-        labels: ["Bez spojení >24 h"],
-      };
-    }
+    const states = [];
+    if (isStale) states.push({ text: "Bez spojení >24 h", tone: "critical" });
+    if (isFull) states.push({ text: "Plný koš", tone: "warning" });
+    if (lowBattery) states.push({ text: "Baterie < 15 %", tone: "warning" });
+    if (!states.length) states.push({ text: "V pořádku", tone: "ok" });
 
-    const warnLabels = [];
-    if (isFull) warnLabels.push("Plný koš");
-    if (lowBattery) warnLabels.push("Baterie < 15 %");
+    const severity = states.some((s) => s.tone === "critical")
+      ? "critical"
+      : states.some((s) => s.tone === "warning")
+        ? "warning"
+        : "ok";
 
-    if (warnLabels.length) {
-      return {
-        color: "#f97316",
-        severity: "warning",
-        labels: warnLabels,
-      };
-    }
+    const color = severity === "critical" ? "#ef4444" : severity === "warning" ? "#f97316" : iconColors.kose;
 
     return {
-      color: iconColors.kose,
-      severity: "ok",
-      labels: ["V pořádku"],
+      color,
+      severity,
+      labels: states.map((s) => s.text),
+      states,
     };
   }
 
@@ -296,15 +324,20 @@ window.addEventListener("DOMContentLoaded", async () => {
       const status = binStatus || evaluateBinStatus(item);
       const fill = item.fillLevel != null ? `${item.fillLevel}%` : "–";
       const battery = item.batteryLevel != null ? `${item.batteryLevel}%` : "–";
-      const updated = item.lastUpdated || "–";
+      const updatedRelative = formatRelativeTime(item.lastUpdated);
+      const updatedAbsolute = formatAbsoluteDate(item.lastUpdated);
+      const statusBadges = status.states
+        .map((state) => `<span class="status-chip status-${state.tone}">${state.text}</span>`)
+        .join("");
       popupContent += `
         <div class="popup-details">
           <div><span>Naplněnost:</span><strong>${fill}</strong></div>
-          <div><span>Poslední aktualizace:</span><strong>${updated}</strong></div>
+          <div><span>Poslední aktualizace:</span><strong>${updatedRelative}</strong></div>
+          <div class="popup-subtext">${updatedAbsolute}</div>
           <div><span>Stav baterie:</span><strong>${battery}</strong></div>
         </div>
         <div class="popup-status popup-${status.severity}">
-          ${status.labels.join(" · ")}
+          <div class="status-chip-row">${statusBadges}</div>
         </div>`;
     } else if (item.category === "lampy") {
       const subject = encodeURIComponent(`Porucha lampy – ${name}`);

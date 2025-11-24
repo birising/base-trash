@@ -1,131 +1,185 @@
-<div class="map-overlay" id="mapOverlay">
-  <div class="pill" id="activeCategoryLabel">Koše</div>
-  <div class="pill secondary">Automatické přiblížení</div>
-</div>
-<div id="mapView" class="view map-view">
-  <div id="map" aria-label="Mapa údržby obce Běloky"></div>
-</div>
-<section id="streamView" class="view stream-view hidden" aria-label="Hladina potoka a počasí">
-  <div class="stream-grid">
-    <div class="stream-card chart-card">
-      <div class="chart-header">
-        <div>
-          <div class="eyebrow">Trend</div>
-          <div class="headline small">Posledních 24 hodin</div>
-          <div class="chart-sub">CSV + live hodnoty, včetně povodňových stupňů</div>
-        </div>
-        <div class="chart-actions">
-          <button class="chart-refresh" id="refreshStreamBtn" type="button" aria-label="Obnovit data hladiny">
-            ↻ Obnovit
-          </button>
-          <span class="stat-chip subtle">Live</span>
-        </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <div class="legend-item"><span class="legend-swatch level"></span>Hladina (cm)</div>
-        <div class="legend-item"><span class="legend-swatch spa1"></span>SPA 1 · 90 cm</div>
-        <div class="legend-item"><span class="legend-swatch spa2"></span>SPA 2 · 100 cm</div>
-        <div class="legend-item"><span class="legend-swatch spa3"></span>SPA 3 · 120 cm</div>
-      </div>
-      <svg id="levelChart" viewBox="0 0 720 320" role="img" aria-label="Graf hladiny potoka"></svg>
-    </div>
-    <div class="stream-card hero">
-      <div class="eyebrow">Hladina potoka</div>
-      <div class="stream-headline">Live přehled</div>
-      <p class="stream-sub">Aktuální úroveň vody a meteo kontext v jednom panelu.</p>
-      <div class="stream-stats">
-        <div class="stat">
-          <div class="stat-label">Úroveň</div>
-          <div class="stat-value" id="streamLevel">–</div>
-          <div class="stat-sub" id="streamUpdated">Načítám…</div>
-        </div>
-        <div class="stat compact">
-          <div class="stat-label">Senzor</div>
-          <div class="stat-value">#24470</div>
-          <div class="stat-sub">Běloky</div>
-        </div>
-        <div class="stat compact">
-          <div class="stat-label">Zdroj</div>
-          <div class="stat-value live" id="streamStatus">Načítám…</div>
-          <div class="stat-sub">live scrape</div>
-        </div>
-      </div>
-      <a class="source-link" href="http://hladiny-vox.pwsplus.eu/Senzors/Details/24470" target="_blank" rel="noopener noreferrer">
-        Zdroj dat · hladiny-vox.pwsplus.eu (24470)
-      </a>
-    </div>
-    <div class="stream-card wide">
-      <div class="chart-header">
-        <div>
-          <div class="eyebrow">ČR · počasí</div>
-          <div class="headline small">Windy &amp; radar</div>
-        </div>
-        <span class="stat-chip subtle">Náhled</span>
-      </div>
-      <div class="weather-embeds inline">
-        <div class="embed">
-          <iframe
-            title="Windy předpověď"
-            src="https://embed.windy.com/embed2.html?lat=49.8&lon=15.5&detailLat=50.1&detailLon=14.4&width=100%&height=100%&zoom=7&level=surface&overlay=rain&product=ecmwf&menu=&message=true&type=map&location=coordinates&detail=true&metricWind=ms&metricTemp=%C2%B0C"
-            frameborder="0"
-            aria-label="Windy předpověď pro Českou republiku"
-          ></iframe>
-        </div>
-        <div class="embed">
-          <iframe
-            title="Radar srážek"
-            src="https://embed.windy.com/embed2.html?lat=49.8&lon=15.5&detailLat=50.1&detailLon=14.4&width=100%&height=100%&zoom=7&level=surface&overlay=radar&product=ecmwf&menu=&message=true&type=map&location=coordinates&detail=true&metricWind=ms&metricTemp=%C2%B0C"
-            frameborder="0"
-            aria-label="Radar srážek pro Českou republiku"
-          ></iframe>
-        </div>
-      </div>
+<section class="dashboard-strip" aria-label="Rychlé přehledy">
+  <div class="strip-header">
+    <div>
+      <div class="eyebrow">Dashboard</div>
+      <div class="headline small">Rychlé přehledy</div>
+      <p class="subtitle">Aktuální data z odvozu, hladiny, košů, lamp a údržby zeleně na jednom místě.</p>
     </div>
   </div>
-</section>
-<section id="wasteView" class="view waste-view hidden" aria-label="Odvoz komunálního odpadu">
-  <div class="waste-grid">
-    <div class="waste-card hero">
-      <div class="eyebrow">Odvoz komunálního odpadu</div>
-      <div class="headline small">Každých 14 dní</div>
-      <div class="mega-date" id="nextPickupDate">–</div>
-      <div class="pill primary" id="nextPickupCountdown">Načítám…</div>
-      <div class="waste-meta">
-        <div>
-          <div class="stat-label">Další svoz</div>
-          <div class="stat-value" id="nextPickupLabel">–</div>
-        </div>
-        <div>
-          <div class="stat-label">Poslední svoz</div>
-          <div class="stat-value" id="lastPickupLabel">17.11.2025</div>
-        </div>
-        <div>
-          <div class="stat-label">Cyklus</div>
-          <div class="stat-value">Každých 14 dní</div>
-        </div>
+  <div class="summary-grid dashboard-grid">
+    <button class="stat-card" data-category="odpad">
+      <div class="stat-top">
+        <span class="stat-label">Odvoz odpadu</span>
+        <span class="stat-chip">Plán</span>
       </div>
-    </div>
-    <div class="waste-card overview">
-      <div class="chart-header">
-        <div>
-          <div class="eyebrow">Harmonogram</div>
-          <div class="headline small">Přehled svozu</div>
-        </div>
-        <span class="stat-chip subtle">Auto</span>
+      <div class="stat-value" id="countOdpad">–</div>
+      <div class="stat-sub" id="nextPickupSummary">Každých 14 dní</div>
+    </button>
+    <button class="stat-card" data-category="hladina">
+      <div class="stat-top">
+        <span class="stat-label">Hladina potoka</span>
+        <span class="stat-chip">Live</span>
       </div>
-      <div class="waste-list" id="upcomingPickups"></div>
-    </div>
-    <div class="waste-card info">
-      <div class="eyebrow">Poznámky</div>
-      <div class="headline small">Rychlé informace</div>
-      <ul class="info-list">
-        <li>Trasa: celá obec Běloky, ulice po ulici.</li>
-        <li>Kontakt: info@beloky.cz</li>
-        <li>Posádka: 2 pracovníci, 1 vůz.</li>
-      </ul>
-      <a class="button ghost" href="mailto:info@beloky.cz?subject=Odvoz%20odpadu%20Běloky" aria-label="Nahlásit problém se svozem">
-        Nahlásit problém
-      </a>
-    </div>
+      <div class="stat-value" id="countHladina">–</div>
+      <div class="stat-sub" id="levelReading">Načítám…</div>
+    </button>
+    <button class="stat-card active" data-category="kose">
+      <div class="stat-top">
+        <span class="stat-label">Koše</span>
+        <span class="stat-chip">Live</span>
+      </div>
+      <div class="stat-value" id="countKose">0</div>
+      <div class="stat-sub">Naplněnost &amp; telemetrie</div>
+    </button>
+    <button class="stat-card" data-category="lampy">
+      <div class="stat-top">
+        <span class="stat-label">Lampy</span>
+        <span class="stat-chip">Sítě</span>
+      </div>
+      <div class="stat-value" id="countLampy">0</div>
+      <div class="stat-sub">Nahlášení závad</div>
+    </button>
+    <button class="stat-card" data-category="zelen">
+      <div class="stat-top">
+        <span class="stat-label">Údržba zeleně</span>
+        <span class="stat-chip">Plán</span>
+      </div>
+      <div class="stat-value" id="countZelen">0</div>
+      <div class="stat-sub" id="zelenSummary">Poslední sečení: –</div>
+    </button>
   </div>
 </section>
+
+<div class="view-container">
+  <div class="map-overlay" id="mapOverlay">
+    <div class="pill" id="activeCategoryLabel">Koše</div>
+    <div class="pill secondary">Automatické přiblížení</div>
+  </div>
+  <div id="mapView" class="view map-view">
+    <div id="map" aria-label="Mapa údržby obce Běloky"></div>
+  </div>
+  <section id="streamView" class="view stream-view hidden" aria-label="Hladina potoka a počasí">
+    <div class="stream-grid">
+      <div class="stream-card chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="eyebrow">Trend</div>
+            <div class="headline small">Posledních 24 hodin</div>
+            <div class="chart-sub">CSV + live hodnoty, včetně povodňových stupňů</div>
+          </div>
+          <div class="chart-actions">
+            <button class="chart-refresh" id="refreshStreamBtn" type="button" aria-label="Obnovit data hladiny">
+              ↻ Obnovit
+            </button>
+            <span class="stat-chip subtle">Live</span>
+          </div>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <div class="legend-item"><span class="legend-swatch level"></span>Hladina (cm)</div>
+          <div class="legend-item"><span class="legend-swatch spa1"></span>SPA 1 · 90 cm</div>
+          <div class="legend-item"><span class="legend-swatch spa2"></span>SPA 2 · 100 cm</div>
+          <div class="legend-item"><span class="legend-swatch spa3"></span>SPA 3 · 120 cm</div>
+        </div>
+        <svg id="levelChart" viewBox="0 0 720 320" role="img" aria-label="Graf hladiny potoka"></svg>
+      </div>
+      <div class="stream-card hero">
+        <div class="eyebrow">Hladina potoka</div>
+        <div class="stream-headline">Live přehled</div>
+        <p class="stream-sub">Aktuální úroveň vody a meteo kontext v jednom panelu.</p>
+        <div class="stream-stats">
+          <div class="stat">
+            <div class="stat-label">Úroveň</div>
+            <div class="stat-value" id="streamLevel">–</div>
+            <div class="stat-sub" id="streamUpdated">Načítám…</div>
+          </div>
+          <div class="stat compact">
+            <div class="stat-label">Senzor</div>
+            <div class="stat-value">#24470</div>
+            <div class="stat-sub">Běloky</div>
+          </div>
+          <div class="stat compact">
+            <div class="stat-label">Zdroj</div>
+            <div class="stat-value live" id="streamStatus">Načítám…</div>
+            <div class="stat-sub">live scrape</div>
+          </div>
+        </div>
+        <a class="source-link" href="http://hladiny-vox.pwsplus.eu/Senzors/Details/24470" target="_blank" rel="noopener noreferrer">
+          Zdroj dat · hladiny-vox.pwsplus.eu (24470)
+        </a>
+      </div>
+      <div class="stream-card wide">
+        <div class="chart-header">
+          <div>
+            <div class="eyebrow">ČR · počasí</div>
+            <div class="headline small">Windy &amp; radar</div>
+          </div>
+          <span class="stat-chip subtle">Náhled</span>
+        </div>
+        <div class="weather-embeds inline">
+          <div class="embed">
+            <iframe
+              title="Windy předpověď"
+              src="https://embed.windy.com/embed2.html?lat=49.8&lon=15.5&detailLat=50.1&detailLon=14.4&width=100%&height=100%&zoom=7&level=surface&overlay=rain&product=ecmwf&menu=&message=true&type=map&location=coordinates&detail=true&metricWind=ms&metricTemp=%C2%B0C"
+              frameborder="0"
+              aria-label="Windy předpověď pro Českou republiku"
+            ></iframe>
+          </div>
+          <div class="embed">
+            <iframe
+              title="Radar srážek"
+              src="https://embed.windy.com/embed2.html?lat=49.8&lon=15.5&detailLat=50.1&detailLon=14.4&width=100%&height=100%&zoom=7&level=surface&overlay=radar&product=ecmwf&menu=&message=true&type=map&location=coordinates&detail=true&metricWind=ms&metricTemp=%C2%B0C"
+              frameborder="0"
+              aria-label="Radar srážek pro Českou republiku"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="wasteView" class="view waste-view hidden" aria-label="Odvoz komunálního odpadu">
+    <div class="waste-grid">
+      <div class="waste-card hero">
+        <div class="eyebrow">Odvoz komunálního odpadu</div>
+        <div class="headline small">Každých 14 dní</div>
+        <div class="mega-date" id="nextPickupDate">–</div>
+        <div class="pill primary" id="nextPickupCountdown">Načítám…</div>
+        <div class="waste-meta">
+          <div>
+            <div class="stat-label">Další svoz</div>
+            <div class="stat-value" id="nextPickupLabel">–</div>
+          </div>
+          <div>
+            <div class="stat-label">Poslední svoz</div>
+            <div class="stat-value" id="lastPickupLabel">17.11.2025</div>
+          </div>
+          <div>
+            <div class="stat-label">Cyklus</div>
+            <div class="stat-value">Každých 14 dní</div>
+          </div>
+        </div>
+      </div>
+      <div class="waste-card overview">
+        <div class="chart-header">
+          <div>
+            <div class="eyebrow">Harmonogram</div>
+            <div class="headline small">Přehled svozu</div>
+          </div>
+          <span class="stat-chip subtle">Auto</span>
+        </div>
+        <div class="waste-list" id="upcomingPickups"></div>
+      </div>
+      <div class="waste-card info">
+        <div class="eyebrow">Poznámky</div>
+        <div class="headline small">Rychlé informace</div>
+        <ul class="info-list">
+          <li>Trasa: celá obec Běloky, ulice po ulici.</li>
+          <li>Kontakt: info@beloky.cz</li>
+          <li>Posádka: 2 pracovníci, 1 vůz.</li>
+        </ul>
+        <a class="button ghost" href="mailto:info@beloky.cz?subject=Odvoz%20odpadu%20Běloky" aria-label="Nahlásit problém se svozem">
+          Nahlásit problém
+        </a>
+      </div>
+    </div>
+  </section>
+</div>

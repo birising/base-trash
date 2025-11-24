@@ -6,10 +6,10 @@
 .stream-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(520px, 2.1fr) minmax(320px, 1fr);
+  grid-template-columns: minmax(520px, 1.8fr) minmax(320px, 1fr);
   grid-template-areas:
     "chart hero"
-    "chart weather";
+    "weather weather";
   align-items: start;
 }
 
@@ -152,7 +152,7 @@
 
 #levelChart {
   width: 100%;
-  height: 380px;
+  height: 320px;
   display: block;
 }
 
@@ -165,12 +165,12 @@
     grid-template-columns: 1fr;
     grid-template-areas:
       "chart"
-      "hero"
-      "weather";
+      "weather"
+      "hero";
   }
 
   #levelChart {
-    height: 320px;
+    height: 280px;
   }
 }
 

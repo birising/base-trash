@@ -1,4 +1,6 @@
-const dataKose = [
+const dataBaseUrl = window.DATA_BASE_URL || "./data";
+
+const fallbackKose = [
   {
     lat: 50.130144,
     lng: 14.219936,
@@ -71,14 +73,14 @@ const dataKose = [
   },
 ];
 
-const dataKontejnery = [
+const fallbackKontejnery = [
   { lat: 50.132911, lng: 14.224212, name: "Zimni udrzba", description: null, category: "zimni_udrzba" },
   { lat: 50.132602, lng: 14.224192, name: "Zimni udrzba", description: null, category: "zimni_udrzba" },
   { lat: 50.130817, lng: 14.221791, name: "Zimni udrba", description: null, category: "zimni_udrzba" },
   { lat: 50.132204, lng: 14.222392, name: "Zimni idezba", description: null, category: "zimni_udrzba" },
 ];
 
-const dataLampy = [
+const fallbackLampy = [
   { lat: 50.133935, lng: 14.222031, name: "Rozbita lampa", description: null, category: "lampy" },
   { lat: 50.132683, lng: 14.22153, name: "Rozbita", description: null, category: "lampy" },
   { lat: 50.130526, lng: 14.220269, name: "Lampa rozbita", description: null, category: "lampy" },
@@ -127,7 +129,7 @@ const dataLampy = [
   { lat: 50.130743, lng: 14.220386, name: "lampa", description: null, category: "lampy" },
 ];
 
-const dataZelene = [
+const fallbackZelene = [
   {
     name: "Park Na Stráni",
     description: "Tráva a okraje",
@@ -168,6 +170,11 @@ const dataZelene = [
     ],
   },
 ];
+
+let dataKose = [];
+let dataKontejnery = [];
+let dataLampy = [];
+let dataZelene = [];
 
 const dataHladina = [
   {
@@ -226,17 +233,46 @@ const streamState = {
   status: "Načítám…",
 };
 
+async function loadDataset(name, fallback = []) {
+  const url = `${dataBaseUrl}/${name}.json`;
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    return Array.isArray(payload) ? payload : fallback;
+  } catch (error) {
+    console.warn(`Nepodařilo se načíst dataset ${name} (${url})`, error);
+    return fallback;
+  }
+}
+
+async function loadAllData() {
+  const [kose, lampy, kontejnery, zelene] = await Promise.all([
+    loadDataset("kose", fallbackKose),
+    loadDataset("lampy", fallbackLampy),
+    loadDataset("kontejnery", fallbackKontejnery),
+    loadDataset("zelene", fallbackZelene),
+  ]);
+
+  dataKose = kose;
+  dataLampy = lampy;
+  dataKontejnery = kontejnery;
+  dataZelene = zelene;
+}
+
 function showMapError(message) {
   const mapContainer = document.getElementById("map");
   if (!mapContainer) return;
   mapContainer.innerHTML = `<div class="map-error">${message}</div>`;
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   if (!window.L) {
     showMapError("Mapový modul se nepodařilo načíst. Zkuste obnovit stránku.");
     return;
   }
+
+  await loadAllData();
 
   const map = L.map("map", {
     zoomControl: false,

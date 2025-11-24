@@ -1,0 +1,72 @@
+[
+  {
+    "lat": 50.130144,
+    "lng": 14.219936,
+    "name": "Koš plný",
+    "description": null,
+    "category": "kos",
+    "fillLevel": 92,
+    "lastUpdated": "2024-05-12 08:15",
+    "batteryLevel": 34
+  },
+  {
+    "lat": 50.128687,
+    "lng": 14.221423,
+    "name": "Koš",
+    "description": null,
+    "category": "kos",
+    "fillLevel": 38,
+    "lastUpdated": "2024-05-12 09:02",
+    "batteryLevel": 78
+  },
+  {
+    "lat": 50.129602,
+    "lng": 14.221984,
+    "name": "Koš",
+    "description": null,
+    "category": "kos",
+    "fillLevel": 56,
+    "lastUpdated": "2024-05-11 18:41",
+    "batteryLevel": 82
+  },
+  {
+    "lat": 50.132469,
+    "lng": 14.220607,
+    "name": "Koš",
+    "description": null,
+    "category": "kos",
+    "fillLevel": 21,
+    "lastUpdated": "2024-05-12 06:58",
+    "batteryLevel": 64
+  },
+  {
+    "lat": 50.132801,
+    "lng": 14.220461,
+    "name": "Koš",
+    "description": null,
+    "category": "kos",
+    "fillLevel": 49,
+    "lastUpdated": "2024-05-11 22:16",
+    "batteryLevel": 59
+  },
+  {
+    "lat": 50.133472,
+    "lng": 14.225753,
+    "name": "Koš",
+    "description": null,
+    "category": "kos",
+    "fillLevel": 73,
+    "lastUpdated": "2024-05-12 07:45",
+    "batteryLevel": 41
+  },
+  {
+    "lat": 50.132557,
+    "lng": 14.220691,
+    "name": "Koš",
+    "description": null,
+    "category": "kos",
+    "fillLevel": 12,
+    "lastUpdated": "2024-05-12 08:55",
+    "batteryLevel": 91
+  }
+]

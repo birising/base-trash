@@ -139,6 +139,11 @@ const dataHladina = [
 ];
 
 const streamEndpoint = "https://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
+const floodThresholds = [
+  { label: "SPA 1", value: 90, color: "#22c55e" },
+  { label: "SPA 2", value: 100, color: "#facc15" },
+  { label: "SPA 3", value: 120, color: "#f97316" },
+];
 function buildHistory(hours = 72, start = 38, variance = 4) {
   const history = [];
   for (let i = 0; i < hours; i += 1) {
@@ -157,6 +162,7 @@ const streamState = {
   level: `${streamHistory.at(-1)} cm`,
   updated: "Základní údaje",
   numeric: streamHistory.at(-1),
+  status: "Načítám…",
 };
 
 function showMapError(message) {
@@ -218,6 +224,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const levelReading = document.getElementById("levelReading");
   const streamLevelEl = document.getElementById("streamLevel");
   const streamUpdatedEl = document.getElementById("streamUpdated");
+  const streamStatusEl = document.getElementById("streamStatus");
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
   const mapOverlay = document.getElementById("mapOverlay");
@@ -240,8 +247,9 @@ window.addEventListener("DOMContentLoaded", () => {
     const height = 260;
     const padding = 32;
 
-    const minVal = Math.min(...series) - 2;
-    const maxVal = Math.max(...series) + 2;
+    const thresholdValues = floodThresholds.map((t) => t.value);
+    const minVal = Math.min(...series, ...thresholdValues) - 4;
+    const maxVal = Math.max(...series, ...thresholdValues) + 6;
     const range = Math.max(maxVal - minVal, 1);
 
     const points = series.map((val, idx) => {
@@ -267,6 +275,15 @@ window.addEventListener("DOMContentLoaded", () => {
       </defs>
       <rect x="${padding}" y="${padding}" width="${width - padding * 2}" height="${height - padding * 2}" rx="12" class="chart-frame" />
       ${gridLines}
+      ${floodThresholds
+        .map((t) => {
+          const y = height - padding - ((t.value - minVal) / range) * (height - padding * 2);
+          return `
+            <line x1="${padding}" x2="${width - padding}" y1="${y}" y2="${y}" class="threshold-line" stroke="${t.color}" />
+            <text x="${width - padding + 6}" y="${y + 4}" class="threshold-label" fill="${t.color}">${t.label} · ${t.value} cm</text>
+          `;
+        })
+        .join("")}
       <path d="${areaD}" class="chart-area" />
       <path d="${pathD}" class="chart-line" />
       ${points
@@ -354,6 +371,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (streamUpdatedEl) {
       streamUpdatedEl.textContent = streamState.updated ? `Aktualizace: ${streamState.updated}` : "Načítám…";
     }
+    if (streamStatusEl) streamStatusEl.textContent = streamState.status || "–";
     renderStreamChart(streamState.numeric);
   }
 
@@ -518,16 +536,18 @@ window.addEventListener("DOMContentLoaded", () => {
       })();
 
       streamState.level = valueFromText || streamState.level;
-      streamState.updated = timeFromText || streamState.updated;
+      streamState.updated = timeFromText || streamState.updated || new Date().toLocaleString("cs-CZ");
       const numericMatch = (valueFromText || "").match(/([0-9]+(?:[.,][0-9]+)?)/);
       streamState.numeric = numericMatch ? parseFloat(numericMatch[1].replace(",", ".")) : streamState.numeric;
       if (streamState.numeric != null && !Number.isNaN(streamState.numeric)) {
         streamHistory = [...streamHistory.slice(-(72 - 1)), streamState.numeric];
       }
+      streamState.status = `Live data · ${new Date().toLocaleTimeString("cs-CZ")}`;
     } catch (err) {
       streamState.level = streamState.level || `${streamHistory.at(-1)} cm`;
       streamState.updated = streamState.updated || "Zdroj nepřístupný";
       streamState.numeric = streamState.numeric || streamHistory.at(-1);
+      streamState.status = "Zdroj nepřístupný";
       console.warn("Chyba při načítání hladiny", err);
     } finally {
       populateLayer("hladina");

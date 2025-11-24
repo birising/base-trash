@@ -23,38 +23,17 @@
       <div class="sidebar-header">
         <div class="eyebrow">Běloky · GIS</div>
         <div class="headline">Správa údržby</div>
-        <p class="subtitle">Přehled košů, lamp a zimní údržby v jedné obrazovce.</p>
+        <p class="subtitle">Přehled odpadu, hladiny potoka a košů v jedné obrazovce.</p>
       </div>
 
       <div class="summary-grid">
-        <button class="stat-card active" data-category="kose">
+        <button class="stat-card" data-category="odpad">
           <div class="stat-top">
-            <span class="stat-label">Koše</span>
-            <span class="stat-chip">Live</span>
-          </div>
-          <div class="stat-value" id="countKose">0</div>
-        </button>
-        <button class="stat-card" data-category="lampy">
-          <div class="stat-top">
-            <span class="stat-label">Lampy</span>
-            <span class="stat-chip">Live</span>
-          </div>
-          <div class="stat-value" id="countLampy">0</div>
-        </button>
-        <button class="stat-card" data-category="kontejnery">
-          <div class="stat-top">
-            <span class="stat-label">Kontejnery</span>
-            <span class="stat-chip">Live</span>
-          </div>
-          <div class="stat-value" id="countKontejnery">0</div>
-        </button>
-        <button class="stat-card" data-category="zelen">
-          <div class="stat-top">
-            <span class="stat-label">Údržba zeleně</span>
+            <span class="stat-label">Odvoz odpadu</span>
             <span class="stat-chip">Plán</span>
           </div>
-          <div class="stat-value" id="countZelen">0</div>
-          <div class="stat-sub" id="zelenSummary">Posekáno · plán</div>
+          <div class="stat-value" id="countOdpad">–</div>
+          <div class="stat-sub" id="nextPickupSummary">Každých 14 dní</div>
         </button>
         <button class="stat-card" data-category="hladina">
           <div class="stat-top">
@@ -64,24 +43,20 @@
           <div class="stat-value" id="countHladina">–</div>
           <div class="stat-sub" id="levelReading">Načítám…</div>
         </button>
-        <button class="stat-card" data-category="odpad">
+        <button class="stat-card active" data-category="kose">
           <div class="stat-top">
-            <span class="stat-label">Odvoz odpadu</span>
-            <span class="stat-chip">Plán</span>
+            <span class="stat-label">Koše</span>
+            <span class="stat-chip">Live</span>
           </div>
-          <div class="stat-value" id="countOdpad">–</div>
-          <div class="stat-sub" id="nextPickupSummary">Každých 14 dní</div>
+          <div class="stat-value" id="countKose">0</div>
         </button>
       </div>
 
       <nav class="nav">
         <div class="nav-title">Zobrazení</div>
-        <button class="nav-item active" data-category="kose">Koše</button>
-        <button class="nav-item" data-category="lampy">Lampy</button>
-        <button class="nav-item" data-category="kontejnery">Kontejnery s posypem</button>
-        <button class="nav-item" data-category="zelen">Údržba zeleně</button>
-        <button class="nav-item" data-category="hladina">Hladina potoka</button>
         <button class="nav-item" data-category="odpad">Odvoz komunálního odpadu</button>
+        <button class="nav-item" data-category="hladina">Hladina potoka</button>
+        <button class="nav-item active" data-category="kose">Koše</button>
       </nav>
       <div class="sidebar-footer">
         <p>Tip: klikněte na marker pro detail.</p>

@@ -64,6 +64,14 @@
           <div class="stat-value" id="countHladina">–</div>
           <div class="stat-sub" id="levelReading">Načítám…</div>
         </button>
+        <button class="stat-card" data-category="odpad">
+          <div class="stat-top">
+            <span class="stat-label">Odvoz odpadu</span>
+            <span class="stat-chip">Plán</span>
+          </div>
+          <div class="stat-value" id="countOdpad">–</div>
+          <div class="stat-sub" id="nextPickupSummary">Každé pondělí</div>
+        </button>
       </div>
 
       <nav class="nav">
@@ -73,6 +81,7 @@
         <button class="nav-item" data-category="kontejnery">Kontejnery s posypem</button>
         <button class="nav-item" data-category="zelen">Údržba zeleně</button>
         <button class="nav-item" data-category="hladina">Hladina potoka</button>
+        <button class="nav-item" data-category="odpad">Odvoz komunálního odpadu</button>
       </nav>
       <div class="sidebar-footer">
         <p>Tip: klikněte na marker pro detail.</p>
@@ -155,6 +164,52 @@
                   aria-label="Radar srážek pro Českou republiku"
                 ></iframe>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="wasteView" class="view waste-view hidden" aria-label="Odvoz komunálního odpadu">
+        <div class="waste-grid">
+          <div class="waste-card hero">
+            <div class="eyebrow">Odvoz komunálního odpadu</div>
+            <div class="headline small">Každé pondělí</div>
+            <div class="mega-date" id="nextPickupDate">–</div>
+            <div class="pill primary" id="nextPickupCountdown">Načítám…</div>
+            <div class="waste-meta">
+              <div>
+                <div class="stat-label">Další svoz</div>
+                <div class="stat-value" id="nextPickupLabel">–</div>
+              </div>
+              <div>
+                <div class="stat-label">Poslední svoz</div>
+                <div class="stat-value" id="lastPickupLabel">17.11.</div>
+              </div>
+              <div>
+                <div class="stat-label">Cyklus</div>
+                <div class="stat-value">Pondělí · 1× týdně</div>
+              </div>
+            </div>
+          </div>
+          <div class="waste-card overview">
+            <div class="chart-header">
+              <div>
+                <div class="eyebrow">Harmonogram</div>
+                <div class="headline small">Přehled svozu</div>
+              </div>
+              <span class="stat-chip subtle">Auto</span>
+            </div>
+            <div class="waste-list" id="upcomingPickups"></div>
+          </div>
+          <div class="waste-card info">
+            <div class="eyebrow">Poznámky</div>
+            <div class="headline small">Rychlé informace</div>
+            <ul class="info-list">
+              <li>Trasa: celá obec Běloky, ulice po ulici.</li>
+              <li>Pokud nádoba nebyla vyvezena, nahlaste to e-mailem.</li>
+              <li>V den svozu prosíme mít nádoby dostupné od 6:00.</li>
+            </ul>
+            <div class="popup-actions">
+              <a class="popup-button" id="reportWasteButton" href="mailto:info@beloky.cz?subject=Svoz%20odpadu%20-%20problem">Nahlásit problém</a>
             </div>
           </div>
         </div>

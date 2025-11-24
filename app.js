@@ -180,6 +180,12 @@ const dataHladina = [
   },
 ];
 
+const wasteSchedule = {
+  frequency: "Každé pondělí",
+  lastPickup: "17.11",
+  contactEmail: "info@beloky.cz",
+};
+
 const streamEndpoint = "https://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
 const floodThresholds = [
   { label: "SPA 1", value: 90, color: "#22c55e" },
@@ -248,6 +254,7 @@ window.addEventListener("DOMContentLoaded", () => {
     kontejnery: "#4ab7ff",
     zelen: "#7dd3fc",
     hladina: "#7c3aed",
+    odpad: "#67e8f9",
   };
 
   const iconSymbols = {
@@ -266,6 +273,7 @@ window.addEventListener("DOMContentLoaded", () => {
     kontejnery: L.layerGroup(),
     zelen: L.layerGroup(),
     hladina: L.layerGroup(),
+    odpad: L.layerGroup(),
   };
 
   const counters = {
@@ -274,6 +282,7 @@ window.addEventListener("DOMContentLoaded", () => {
     kontejnery: document.getElementById("countKontejnery"),
     zelen: document.getElementById("countZelen"),
     hladina: document.getElementById("countHladina"),
+    odpad: document.getElementById("countOdpad"),
   };
 
   const zelenSummary = document.getElementById("zelenSummary");
@@ -282,11 +291,68 @@ window.addEventListener("DOMContentLoaded", () => {
   const streamLevelEl = document.getElementById("streamLevel");
   const streamUpdatedEl = document.getElementById("streamUpdated");
   const streamStatusEl = document.getElementById("streamStatus");
+  const nextPickupDateEl = document.getElementById("nextPickupDate");
+  const nextPickupCountdownEl = document.getElementById("nextPickupCountdown");
+  const nextPickupLabelEl = document.getElementById("nextPickupLabel");
+  const lastPickupLabelEl = document.getElementById("lastPickupLabel");
+  const upcomingPickupsEl = document.getElementById("upcomingPickups");
+  const nextPickupSummaryEl = document.getElementById("nextPickupSummary");
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
   const mapOverlay = document.getElementById("mapOverlay");
   const mapView = document.getElementById("mapView");
   const streamView = document.getElementById("streamView");
+  const wasteView = document.getElementById("wasteView");
+
+  const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
+
+  function parsePickupDate(dateStr) {
+    const parts = dateStr.split(".").filter(Boolean);
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const now = new Date();
+    const year = parts[2] ? parseInt(parts[2], 10) : now.getFullYear();
+    const parsed = new Date(year, month, day);
+    if (!parts[2] && parsed > now) parsed.setFullYear(year - 1);
+    return parsed;
+  }
+
+  function getNextMonday(reference = new Date()) {
+    const date = new Date(reference);
+    const day = date.getDay();
+    const diff = day === 1 ? 7 : (8 - day) % 7;
+    date.setDate(date.getDate() + diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  function formatDate(date) {
+    return date.toLocaleDateString("cs-CZ", {
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
+  function formatCountdown(target) {
+    const now = new Date();
+    const diffMs = target - now;
+    const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    if (days === 0) return "Dnes";
+    if (days === 1) return "Zítra";
+    return `Za ${days} dny`;
+  }
+
+  function buildUpcomingPickups(startDate, count = 4) {
+    const list = [];
+    for (let i = 0; i < count; i += 1) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i * 7);
+      list.push(date);
+    }
+    return list;
+  }
 
   function renderStreamChart(latestValue = null) {
     const chart = document.getElementById("levelChart");
@@ -489,6 +555,9 @@ window.addEventListener("DOMContentLoaded", () => {
     if (counters.hladina) {
       counters.hladina.textContent = streamState.level ? streamState.level : `${dataHladina.length} senzor`;
     }
+    if (counters.odpad && nextPickupSummaryEl) {
+      counters.odpad.textContent = nextPickupSummaryEl.textContent || "–";
+    }
     if (zelenSummary) {
       const latest = dataZelene[0]?.lastMowed || "–";
       zelenSummary.textContent = `Poslední sečení: ${latest}`;
@@ -506,12 +575,43 @@ window.addEventListener("DOMContentLoaded", () => {
     renderStreamChart(streamState.numeric);
   }
 
+  function updateWasteDashboard() {
+    if (!nextPickupDateEl || !nextPickupCountdownEl || !nextPickupLabelEl || !upcomingPickupsEl) return;
+
+    const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
+    const nextPickupDate = getNextMonday(new Date());
+    const countdown = formatCountdown(nextPickupDate);
+
+    nextPickupDateEl.textContent = formatDate(nextPickupDate);
+    nextPickupLabelEl.textContent = formatDate(nextPickupDate);
+    nextPickupCountdownEl.textContent = countdown;
+    if (lastPickupLabelEl) lastPickupLabelEl.textContent = formatDate(lastPickupDate);
+    if (nextPickupSummaryEl) nextPickupSummaryEl.textContent = `Další svoz: ${nextPickupDate.toLocaleDateString("cs-CZ")}`;
+
+    const upcoming = buildUpcomingPickups(nextPickupDate, 4);
+    upcomingPickupsEl.innerHTML = upcoming
+      .map(
+        (date, idx) => `
+        <div class="waste-row">
+          <div>
+            <div class="date">${formatDate(date)}</div>
+            <div class="label">${idx === 0 ? "Příští svoz" : `${idx + 1}. týden`}</div>
+          </div>
+          <span class="stat-chip subtle">Pondělí</span>
+        </div>`
+      )
+      .join("");
+  }
+
+  updateWasteDashboard();
   updateCounters();
 
   Object.values(layers).forEach((layer) => layer.addTo(map));
 
   function setActiveCategory(category) {
     const isStreamView = category === "hladina";
+    const isWasteView = category === "odpad";
+    const isMapCategory = mapCategories.includes(category);
     Object.entries(layers).forEach(([key, layer]) => {
       if (key === category) {
         map.addLayer(layer);
@@ -530,7 +630,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const targetStat = document.querySelector(`.stat-card[data-category="${category}"]`);
     if (targetStat) targetStat.classList.add('active');
 
-    if (!isStreamView) {
+    if (isMapCategory) {
       const activeData =
         category === "kose"
           ? dataKose
@@ -538,16 +638,10 @@ window.addEventListener("DOMContentLoaded", () => {
             ? dataLampy
             : category === "kontejnery"
               ? dataKontejnery
-              : category === "zelen"
-                ? dataZelene
-                : dataHladina;
+              : dataZelene;
 
-      let coords = [];
-      if (category === "zelen") {
-        coords = activeData.flatMap((area) => area.coords);
-      } else {
-        coords = activeData.map((item) => [item.lat, item.lng]);
-      }
+      const coords =
+        category === "zelen" ? activeData.flatMap((area) => area.coords) : activeData.map((item) => [item.lat, item.lng]);
 
       if (coords.length) {
         const bounds = L.latLngBounds(coords);
@@ -565,15 +659,18 @@ window.addEventListener("DOMContentLoaded", () => {
               ? "Kontejnery"
               : category === "zelen"
                 ? "Údržba zeleně"
-                : "Hladina potoka";
+                : category === "hladina"
+                  ? "Hladina potoka"
+                  : "Odvoz odpadu";
       categoryLabel.textContent = `${labelText}`;
     }
 
-    if (mapOverlay) mapOverlay.classList.toggle("hidden", isStreamView);
-    if (mapView) mapView.classList.toggle("hidden", isStreamView);
+    if (mapOverlay) mapOverlay.classList.toggle("hidden", !isMapCategory);
+    if (mapView) mapView.classList.toggle("hidden", !isMapCategory);
     if (streamView) streamView.classList.toggle("hidden", !isStreamView);
+    if (wasteView) wasteView.classList.toggle("hidden", !isWasteView);
 
-    if (!isStreamView) {
+    if (isMapCategory) {
       refreshMapSize();
     }
   }

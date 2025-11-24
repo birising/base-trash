@@ -91,6 +91,47 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
 
+  const BIN_THRESHOLDS = {
+    full: 85,
+    batteryLow: 15,
+    staleHours: 24,
+  };
+
+  function evaluateBinStatus(item) {
+    const now = Date.now();
+    const updatedMs = Date.parse(item.lastUpdated || "");
+    const hoursSinceUpdate = Number.isFinite(updatedMs) ? (now - updatedMs) / (1000 * 60 * 60) : Infinity;
+    const isStale = hoursSinceUpdate > BIN_THRESHOLDS.staleHours;
+    const isFull = typeof item.fillLevel === "number" && item.fillLevel >= BIN_THRESHOLDS.full;
+    const lowBattery = typeof item.batteryLevel === "number" && item.batteryLevel < BIN_THRESHOLDS.batteryLow;
+
+    if (isStale) {
+      return {
+        color: "#ef4444",
+        severity: "critical",
+        labels: ["Bez spojení >24 h"],
+      };
+    }
+
+    const warnLabels = [];
+    if (isFull) warnLabels.push("Plný koš");
+    if (lowBattery) warnLabels.push("Baterie < 15 %");
+
+    if (warnLabels.length) {
+      return {
+        color: "#f97316",
+        severity: "warning",
+        labels: warnLabels,
+      };
+    }
+
+    return {
+      color: iconColors.kose,
+      severity: "ok",
+      labels: ["V pořádku"],
+    };
+  }
+
   function parsePickupDate(dateStr) {
     const parts = dateStr.split(".").filter(Boolean);
     const day = parseInt(parts[0], 10);
@@ -217,14 +258,15 @@ window.addEventListener("DOMContentLoaded", async () => {
     `;
   }
 
-  function buildIcon(category) {
+  function buildIcon(category, colorOverride) {
     const symbol = iconSymbols[category];
     if (!symbol) return null;
     const sizing = iconSizes[category] || { size: [40, 44], anchor: [20, 42], popup: [0, -32] };
+    const color = colorOverride || iconColors[category];
     return L.divIcon({
       className: `marker-wrapper marker-${category}`,
       html: `
-        <div class="marker-icon marker-${category}" style="--marker-color:${iconColors[category]}">
+        <div class="marker-icon marker-${category}" style="--marker-color:${color}">
           <span class="marker-emoji">${symbol.emoji}</span>
           <span class="marker-label">${symbol.label}</span>
         </div>
@@ -238,8 +280,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   function createMarker(item, color) {
     const { lat, lng, name } = item;
     const useIcon = item.category === "kose" || item.category === "lampy";
+    const binStatus = item.category === "kose" ? evaluateBinStatus(item) : null;
     const marker = useIcon
-      ? L.marker([lat, lng], { icon: buildIcon(item.category) })
+      ? L.marker([lat, lng], { icon: buildIcon(item.category, binStatus?.color || color) })
       : L.circleMarker([lat, lng], {
           radius: 8,
           color,
@@ -250,6 +293,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     let popupContent = `<strong>${name}</strong>`;
     if (item.category === "kose") {
+      const status = binStatus || evaluateBinStatus(item);
       const fill = item.fillLevel != null ? `${item.fillLevel}%` : "–";
       const battery = item.batteryLevel != null ? `${item.batteryLevel}%` : "–";
       const updated = item.lastUpdated || "–";
@@ -258,6 +302,9 @@ window.addEventListener("DOMContentLoaded", async () => {
           <div><span>Naplněnost:</span><strong>${fill}</strong></div>
           <div><span>Poslední aktualizace:</span><strong>${updated}</strong></div>
           <div><span>Stav baterie:</span><strong>${battery}</strong></div>
+        </div>
+        <div class="popup-status popup-${status.severity}">
+          ${status.labels.join(" · ")}
         </div>`;
     } else if (item.category === "lampy") {
       const subject = encodeURIComponent(`Porucha lampy – ${name}`);

@@ -190,6 +190,11 @@ const wasteSchedule = {
 // Primární zdroj hladiny a seznam záložních adres (kvůli CORS a mixovanému obsahu na GitHub Pages).
 const streamSourceUrl = "http://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
 const streamFetchCandidates = [
+  // Bez-CORS proxy vracející čistý HTML obsah
+  `https://api.allorigins.win/raw?url=${encodeURIComponent(streamSourceUrl)}`,
+  // Textový snapshot (markdown) vhodný pro čtení regexem, pokud HTML nejde načíst
+  `https://r.jina.ai/${streamSourceUrl}`,
+  `https://r.jina.ai/${streamSourceUrl.replace("http://", "https://")}`,
   `https://cors.isomorphic-git.org/${streamSourceUrl}`,
   `https://cors.isomorphic-git.org/${streamSourceUrl.replace("http://", "https://")}`,
   streamSourceUrl.replace("http://", "https://"),
@@ -774,20 +779,26 @@ window.addEventListener("DOMContentLoaded", () => {
       ?.textContent;
     const fallbackTime = doc.querySelector("time, .timestamp")?.textContent;
 
+    // Vytvoř kombinovaný text (HTML + stripnutý text), abychom zachytili i markdown snapshoty (r.jina.ai).
+    const textOnly = doc.body ? doc.body.textContent || "" : "";
+    const combinedText = `${html}\n${textOnly}`;
+
     const valueFromText = (() => {
       const regexes = [
         /Aktuální[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*cm/i,
+        /Stav[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*cm/i,
+        /Hladina[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*cm/i,
         /([0-9]+(?:[.,][0-9]+)?)\s*cm/i,
       ];
       for (const r of regexes) {
-        const match = html.match(r);
+        const match = combinedText.match(r);
         if (match) return `${match[1].replace(",", ".")} cm`;
       }
       return fallbackValue ? fallbackValue.trim() : null;
     })();
 
     const timeFromText = (() => {
-      const match = html.match(/(\d{1,2}\.\d{1,2}\.\d{4}[^\d]*\d{1,2}:\d{2})/);
+      const match = combinedText.match(/(\d{1,2}\.\d{1,2}\.\d{2,4}[^\d]*\d{1,2}:\d{2})/);
       if (match) return match[1];
       return fallbackTime ? fallbackTime.trim() : null;
     })();
@@ -807,12 +818,14 @@ window.addEventListener("DOMContentLoaded", () => {
         const html = await response.text();
 
         const { valueFromText, timeFromText, numeric } = extractStreamData(html);
-        if (valueFromText) streamState.level = valueFromText;
-        if (timeFromText) streamState.updated = timeFromText;
         if (numeric != null && !Number.isNaN(numeric)) {
           streamState.numeric = numeric;
+          streamState.level = `${numeric} cm`;
           streamHistory = [...streamHistory.slice(-(72 - 1)), numeric];
+        } else if (valueFromText) {
+          streamState.level = valueFromText;
         }
+        if (timeFromText) streamState.updated = timeFromText;
 
         streamState.updated = streamState.updated || new Date().toLocaleString("cs-CZ");
         streamState.status = `Live data (${new URL(candidate).hostname}) · ${new Date().toLocaleTimeString("cs-CZ")}`;

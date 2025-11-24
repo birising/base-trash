@@ -619,6 +619,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const isStreamView = category === "hladina";
     const isWasteView = category === "odpad";
     const isMapCategory = mapCategories.includes(category);
+    // Always keep the map layers in sync with the chosen category.
     Object.entries(layers).forEach(([key, layer]) => {
       if (key === category) {
         map.addLayer(layer);
@@ -672,13 +673,16 @@ window.addEventListener("DOMContentLoaded", () => {
       categoryLabel.textContent = `${labelText}`;
     }
 
+    // Switch the visible view explicitly so returning from the stream panel always shows the map again.
     if (mapOverlay) mapOverlay.classList.toggle("hidden", !isMapCategory);
     if (mapView) mapView.classList.toggle("hidden", !isMapCategory);
     if (streamView) streamView.classList.toggle("hidden", !isStreamView);
     if (wasteView) wasteView.classList.toggle("hidden", !isWasteView);
 
+    // Refresh the map size after toggling visibility to avoid a blank map when coming back from other views.
     if (isMapCategory) {
-      refreshMapSize();
+      refreshMapSize(0);
+      refreshMapSize(180);
     }
   }
 

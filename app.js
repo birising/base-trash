@@ -255,6 +255,11 @@ window.addEventListener("DOMContentLoaded", () => {
     lampy: { emoji: "💡", label: "Lampa" },
   };
 
+  const iconSizes = {
+    kose: { size: [42, 46], anchor: [21, 44], popup: [0, -34] },
+    lampy: { size: [34, 38], anchor: [17, 36], popup: [0, -30] },
+  };
+
   const layers = {
     kose: L.layerGroup(),
     lampy: L.layerGroup(),
@@ -358,17 +363,18 @@ window.addEventListener("DOMContentLoaded", () => {
   function buildIcon(category) {
     const symbol = iconSymbols[category];
     if (!symbol) return null;
+    const sizing = iconSizes[category] || { size: [40, 44], anchor: [20, 42], popup: [0, -32] };
     return L.divIcon({
-      className: "marker-wrapper",
+      className: `marker-wrapper marker-${category}`,
       html: `
-        <div class="marker-icon" style="--marker-color:${iconColors[category]}">
+        <div class="marker-icon marker-${category}" style="--marker-color:${iconColors[category]}">
           <span class="marker-emoji">${symbol.emoji}</span>
           <span class="marker-label">${symbol.label}</span>
         </div>
       `,
-      iconSize: [42, 46],
-      iconAnchor: [21, 44],
-      popupAnchor: [0, -34],
+      iconSize: sizing.size,
+      iconAnchor: sizing.anchor,
+      popupAnchor: sizing.popup,
     });
   }
 

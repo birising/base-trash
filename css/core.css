@@ -319,27 +319,26 @@ body {
 .view-container {
   position: relative;
   flex: 1;
-  min-height: 0;
+  min-height: calc(100vh - 64px);
   display: flex;
   flex-direction: column;
 }
 
 .view {
   width: 100%;
-  height: auto;
-  min-height: 480px;
+  min-height: 520px;
   flex: 1 1 auto;
 }
 
 .map-view {
   display: flex;
-  min-height: 560px;
+  min-height: clamp(640px, 72vh, 920px);
 }
 
 #map {
   width: 100%;
-  height: auto;
-  min-height: 560px;
+  height: clamp(640px, 72vh, 920px);
+  min-height: 520px;
   flex: 1;
   background: linear-gradient(180deg, #0b1423, #0f1d31);
   border-top: 1px solid var(--border);

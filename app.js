@@ -1,76 +1,73 @@
 const dataBaseUrl = window.DATA_BASE_URL || "./data";
 
-const fallbackKose = [
+const fallbackKoseDefinitions = [
   {
+    id: "K-01",
     lat: 50.130144,
     lng: 14.219936,
     name: "Koš plný",
     description: null,
-    category: "kos",
-    fillLevel: 92,
-    lastUpdated: "2024-05-12 08:15",
-    batteryLevel: 34,
+    category: "kose",
   },
   {
+    id: "K-02",
     lat: 50.128687,
     lng: 14.221423,
     name: "Koš",
     description: null,
-    category: "kos",
-    fillLevel: 38,
-    lastUpdated: "2024-05-12 09:02",
-    batteryLevel: 78,
+    category: "kose",
   },
   {
+    id: "K-03",
     lat: 50.129602,
     lng: 14.221984,
     name: "Koš",
     description: null,
-    category: "kos",
-    fillLevel: 56,
-    lastUpdated: "2024-05-11 18:41",
-    batteryLevel: 82,
+    category: "kose",
   },
   {
+    id: "K-04",
     lat: 50.132469,
     lng: 14.220607,
     name: "Koš",
     description: null,
-    category: "kos",
-    fillLevel: 21,
-    lastUpdated: "2024-05-12 06:58",
-    batteryLevel: 64,
+    category: "kose",
   },
   {
+    id: "K-05",
     lat: 50.132801,
     lng: 14.220461,
     name: "Koš",
     description: null,
-    category: "kos",
-    fillLevel: 49,
-    lastUpdated: "2024-05-11 22:16",
-    batteryLevel: 59,
+    category: "kose",
   },
   {
+    id: "K-06",
     lat: 50.133472,
     lng: 14.225753,
     name: "Koš",
     description: null,
-    category: "kos",
-    fillLevel: 73,
-    lastUpdated: "2024-05-12 07:45",
-    batteryLevel: 41,
+    category: "kose",
   },
   {
+    id: "K-07",
     lat: 50.132557,
     lng: 14.220691,
     name: "Koš",
     description: null,
-    category: "kos",
-    fillLevel: 12,
-    lastUpdated: "2024-05-12 08:55",
-    batteryLevel: 91,
+    category: "kose",
   },
+];
+
+const fallbackKoseTelemetry = [
+  { id: "K-01", fillLevel: 92, lastUpdated: "2024-05-12T08:15:00+02:00", batteryLevel: 34 },
+  { id: "K-01", fillLevel: 88, lastUpdated: "2024-05-11T18:10:00+02:00", batteryLevel: 35 },
+  { id: "K-02", fillLevel: 38, lastUpdated: "2024-05-12T09:02:00+02:00", batteryLevel: 78 },
+  { id: "K-03", fillLevel: 56, lastUpdated: "2024-05-11T18:41:00+02:00", batteryLevel: 82 },
+  { id: "K-04", fillLevel: 21, lastUpdated: "2024-05-12T06:58:00+02:00", batteryLevel: 64 },
+  { id: "K-05", fillLevel: 49, lastUpdated: "2024-05-11T22:16:00+02:00", batteryLevel: 59 },
+  { id: "K-06", fillLevel: 73, lastUpdated: "2024-05-12T07:45:00+02:00", batteryLevel: 41 },
+  { id: "K-07", fillLevel: 12, lastUpdated: "2024-05-12T08:55:00+02:00", batteryLevel: 91 },
 ];
 
 const fallbackKontejnery = [
@@ -246,15 +243,84 @@ async function loadDataset(name, fallback = []) {
   }
 }
 
+function parseKoseTelemetry(csvText) {
+  const lines = csvText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (!lines.length) return [];
+  const header = lines.shift().split(",").map((h) => h.trim().toLowerCase());
+  const idx = {
+    id: header.indexOf("id"),
+    fillLevel: header.indexOf("filllevel"),
+    lastUpdated: header.indexOf("lastupdated"),
+    batteryLevel: header.indexOf("batterylevel"),
+  };
+
+  return lines
+    .map((row) => row.split(",").map((cell) => cell.trim()))
+    .map((cells) => ({
+      id: idx.id >= 0 ? cells[idx.id] : undefined,
+      fillLevel: idx.fillLevel >= 0 ? Number(cells[idx.fillLevel]) : undefined,
+      lastUpdated: idx.lastUpdated >= 0 ? cells[idx.lastUpdated] : undefined,
+      batteryLevel: idx.batteryLevel >= 0 ? Number(cells[idx.batteryLevel]) : undefined,
+    }))
+    .filter((entry) => entry.id);
+}
+
+function pickLatestTelemetry(entries) {
+  const latest = new Map();
+  entries.forEach((entry, index) => {
+    const current = latest.get(entry.id);
+    const timeValue = Date.parse(entry.lastUpdated || "");
+    const currentTime = current ? Date.parse(current.lastUpdated || "") : -Infinity;
+    const isNewer = Number.isFinite(timeValue) && timeValue >= currentTime;
+    const fallbackNewer = !Number.isFinite(timeValue) && current === undefined;
+    if (isNewer || fallbackNewer) {
+      latest.set(entry.id, { ...entry, order: index });
+    }
+  });
+  return latest;
+}
+
+function mergeKose(definitions, telemetryEntries) {
+  const latestTelemetry = pickLatestTelemetry(telemetryEntries);
+  return definitions.map((def) => {
+    const telem = latestTelemetry.get(def.id);
+    return {
+      ...def,
+      category: "kose",
+      fillLevel: telem?.fillLevel ?? null,
+      lastUpdated: telem?.lastUpdated ?? "–",
+      batteryLevel: telem?.batteryLevel ?? null,
+    };
+  });
+}
+
+async function loadKoseTelemetry() {
+  const url = `${dataBaseUrl}/kose_telemetry.csv`;
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const csv = await response.text();
+    const parsed = parseKoseTelemetry(csv);
+    return parsed.length ? parsed : fallbackKoseTelemetry;
+  } catch (error) {
+    console.warn(`Nepodařilo se načíst telemetrii košů (${url})`, error);
+    return fallbackKoseTelemetry;
+  }
+}
+
 async function loadAllData() {
-  const [kose, lampy, kontejnery, zelene] = await Promise.all([
-    loadDataset("kose", fallbackKose),
+  const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene] = await Promise.all([
+    loadDataset("kose", fallbackKoseDefinitions),
+    loadKoseTelemetry(),
     loadDataset("lampy", fallbackLampy),
     loadDataset("kontejnery", fallbackKontejnery),
     loadDataset("zelene", fallbackZelene),
   ]);
 
-  dataKose = kose;
+  dataKose = mergeKose(koseDefinitions, koseTelemetry);
   dataLampy = lampy;
   dataKontejnery = kontejnery;
   dataZelene = zelene;
@@ -513,7 +579,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         });
 
     let popupContent = `<strong>${name}</strong>`;
-    if (item.category === "kos") {
+    if (item.category === "kose") {
       const fill = item.fillLevel != null ? `${item.fillLevel}%` : "–";
       const battery = item.batteryLevel != null ? `${item.batteryLevel}%` : "–";
       const updated = item.lastUpdated || "–";

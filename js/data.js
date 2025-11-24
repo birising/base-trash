@@ -203,31 +203,223 @@ const streamFetchCandidates = [
   streamSourceUrl.replace("http://", "https://"),
   streamSourceUrl,
 ];
+
+const fallbackStreamCsv = `
+2025-11-23 12:10:00;20
+2025-11-23 12:20:00;21
+2025-11-23 12:30:00;21
+2025-11-23 12:40:00;21
+2025-11-23 12:50:00;21
+2025-11-23 13:00:00;20
+2025-11-23 13:10:00;18
+2025-11-23 13:20:00;18
+2025-11-23 13:30:00;18
+2025-11-23 13:40:00;18
+2025-11-23 13:50:00;20
+2025-11-23 14:00:00;20
+2025-11-23 14:10:00;21
+2025-11-23 14:20:00;21
+2025-11-23 14:30:00;22
+2025-11-23 14:40:00;23
+2025-11-23 14:50:00;23
+2025-11-23 15:00:00;23
+2025-11-23 15:10:00;23
+2025-11-23 15:20:00;22
+2025-11-23 15:30:00;22
+2025-11-23 15:40:00;22
+2025-11-23 15:50:00;22
+2025-11-23 16:00:00;22
+2025-11-23 16:10:00;22
+2025-11-23 16:20:00;22
+2025-11-23 16:30:00;23
+2025-11-23 16:40:00;23
+2025-11-23 16:50:00;23
+2025-11-23 17:00:00;23
+2025-11-23 17:10:00;23
+2025-11-23 17:20:00;23
+2025-11-23 17:30:00;23
+2025-11-23 17:40:00;23
+2025-11-23 17:50:00;24
+2025-11-23 18:00:00;23
+2025-11-23 18:10:00;23
+2025-11-23 18:20:00;23
+2025-11-23 18:30:00;24
+2025-11-23 18:40:00;24
+2025-11-23 18:50:00;24
+2025-11-23 19:00:00;24
+2025-11-23 19:10:00;24
+2025-11-23 19:20:00;24
+2025-11-23 19:30:00;24
+2025-11-23 19:40:00;25
+2025-11-23 19:50:00;24
+2025-11-23 20:00:00;24
+2025-11-23 20:10:00;24
+2025-11-23 20:20:00;24
+2025-11-23 20:30:00;24
+2025-11-23 20:40:00;25
+2025-11-23 20:50:00;24
+2025-11-23 21:00:00;24
+2025-11-23 21:10:00;25
+2025-11-23 21:20:00;25
+2025-11-23 21:30:00;25
+2025-11-23 21:40:00;25
+2025-11-23 21:50:00;24
+2025-11-23 22:00:00;24
+2025-11-23 22:10:00;25
+2025-11-23 22:20:00;25
+2025-11-23 22:30:00;25
+2025-11-23 22:40:00;25
+2025-11-23 22:50:00;24
+2025-11-23 23:00:00;25
+2025-11-23 23:10:00;25
+2025-11-23 23:20:00;25
+2025-11-23 23:30:00;25
+2025-11-23 23:40:00;25
+2025-11-23 23:50:00;25
+2025-11-24 00:00:00;24
+2025-11-24 00:10:00;24
+2025-11-24 00:20:00;24
+2025-11-24 00:30:00;24
+2025-11-24 00:40:00;24
+2025-11-24 00:50:00;24
+2025-11-24 01:00:00;24
+2025-11-24 01:10:00;24
+2025-11-24 01:20:00;25
+2025-11-24 01:30:00;24
+2025-11-24 01:40:00;24
+2025-11-24 01:50:00;24
+2025-11-24 02:00:00;24
+2025-11-24 02:10:00;24
+2025-11-24 02:20:00;24
+2025-11-24 02:30:00;24
+2025-11-24 02:40:00;24
+2025-11-24 02:50:00;24
+2025-11-24 03:00:00;24
+2025-11-24 03:10:00;23
+2025-11-24 03:20:00;24
+2025-11-24 03:30:00;23
+2025-11-24 03:40:00;24
+2025-11-24 03:50:00;23
+2025-11-24 04:00:00;23
+2025-11-24 04:10:00;23
+2025-11-24 04:20:00;23
+2025-11-24 04:30:00;24
+2025-11-24 04:40:00;23
+2025-11-24 04:50:00;24
+2025-11-24 05:00:00;23
+2025-11-24 05:10:00;23
+2025-11-24 05:20:00;23
+2025-11-24 05:30:00;24
+2025-11-24 05:40:00;23
+2025-11-24 05:50:00;23
+2025-11-24 06:00:00;23
+2025-11-24 06:10:00;24
+2025-11-24 06:20:00;23
+2025-11-24 06:30:00;23
+2025-11-24 06:40:00;23
+2025-11-24 06:50:00;24
+2025-11-24 07:00:00;23
+2025-11-24 07:10:00;23
+2025-11-24 07:20:00;24
+2025-11-24 07:30:00;23
+2025-11-24 07:40:00;23
+2025-11-24 07:50:00;23
+2025-11-24 08:00:00;23
+2025-11-24 08:10:00;23
+2025-11-24 08:20:00;23
+2025-11-24 08:30:00;23
+2025-11-24 08:40:00;23
+2025-11-24 08:50:00;23
+2025-11-24 09:00:00;23
+2025-11-24 09:10:00;23
+2025-11-24 09:20:00;23
+2025-11-24 09:30:00;23
+2025-11-24 09:40:00;23
+2025-11-24 09:50:00;23
+2025-11-24 10:00:00;22
+2025-11-24 10:10:00;22
+2025-11-24 10:20:00;23
+2025-11-24 10:30:00;22
+2025-11-24 10:40:00;22
+2025-11-24 10:50:00;22
+2025-11-24 11:00:00;22
+2025-11-24 11:10:00;22
+2025-11-24 11:20:00;22
+2025-11-24 11:30:00;21
+2025-11-24 11:40:00;22
+2025-11-24 11:50:00;21
+2025-11-24 12:00:00;21
+`;
 const floodThresholds = [
   { label: "SPA 1", value: 90, color: "#22c55e" },
   { label: "SPA 2", value: 100, color: "#facc15" },
   { label: "SPA 3", value: 120, color: "#f97316" },
 ];
-function buildHistory(hours = 72, start = 38, variance = 4) {
-  const history = [];
-  for (let i = 0; i < hours; i += 1) {
-    const wave = Math.sin(i / 8) * 1.5;
-    const drift = i * 0.02;
-    const micro = Math.cos(i / 5) * 0.8;
-    const swing = ((i % 12) / 12) * (variance * 0.6);
-    const value = Math.max(24, Math.round((start + wave + drift + micro + swing) * 10) / 10);
-    history.push(value);
-  }
-  return history;
-}
-
-let streamHistory = buildHistory();
+let streamHistory = [];
 const streamState = {
-  level: `${streamHistory.at(-1)} cm`,
+  level: "Načítám…",
   updated: "Základní údaje",
-  numeric: streamHistory.at(-1),
+  numeric: null,
   status: "Načítám…",
 };
+
+function parseStreamCsv(csvText = "") {
+  return csvText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [ts, value] = line.split(";").map((p) => p.trim());
+      const numeric = Number(value?.replace(",", "."));
+      const parsedDate = Date.parse(ts.replace(" ", "T"));
+      return {
+        ts,
+        date: Number.isFinite(parsedDate) ? new Date(parsedDate) : null,
+        numeric: Number.isFinite(numeric) ? numeric : null,
+      };
+    })
+    .filter((entry) => entry.numeric != null);
+}
+
+function setStreamHistory(entries) {
+  if (!entries || !entries.length) return;
+  entries.sort((a, b) => {
+    const aTime = a.date ? a.date.getTime() : 0;
+    const bTime = b.date ? b.date.getTime() : 0;
+    return aTime - bTime;
+  });
+
+  streamHistory = entries.map((e) => e.numeric);
+  while (streamHistory.length > 72) streamHistory.shift();
+
+  const latest = entries.at(-1);
+  streamState.numeric = latest.numeric;
+  streamState.level = `${latest.numeric} cm`;
+  streamState.updated = latest.date
+    ? latest.date.toLocaleString("cs-CZ", { timeZone: "Europe/Prague" })
+    : latest.ts;
+  streamState.status = "CSV data (hladina.csv)";
+}
+
+async function loadStreamHistory() {
+  const url = `${dataBaseUrl}/hladina.csv`;
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const csv = await response.text();
+    const parsed = parseStreamCsv(csv);
+    if (parsed.length) {
+      setStreamHistory(parsed);
+      return parsed;
+    }
+    throw new Error("Prázdný soubor hladiny");
+  } catch (error) {
+    console.warn(`Nepodařilo se načíst hladinovou historii (${url})`, error);
+    const fallbackParsed = parseStreamCsv(fallbackStreamCsv);
+    setStreamHistory(fallbackParsed);
+    return fallbackParsed;
+  }
+}
 
 async function loadDataset(name, fallback = []) {
   const url = `${dataBaseUrl}/${name}.json`;
@@ -311,12 +503,13 @@ async function loadKoseTelemetry() {
 }
 
 async function loadAllData() {
-  const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene] = await Promise.all([
+  const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory] = await Promise.all([
     loadDataset("kose", fallbackKoseDefinitions),
     loadKoseTelemetry(),
     loadDataset("lampy", fallbackLampy),
     loadDataset("kontejnery", fallbackKontejnery),
     loadDataset("zelene", fallbackZelene),
+    loadStreamHistory(),
   ]);
 
   dataKose = mergeKose(koseDefinitions, koseTelemetry);

@@ -187,7 +187,14 @@ const wasteSchedule = {
   contactEmail: "info@beloky.cz",
 };
 
-const streamEndpoint = "https://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
+// Primární zdroj hladiny a seznam záložních adres (kvůli CORS a mixovanému obsahu na GitHub Pages).
+const streamSourceUrl = "http://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
+const streamFetchCandidates = [
+  `https://cors.isomorphic-git.org/${streamSourceUrl}`,
+  `https://cors.isomorphic-git.org/${streamSourceUrl.replace("http://", "https://")}`,
+  streamSourceUrl.replace("http://", "https://"),
+  streamSourceUrl,
+];
 const floodThresholds = [
   { label: "SPA 1", value: 90, color: "#22c55e" },
   { label: "SPA 2", value: 100, color: "#facc15" },
@@ -758,51 +765,75 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function fetchStreamLevel() {
-    try {
-      const response = await fetch(streamEndpoint, { cache: "no-store" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const html = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
+  function extractStreamData(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
 
-      const valueCandidate =
-        doc.querySelector(".sensor-value, .value, .measurement, .card-body strong")?.textContent ||
-        doc.querySelector("[data-value]")?.getAttribute("data-value");
-      const timeCandidate =
-        doc.querySelector("time")?.textContent ||
-        doc.querySelector(".timestamp")?.textContent;
+    const fallbackValue = doc
+      .querySelector(".sensor-value, .value, .measurement, .card-body strong, [data-value]")
+      ?.textContent;
+    const fallbackTime = doc.querySelector("time, .timestamp")?.textContent;
 
-      const valueFromText = (() => {
-        const match = html.match(/([0-9]+(?:[.,][0-9]+)?)\s*(cm|m)/i);
-        if (match) return `${match[1].replace(",", ".")} ${match[2]}`;
-        return valueCandidate ? valueCandidate.trim() : null;
-      })();
-
-      const timeFromText = (() => {
-        const match = html.match(/(\d{1,2}\.\d{1,2}\.\d{4}[^\d]*\d{1,2}:\d{2})/);
-        if (match) return match[1];
-        return timeCandidate ? timeCandidate.trim() : null;
-      })();
-
-      streamState.level = valueFromText || streamState.level;
-      streamState.updated = timeFromText || streamState.updated || new Date().toLocaleString("cs-CZ");
-      const numericMatch = (valueFromText || "").match(/([0-9]+(?:[.,][0-9]+)?)/);
-      streamState.numeric = numericMatch ? parseFloat(numericMatch[1].replace(",", ".")) : streamState.numeric;
-      if (streamState.numeric != null && !Number.isNaN(streamState.numeric)) {
-        streamHistory = [...streamHistory.slice(-(72 - 1)), streamState.numeric];
+    const valueFromText = (() => {
+      const regexes = [
+        /Aktuální[^0-9]*([0-9]+(?:[.,][0-9]+)?)\s*cm/i,
+        /([0-9]+(?:[.,][0-9]+)?)\s*cm/i,
+      ];
+      for (const r of regexes) {
+        const match = html.match(r);
+        if (match) return `${match[1].replace(",", ".")} cm`;
       }
-      streamState.status = `Live data · ${new Date().toLocaleTimeString("cs-CZ")}`;
-    } catch (err) {
+      return fallbackValue ? fallbackValue.trim() : null;
+    })();
+
+    const timeFromText = (() => {
+      const match = html.match(/(\d{1,2}\.\d{1,2}\.\d{4}[^\d]*\d{1,2}:\d{2})/);
+      if (match) return match[1];
+      return fallbackTime ? fallbackTime.trim() : null;
+    })();
+
+    const numericMatch = (valueFromText || "").match(/([0-9]+(?:[.,][0-9]+)?)/);
+    const numeric = numericMatch ? parseFloat(numericMatch[1].replace(",", ".")) : null;
+
+    return { valueFromText, timeFromText, numeric };
+  }
+
+  async function fetchStreamLevel() {
+    let lastError = null;
+    for (const candidate of streamFetchCandidates) {
+      try {
+        const response = await fetch(candidate, { cache: "no-store", mode: "cors" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const html = await response.text();
+
+        const { valueFromText, timeFromText, numeric } = extractStreamData(html);
+        if (valueFromText) streamState.level = valueFromText;
+        if (timeFromText) streamState.updated = timeFromText;
+        if (numeric != null && !Number.isNaN(numeric)) {
+          streamState.numeric = numeric;
+          streamHistory = [...streamHistory.slice(-(72 - 1)), numeric];
+        }
+
+        streamState.updated = streamState.updated || new Date().toLocaleString("cs-CZ");
+        streamState.status = `Live data (${new URL(candidate).hostname}) · ${new Date().toLocaleTimeString("cs-CZ")}`;
+        lastError = null;
+        break;
+      } catch (err) {
+        lastError = err;
+        continue;
+      }
+    }
+
+    if (lastError) {
       streamState.level = streamState.level || `${streamHistory.at(-1)} cm`;
       streamState.updated = streamState.updated || "Zdroj nepřístupný";
       streamState.numeric = streamState.numeric || streamHistory.at(-1);
-      streamState.status = "Zdroj nepřístupný";
-      console.warn("Chyba při načítání hladiny", err);
-    } finally {
-      populateLayer("hladina");
-      updateCounters();
+      streamState.status = "Zdroj nepřístupný (CORS / blokováno)";
+      console.warn("Chyba při načítání hladiny", lastError);
     }
+
+    populateLayer("hladina");
+    updateCounters();
   }
 
   setActiveCategory("kose");

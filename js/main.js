@@ -214,22 +214,49 @@ window.addEventListener("DOMContentLoaded", async () => {
     return list;
   }
 
-  function renderStreamChart(latestValue = null) {
+  function renderStreamChart(latestValue = null, latestTime = null) {
     const chart = document.getElementById("levelChart");
     if (!chart) return;
 
-    const series = [...streamHistory];
+    const values = [...streamHistory];
+    const times = streamHistoryTimes.map((t) => (t instanceof Date && Number.isFinite(t.getTime()) ? t : null));
     const normalizedLatest = latestValue != null ? latestValue : streamState.numeric;
     if (normalizedLatest != null) {
-      series.push(normalizedLatest);
+      values.push(normalizedLatest);
+      times.push(latestTime instanceof Date && Number.isFinite(latestTime.getTime()) ? latestTime : new Date());
     }
 
-    while (series.length > 72) series.shift();
+    let latestTimestamp = null;
+    for (let i = times.length - 1; i >= 0; i -= 1) {
+      const candidate = times[i];
+      if (candidate instanceof Date && Number.isFinite(candidate.getTime())) {
+        latestTimestamp = candidate;
+        break;
+      }
+    }
+
+    const cutoff = latestTimestamp ? latestTimestamp.getTime() - STREAM_MAX_WINDOW_HOURS * 60 * 60 * 1000 : null;
+    const filteredValues = [];
+    const filteredTimes = [];
+    values.forEach((val, idx) => {
+      const t = times[idx];
+      if (cutoff && t instanceof Date && Number.isFinite(t.getTime()) && t.getTime() < cutoff) return;
+      filteredValues.push(val);
+      filteredTimes.push(t);
+    });
+
+    const series = filteredValues.length ? filteredValues : values;
+    const seriesTimes = filteredTimes.length ? filteredTimes : times;
+
+    if (!series.length) {
+      chart.innerHTML = "";
+      return;
+    }
 
     const width = 720;
     const height = 320;
-    const paddingLeft = 44;
-    const paddingRight = 92;
+    const paddingLeft = 48;
+    const paddingRight = 118;
     const paddingY = 36;
 
     const thresholdValues = floodThresholds.map((t) => t.value);
@@ -237,20 +264,48 @@ window.addEventListener("DOMContentLoaded", async () => {
     const maxVal = Math.max(...series, ...thresholdValues) + 6;
     const range = Math.max(maxVal - minVal, 1);
 
+    const startTime = seriesTimes.find((t) => t instanceof Date && Number.isFinite(t.getTime()));
+    const endTime = latestTimestamp || startTime;
+    const totalSpan = startTime && endTime ? Math.max(endTime.getTime() - startTime.getTime(), 1) : series.length;
+
     const points = series.map((val, idx) => {
-      const x =
-        paddingLeft + (idx / (series.length - 1)) * (width - paddingLeft - paddingRight);
+      const t = seriesTimes[idx];
+      const ratio = startTime && endTime && t instanceof Date && Number.isFinite(t.getTime())
+        ? Math.max(0, Math.min(1, (t.getTime() - startTime.getTime()) / totalSpan))
+        : (series.length === 1 ? 0 : idx / (series.length - 1));
+      const x = paddingLeft + ratio * (width - paddingLeft - paddingRight);
       const y = height - paddingY - ((val - minVal) / range) * (height - paddingY * 2);
-      return { x, y };
+      return { x, y, idx };
     });
 
     const pathD = points.map((p, idx) => `${idx === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
     const areaD = `${pathD} L${points.at(-1).x},${height - paddingY} L${points[0].x},${height - paddingY} Z`;
 
-    const gridLines = [0.25, 0.5, 0.75].map((ratio) => {
-      const y = paddingY + (height - paddingY * 2) * ratio;
-      return `<line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" class="chart-grid" />`;
-    }).join("");
+    const gridLines = [0.25, 0.5, 0.75]
+      .map((ratio) => {
+        const y = paddingY + (height - paddingY * 2) * ratio;
+        return `<line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" class="chart-grid" />`;
+      })
+      .join("");
+
+    const tickCount = Math.min(6, points.length);
+    const tickIndices = new Set();
+    for (let i = 0; i < tickCount; i += 1) {
+      tickIndices.add(Math.round((i / (tickCount - 1 || 1)) * (points.length - 1)));
+    }
+    const ticks = points
+      .map((p, idx) => {
+        if (!tickIndices.has(idx)) return "";
+        const t = seriesTimes[idx];
+        const label =
+          t instanceof Date && Number.isFinite(t.getTime())
+            ? t.toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })
+            : idx === points.length - 1
+              ? "Nyní"
+              : `-${points.length - 1 - idx}h`;
+        return `<text x="${p.x}" y="${height - paddingY + 16}" class="chart-label">${label}</text>`;
+      })
+      .join("");
 
     chart.innerHTML = `
       <defs>
@@ -272,16 +327,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         .join("")}
       <path d="${areaD}" class="chart-area" />
       <path d="${pathD}" class="chart-line" />
-      ${points
-        .map((p, idx) => {
-          const isTick = idx % 12 === 0 || idx === points.length - 1;
-          const hoursAgo = points.length - 1 - idx;
-          const label = idx === points.length - 1 ? "Nyní" : `-${hoursAgo}h`;
-          return `
-            ${isTick ? `<text x="${p.x}" y="${height - paddingY + 16}" class="chart-label">${label}</text>` : ""}
-          `;
-        })
-        .join("")}
+      ${ticks}
       <text x="${points.at(-1).x}" y="${points.at(-1).y - 12}" class="chart-value">${series.at(-1)} cm</text>
     `;
   }
@@ -443,7 +489,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       streamUpdatedEl.textContent = streamState.updated ? `Aktualizace: ${streamState.updated}` : "Načítám…";
     }
     if (streamStatusEl) streamStatusEl.textContent = streamState.status || "–";
-    renderStreamChart(streamState.numeric);
+    renderStreamChart(streamState.numeric, streamHistoryTimes.at(-1));
   }
 
   function updateWasteDashboard() {
@@ -661,6 +707,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     return { valueFromText, timeFromText, numeric };
   }
 
+  function parseTimestamp(value) {
+    if (!value) return null;
+    const normalized = value.replace(" ", "T");
+    const ts = Date.parse(normalized);
+    return Number.isFinite(ts) ? new Date(ts) : null;
+  }
+
   async function fetchStreamLevel() {
     let lastError = null;
     for (const candidate of streamFetchCandidates) {
@@ -671,13 +724,19 @@ window.addEventListener("DOMContentLoaded", async () => {
 
         const { valueFromText, timeFromText, numeric } = extractStreamData(html);
         if (numeric != null && !Number.isNaN(numeric)) {
-          streamState.numeric = numeric;
-          streamState.level = `${numeric} cm`;
-          streamHistory = [...streamHistory.slice(-(72 - 1)), numeric];
+          const parsedTime = parseTimestamp(timeFromText) || new Date();
+          pushStreamReading(numeric, parsedTime);
+          streamState.numeric = streamHistory.at(-1);
+          streamState.level = `${streamState.numeric} cm`;
         } else if (valueFromText) {
           streamState.level = valueFromText;
         }
-        if (timeFromText) streamState.updated = timeFromText;
+        if (timeFromText) {
+          const parsedTime = parseTimestamp(timeFromText);
+          streamState.updated = parsedTime
+            ? parsedTime.toLocaleString("cs-CZ", { timeZone: "Europe/Prague" })
+            : timeFromText;
+        }
 
         streamState.updated = streamState.updated || new Date().toLocaleString("cs-CZ");
         streamState.status = `Live data (${new URL(candidate).hostname}) · ${new Date().toLocaleTimeString("cs-CZ")}`;
@@ -701,10 +760,31 @@ window.addEventListener("DOMContentLoaded", async () => {
     updateCounters();
   }
 
+  async function refreshStreamData(manual = false) {
+    const btn = document.getElementById("refreshStreamBtn");
+    if (manual && btn) {
+      btn.disabled = true;
+      btn.textContent = "Obnovuji…";
+    }
+
+    await loadStreamHistory();
+    updateCounters();
+    await fetchStreamLevel();
+
+    if (manual && btn) {
+      btn.disabled = false;
+      btn.textContent = "↻ Obnovit";
+    }
+  }
+
   setActiveCategory("kose");
   setupSidebarToggle();
   initNav();
   refreshMapSize(0);
   window.addEventListener("resize", () => refreshMapSize(80));
+  const refreshButton = document.getElementById("refreshStreamBtn");
+  if (refreshButton) {
+    refreshButton.addEventListener("click", () => refreshStreamData(true));
+  }
   fetchStreamLevel();
 });

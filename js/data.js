@@ -355,7 +355,10 @@ const floodThresholds = [
   { label: "SPA 2", value: 100, color: "#facc15" },
   { label: "SPA 3", value: 120, color: "#f97316" },
 ];
+
+const STREAM_MAX_WINDOW_HOURS = 24;
 let streamHistory = [];
+let streamHistoryTimes = [];
 const streamState = {
   level: "Načítám…",
   updated: "Základní údaje",
@@ -381,6 +384,38 @@ function parseStreamCsv(csvText = "") {
     .filter((entry) => entry.numeric != null);
 }
 
+function trimStreamWindow() {
+  const latestTime = [...streamHistoryTimes].reverse().find((d) => d instanceof Date && Number.isFinite(d.getTime()));
+  if (latestTime instanceof Date) {
+    const cutoff = latestTime.getTime() - STREAM_MAX_WINDOW_HOURS * 60 * 60 * 1000;
+    while (
+      streamHistoryTimes.length &&
+      streamHistoryTimes[0] instanceof Date &&
+      Number.isFinite(streamHistoryTimes[0].getTime()) &&
+      streamHistoryTimes[0].getTime() < cutoff
+    ) {
+      streamHistoryTimes.shift();
+      streamHistory.shift();
+    }
+  }
+
+  // Safety net: keep a reasonable number of points even if timestamps chybí
+  const maxPoints = 6 * STREAM_MAX_WINDOW_HOURS; // e.g. 10min interval ~144 bodů
+  while (streamHistory.length > maxPoints) {
+    streamHistory.shift();
+    streamHistoryTimes.shift();
+  }
+}
+
+function pushStreamReading(value, timestamp = new Date()) {
+  if (value == null || Number.isNaN(value)) return;
+  const safeTime =
+    timestamp instanceof Date && Number.isFinite(timestamp.getTime()) ? timestamp : new Date();
+  streamHistory.push(value);
+  streamHistoryTimes.push(safeTime);
+  trimStreamWindow();
+}
+
 function setStreamHistory(entries) {
   if (!entries || !entries.length) return;
   entries.sort((a, b) => {
@@ -389,8 +424,13 @@ function setStreamHistory(entries) {
     return aTime - bTime;
   });
 
-  streamHistory = entries.map((e) => e.numeric);
-  while (streamHistory.length > 72) streamHistory.shift();
+  streamHistory = [];
+  streamHistoryTimes = [];
+  entries.forEach((entry) => {
+    if (entry.numeric != null) {
+      pushStreamReading(entry.numeric, entry.date);
+    }
+  });
 
   const latest = entries.at(-1);
   streamState.numeric = latest.numeric;

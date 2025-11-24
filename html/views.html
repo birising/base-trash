@@ -11,10 +11,15 @@
       <div class="chart-header">
         <div>
           <div class="eyebrow">Trend</div>
-          <div class="headline small">Posledních 72 hodin</div>
-          <div class="chart-sub">Včetně posledního naměřeného stavu a povodňových stupňů</div>
+          <div class="headline small">Posledních 24 hodin</div>
+          <div class="chart-sub">CSV + live hodnoty, včetně povodňových stupňů</div>
         </div>
-        <span class="stat-chip subtle">Live</span>
+        <div class="chart-actions">
+          <button class="chart-refresh" id="refreshStreamBtn" type="button" aria-label="Obnovit data hladiny">
+            ↻ Obnovit
+          </button>
+          <span class="stat-chip subtle">Live</span>
+        </div>
       </div>
       <div class="legend" aria-hidden="true">
         <div class="legend-item"><span class="legend-swatch level"></span>Hladina (cm)</div>

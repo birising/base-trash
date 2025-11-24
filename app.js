@@ -139,7 +139,8 @@ const dataHladina = [
 ];
 
 const streamEndpoint = "https://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
-const streamState = { level: null, updated: null };
+const streamState = { level: null, updated: null, numeric: null };
+const streamHistoryBase = [35, 37, 36, 42, 40, 38];
 
 function showMapError(message) {
   const mapContainer = document.getElementById("map");
@@ -198,8 +199,63 @@ window.addEventListener("DOMContentLoaded", () => {
   };
 
   const levelReading = document.getElementById("levelReading");
+  const streamLevelEl = document.getElementById("streamLevel");
+  const streamUpdatedEl = document.getElementById("streamUpdated");
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
+  const mapOverlay = document.getElementById("mapOverlay");
+  const mapView = document.getElementById("mapView");
+  const streamView = document.getElementById("streamView");
+
+  function renderStreamChart(latestValue = null) {
+    const chart = document.getElementById("levelChart");
+    if (!chart) return;
+
+    const values = [...streamHistoryBase, latestValue != null ? latestValue : streamHistoryBase.at(-1)];
+    const labels = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
+    const width = 420;
+    const height = 180;
+    const padding = 26;
+
+    const minVal = Math.min(...values) - 2;
+    const maxVal = Math.max(...values) + 2;
+    const range = Math.max(maxVal - minVal, 1);
+
+    const points = values.map((val, idx) => {
+      const x = padding + (idx / (values.length - 1)) * (width - padding * 2);
+      const y = height - padding - ((val - minVal) / range) * (height - padding * 2);
+      return { x, y };
+    });
+
+    const pathD = points.map((p, idx) => `${idx === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+    const areaD = `${pathD} L${points.at(-1).x},${height - padding} L${points[0].x},${height - padding} Z`;
+
+    const gridLines = [0.25, 0.5, 0.75].map((ratio) => {
+      const y = padding + (height - padding * 2) * ratio;
+      return `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" class="chart-grid" />`;
+    }).join("");
+
+    chart.innerHTML = `
+      <defs>
+        <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#6ff0d5" stop-opacity="0.35" />
+          <stop offset="100%" stop-color="#6ff0d5" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+      <rect x="${padding}" y="${padding}" width="${width - padding * 2}" height="${height - padding * 2}" rx="12" class="chart-frame" />
+      ${gridLines}
+      <path d="${areaD}" class="chart-area" />
+      <path d="${pathD}" class="chart-line" />
+      ${points
+        .map(
+          (p, idx) => `
+          <circle cx="${p.x}" cy="${p.y}" r="4" class="chart-dot" />
+          <text x="${p.x}" y="${height - padding + 16}" class="chart-label">${labels[idx] || ""}</text>`
+        )
+        .join("")}
+      <text x="${points.at(-1).x}" y="${points.at(-1).y - 12}" class="chart-value">${values.at(-1)} cm</text>
+    `;
+  }
 
   function createMarker(item, color) {
     const { lat, lng, name } = item;
@@ -267,6 +323,11 @@ window.addEventListener("DOMContentLoaded", () => {
         ? `Aktualizace: ${streamState.updated}`
         : "Načítám data senzorů…";
     }
+    if (streamLevelEl) streamLevelEl.textContent = streamState.level || "–";
+    if (streamUpdatedEl) {
+      streamUpdatedEl.textContent = streamState.updated ? `Aktualizace: ${streamState.updated}` : "Načítám…";
+    }
+    renderStreamChart(streamState.numeric);
   }
 
   updateCounters();
@@ -274,6 +335,7 @@ window.addEventListener("DOMContentLoaded", () => {
   Object.values(layers).forEach((layer) => layer.addTo(map));
 
   function setActiveCategory(category) {
+    const isStreamView = category === "hladina";
     Object.entries(layers).forEach(([key, layer]) => {
       if (key === category) {
         map.addLayer(layer);
@@ -292,18 +354,20 @@ window.addEventListener("DOMContentLoaded", () => {
     const targetStat = document.querySelector(`.stat-card[data-category="${category}"]`);
     if (targetStat) targetStat.classList.add('active');
 
-    const activeData =
-      category === "kose"
-        ? dataKose
-        : category === "lampy"
-          ? dataLampy
-          : category === "kontejnery"
-            ? dataKontejnery
-            : dataHladina;
-    const coords = activeData.map((item) => [item.lat, item.lng]);
-    if (coords.length) {
-      const bounds = L.latLngBounds(coords);
-      map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+    if (!isStreamView) {
+      const activeData =
+        category === "kose"
+          ? dataKose
+          : category === "lampy"
+            ? dataLampy
+            : category === "kontejnery"
+              ? dataKontejnery
+              : dataHladina;
+      const coords = activeData.map((item) => [item.lat, item.lng]);
+      if (coords.length) {
+        const bounds = L.latLngBounds(coords);
+        map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+      }
     }
 
     if (categoryLabel) {
@@ -318,7 +382,13 @@ window.addEventListener("DOMContentLoaded", () => {
       categoryLabel.textContent = `${labelText}`;
     }
 
-    refreshMapSize();
+    if (mapOverlay) mapOverlay.classList.toggle("hidden", isStreamView);
+    if (mapView) mapView.classList.toggle("hidden", isStreamView);
+    if (streamView) streamView.classList.toggle("hidden", !isStreamView);
+
+    if (!isStreamView) {
+      refreshMapSize();
+    }
   }
 
   function setupSidebarToggle() {
@@ -422,6 +492,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
       streamState.level = valueFromText || streamState.level;
       streamState.updated = timeFromText || streamState.updated;
+      const numericMatch = (valueFromText || "").match(/([0-9]+(?:[.,][0-9]+)?)/);
+      streamState.numeric = numericMatch ? parseFloat(numericMatch[1].replace(",", ".")) : streamState.numeric;
     } catch (err) {
       streamState.level = streamState.level || "Nedostupné";
       streamState.updated = streamState.updated || "Zdroj nepřístupný";

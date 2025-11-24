@@ -88,6 +88,23 @@
       </div>
       <section id="streamView" class="view stream-view hidden" aria-label="Hladina potoka a počasí">
         <div class="stream-grid">
+          <div class="stream-card chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="eyebrow">Trend</div>
+                <div class="headline small">Posledních 72 hodin</div>
+                <div class="chart-sub">Včetně posledního naměřeného stavu a povodňových stupňů</div>
+              </div>
+              <span class="stat-chip subtle">Live</span>
+            </div>
+            <div class="legend" aria-hidden="true">
+              <div class="legend-item"><span class="legend-swatch level"></span>Hladina (cm)</div>
+              <div class="legend-item"><span class="legend-swatch spa1"></span>SPA 1 · 90 cm</div>
+              <div class="legend-item"><span class="legend-swatch spa2"></span>SPA 2 · 100 cm</div>
+              <div class="legend-item"><span class="legend-swatch spa3"></span>SPA 3 · 120 cm</div>
+            </div>
+            <svg id="levelChart" viewBox="0 0 720 320" role="img" aria-label="Graf hladiny potoka"></svg>
+          </div>
           <div class="stream-card hero">
             <div class="eyebrow">Hladina potoka</div>
             <div class="stream-headline">Live přehled</div>
@@ -112,23 +129,6 @@
             <a class="source-link" href="https://hladiny-vox.pwsplus.eu/Senzors/Details/24470" target="_blank" rel="noopener noreferrer">
               Zdroj dat · hladiny-vox.pwsplus.eu
             </a>
-          </div>
-          <div class="stream-card chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="eyebrow">Trend</div>
-                <div class="headline small">Posledních 72 hodin</div>
-                <div class="chart-sub">Včetně posledního naměřeného stavu a povodňových stupňů</div>
-              </div>
-              <span class="stat-chip subtle">Live</span>
-            </div>
-            <div class="legend" aria-hidden="true">
-              <div class="legend-item"><span class="legend-swatch level"></span>Hladina (cm)</div>
-              <div class="legend-item"><span class="legend-swatch spa1"></span>SPA 1 · 90 cm</div>
-              <div class="legend-item"><span class="legend-swatch spa2"></span>SPA 2 · 100 cm</div>
-              <div class="legend-item"><span class="legend-swatch spa3"></span>SPA 3 · 120 cm</div>
-            </div>
-            <svg id="levelChart" viewBox="0 0 580 260" role="img" aria-label="Graf hladiny potoka"></svg>
           </div>
           <div class="stream-card wide">
             <div class="chart-header">

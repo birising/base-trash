@@ -300,11 +300,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
     while (series.length > 72) series.shift();
 
-    const width = 580;
-    const height = 260;
-    const paddingLeft = 32;
-    const paddingRight = 68;
-    const paddingY = 32;
+    const width = 720;
+    const height = 320;
+    const paddingLeft = 44;
+    const paddingRight = 92;
+    const paddingY = 36;
 
     const thresholdValues = floodThresholds.map((t) => t.value);
     const minVal = Math.min(...series, ...thresholdValues) - 4;

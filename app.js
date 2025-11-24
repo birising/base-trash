@@ -139,11 +139,24 @@ const dataHladina = [
 ];
 
 const streamEndpoint = "https://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
-const streamHistoryBase = [35, 37, 36, 42, 40, 38];
+function buildHistory(hours = 72, start = 38, variance = 4) {
+  const history = [];
+  for (let i = 0; i < hours; i += 1) {
+    const wave = Math.sin(i / 8) * 1.5;
+    const drift = i * 0.02;
+    const micro = Math.cos(i / 5) * 0.8;
+    const swing = ((i % 12) / 12) * (variance * 0.6);
+    const value = Math.max(24, Math.round((start + wave + drift + micro + swing) * 10) / 10);
+    history.push(value);
+  }
+  return history;
+}
+
+let streamHistory = buildHistory();
 const streamState = {
-  level: `${streamHistoryBase.at(-1)} cm`,
+  level: `${streamHistory.at(-1)} cm`,
   updated: "Základní údaje",
-  numeric: streamHistoryBase.at(-1),
+  numeric: streamHistory.at(-1),
 };
 
 function showMapError(message) {
@@ -215,18 +228,24 @@ window.addEventListener("DOMContentLoaded", () => {
     const chart = document.getElementById("levelChart");
     if (!chart) return;
 
-    const values = [...streamHistoryBase, latestValue != null ? latestValue : streamHistoryBase.at(-1)];
-    const labels = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
-    const width = 420;
-    const height = 180;
-    const padding = 26;
+    const series = [...streamHistory];
+    const normalizedLatest = latestValue != null ? latestValue : streamState.numeric;
+    if (normalizedLatest != null) {
+      series.push(normalizedLatest);
+    }
 
-    const minVal = Math.min(...values) - 2;
-    const maxVal = Math.max(...values) + 2;
+    while (series.length > 72) series.shift();
+
+    const width = 540;
+    const height = 260;
+    const padding = 32;
+
+    const minVal = Math.min(...series) - 2;
+    const maxVal = Math.max(...series) + 2;
     const range = Math.max(maxVal - minVal, 1);
 
-    const points = values.map((val, idx) => {
-      const x = padding + (idx / (values.length - 1)) * (width - padding * 2);
+    const points = series.map((val, idx) => {
+      const x = padding + (idx / (series.length - 1)) * (width - padding * 2);
       const y = height - padding - ((val - minVal) / range) * (height - padding * 2);
       return { x, y };
     });
@@ -251,13 +270,17 @@ window.addEventListener("DOMContentLoaded", () => {
       <path d="${areaD}" class="chart-area" />
       <path d="${pathD}" class="chart-line" />
       ${points
-        .map(
-          (p, idx) => `
-          <circle cx="${p.x}" cy="${p.y}" r="4" class="chart-dot" />
-          <text x="${p.x}" y="${height - padding + 16}" class="chart-label">${labels[idx] || ""}</text>`
-        )
+        .map((p, idx) => {
+          const isTick = idx % 12 === 0 || idx === points.length - 1;
+          const hoursAgo = points.length - 1 - idx;
+          const label = idx === points.length - 1 ? "Nyní" : `-${hoursAgo}h`;
+          return `
+            <circle cx="${p.x}" cy="${p.y}" r="4" class="chart-dot" />
+            ${isTick ? `<text x="${p.x}" y="${height - padding + 16}" class="chart-label">${label}</text>` : ""}
+          `;
+        })
         .join("")}
-      <text x="${points.at(-1).x}" y="${points.at(-1).y - 12}" class="chart-value">${values.at(-1)} cm</text>
+      <text x="${points.at(-1).x}" y="${points.at(-1).y - 12}" class="chart-value">${series.at(-1)} cm</text>
     `;
   }
 
@@ -323,9 +346,9 @@ window.addEventListener("DOMContentLoaded", () => {
       counters.hladina.textContent = streamState.level ? streamState.level : `${dataHladina.length} senzor`;
     }
     if (levelReading) {
-      levelReading.textContent = streamState.updated
-        ? `Aktualizace: ${streamState.updated}`
-        : "Načítám data senzorů…";
+      const levelText = streamState.level ? `Aktuální: ${streamState.level}` : "Načítám data senzorů…";
+      const stamp = streamState.updated ? ` · ${streamState.updated}` : "";
+      levelReading.textContent = `${levelText}${stamp}`;
     }
     if (streamLevelEl) streamLevelEl.textContent = streamState.level || "–";
     if (streamUpdatedEl) {
@@ -498,10 +521,13 @@ window.addEventListener("DOMContentLoaded", () => {
       streamState.updated = timeFromText || streamState.updated;
       const numericMatch = (valueFromText || "").match(/([0-9]+(?:[.,][0-9]+)?)/);
       streamState.numeric = numericMatch ? parseFloat(numericMatch[1].replace(",", ".")) : streamState.numeric;
+      if (streamState.numeric != null && !Number.isNaN(streamState.numeric)) {
+        streamHistory = [...streamHistory.slice(-(72 - 1)), streamState.numeric];
+      }
     } catch (err) {
-      streamState.level = streamState.level || `${streamHistoryBase.at(-1)} cm`;
+      streamState.level = streamState.level || `${streamHistory.at(-1)} cm`;
       streamState.updated = streamState.updated || "Zdroj nepřístupný";
-      streamState.numeric = streamState.numeric || streamHistoryBase.at(-1);
+      streamState.numeric = streamState.numeric || streamHistory.at(-1);
       console.warn("Chyba při načítání hladiny", err);
     } finally {
       populateLayer("hladina");

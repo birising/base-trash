@@ -306,6 +306,19 @@ const fallbackZelene = [
       [50.133257, 14.220318],
     ],
   },
+  {
+    name: "Plocha u křižovatky",
+    description: "Travnatý trojúhelník u křižovatky",
+    category: "zelen",
+    lastMowed: "2024-06-18 09:15",
+    frequency: "1× za 2 týdny",
+    coords: [
+      [50.129189, 14.221788],
+      [50.128945, 14.221615],
+      [50.12887, 14.221849],
+      [50.129148, 14.22201],
+    ],
+  },
 ];
 
 let dataKose = [];

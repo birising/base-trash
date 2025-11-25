@@ -130,6 +130,7 @@ const fallbackZelene = [
     name: "Zelený pás u potoka",
     description: "Travnatý úsek podél potoka",
     category: "zelen",
+    type: "trava",
     lastMowed: "2024-05-18 10:00",
     frequency: "1× za 3 týdny",
     coords: [
@@ -152,6 +153,7 @@ const fallbackZelene = [
     name: "Remízek u polní cesty",
     description: "Tráva s náletovými keři",
     category: "zelen",
+    type: "trava",
     lastMowed: "2024-05-22 08:15",
     frequency: "1× za 3 týdny",
     coords: [
@@ -175,6 +177,7 @@ const fallbackZelene = [
     name: "Louka u polní cesty",
     description: "Sekaná louka se smrkovým pásmem",
     category: "zelen",
+    type: "trava",
     lastMowed: "2024-05-28 07:50",
     frequency: "1× za 3 týdny",
     coords: [
@@ -201,6 +204,7 @@ const fallbackZelene = [
     name: "Plácek u dvora",
     description: "Travnatá plocha u ulice na návsi",
     category: "zelen",
+    type: "trava",
     lastMowed: "2024-06-04 08:45",
     frequency: "1× za 2 týdny",
     coords: [
@@ -231,6 +235,7 @@ const fallbackZelene = [
     name: "Záhon u lávky",
     description: "Křoviny a tráva okolo lávky u potoka",
     category: "zelen",
+    type: "zahony",
     lastMowed: "2024-06-10 09:20",
     frequency: "1× za 2 týdny",
     coords: [
@@ -253,6 +258,7 @@ const fallbackZelene = [
     name: "Pás u chodníku",
     description: "Úzký travnatý pás u pěší trasy",
     category: "zelen",
+    type: "zahony",
     lastMowed: "2024-06-12 07:40",
     frequency: "1× za 2 týdny",
     coords: [
@@ -273,6 +279,7 @@ const fallbackZelene = [
     name: "Okraj hřiště",
     description: "Tráva a nízké keře u sportoviště",
     category: "zelen",
+    type: "trava",
     lastMowed: "2024-06-14 08:00",
     frequency: "1× za 2 týdny",
     coords: [
@@ -310,6 +317,7 @@ const fallbackZelene = [
     name: "Plocha u křižovatky",
     description: "Travnatý trojúhelník u křižovatky",
     category: "zelen",
+    type: "trava",
     lastMowed: "2024-06-18 09:15",
     frequency: "1× za 2 týdny",
     coords: [
@@ -317,6 +325,22 @@ const fallbackZelene = [
       [50.128945, 14.221615],
       [50.12887, 14.221849],
       [50.129148, 14.22201],
+    ],
+  },
+  {
+    name: "Květinové záhony u návsi",
+    description: "Pruh záhonů s trvalkami a keři",
+    category: "zelen",
+    type: "zahony",
+    lastMowed: "2024-06-19 07:30",
+    frequency: "1× týdně péče o záhony",
+    coords: [
+      [50.13232, 14.22274],
+      [50.13229, 14.22263],
+      [50.13224, 14.22262],
+      [50.1322, 14.22271],
+      [50.13224, 14.2228],
+      [50.13229, 14.22282],
     ],
   },
 ];

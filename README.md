@@ -30,6 +30,7 @@ Tato aplikace je připravená pro hostování na GitHub Pages bez jakéhokoli bu
 
 - `kose.json` obsahuje pouze definice košů (ID, název, souřadnice). Telemetrie (naplněnost, poslední aktualizace, stav baterie) se načítá z CSV `kose_telemetry.csv`, které může obsahovat vícero řádků na stejný koš; aplikace vždy vezme nejnovější záznam podle času `lastUpdated`.
 - `lampy.json` nese pořadové číslo `id` u každé lampy; stejné ID se propisuje do štítku na mapě pro rychlé odlišení bodů.
+- `zelene.json` rozlišuje plochy podle `type`: `trava` (trávníky) a `zahony` (záhony). Na mapě se mezi nimi dá přepínat růžovým tlačítkem v panelu vrstev.
 - Struktura ostatních JSON souborů odpovídá poli objektů v `js/data.js`; díky tomu lze data spravovat odděleně jako open-data snapshoty.
 - `hladina.csv` obsahuje historii úrovně potoka v centimetrech, formát řádku je `YYYY-MM-DD HH:mm:ss;HODNOTA`. Aplikace CSV načte (z `DATA_BASE_URL/hladina.csv`), použije ho pro 72h graf a zobrazí poslední záznam jako aktuální stav; pokud CSV chybí, použije vložený fallback se stejnou strukturou.
 

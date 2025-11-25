@@ -74,18 +74,29 @@ window.addEventListener("DOMContentLoaded", async () => {
     kose: "#1b8a63",
     lampy: "#f28c38",
     kontejnery: "#4ab7ff",
-    zelen: "#0ea5e9",
+    zelenTrava: "#0ea5e9",
+    zelenZahony: "#ec4899",
     hladina: "#7c3aed",
     odpad: "#67e8f9",
   };
 
-  const greenspaceStyle = {
-    color: "#0284c7",
-    weight: 3,
-    fillColor: "#38bdf8",
-    fillOpacity: 0.45,
-    dashArray: "10 6",
-    lineJoin: "round",
+  const greenspaceStyles = {
+    trava: {
+      color: "#0284c7",
+      weight: 3,
+      fillColor: "#38bdf8",
+      fillOpacity: 0.45,
+      dashArray: "10 6",
+      lineJoin: "round",
+    },
+    zahony: {
+      color: "#db2777",
+      weight: 3,
+      fillColor: "#f472b6",
+      fillOpacity: 0.5,
+      dashArray: "8 5",
+      lineJoin: "round",
+    },
   };
 
   const iconSymbols = {
@@ -102,7 +113,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     kose: L.layerGroup(),
     lampy: L.layerGroup(),
     kontejnery: L.layerGroup(),
-    zelen: L.layerGroup(),
+    zelenTrava: L.layerGroup(),
+    zelenZahony: L.layerGroup(),
     hladina: L.layerGroup(),
     odpad: L.layerGroup(),
   };
@@ -131,11 +143,15 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
   const mapOverlay = document.getElementById("mapOverlay");
+  const greenspaceToggle = document.getElementById("greenspaceToggle");
   const mapView = document.getElementById("mapView");
   const streamView = document.getElementById("streamView");
   const wasteView = document.getElementById("wasteView");
 
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
+
+  let greenspaceMode = "trava";
+  let currentCategory = "kose";
 
   const BIN_THRESHOLDS = {
     full: 85,
@@ -465,8 +481,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     return marker;
   }
 
-  function createPolygon(area, color) {
-    const polygon = L.polygon(area.coords, greenspaceStyle);
+  function createPolygon(area, color, style) {
+    const baseStyle = style || greenspaceStyles.trava;
+    const polygon = L.polygon(area.coords, { ...baseStyle, color: color || baseStyle.color });
 
     const subject = encodeURIComponent(`Údržba zeleně – ${area.name}`);
     const body = encodeURIComponent(
@@ -490,14 +507,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     polygon.on("mouseover", () => {
       polygon.bringToFront();
       polygon.setStyle({
-        color: "#0369a1",
-        weight: 4,
-        fillOpacity: 0.6,
+        color: baseStyle.color,
+        weight: baseStyle.weight + 1,
+        fillOpacity: Math.min(0.85, (baseStyle.fillOpacity || 0.5) + 0.15),
       });
     });
 
     polygon.on("mouseout", () => {
-      polygon.setStyle(greenspaceStyle);
+      polygon.setStyle(baseStyle);
     });
     return polygon;
   }
@@ -508,13 +525,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (category === "kose") source = dataKose;
     if (category === "lampy") source = dataLampy;
     if (category === "kontejnery") source = dataKontejnery;
-    if (category === "zelen") source = dataZelene;
     if (category === "hladina") source = dataHladina;
 
     source.forEach((item) => {
-      const shape = category === "zelen"
-        ? createPolygon(item, iconColors[category])
-        : createMarker(item, iconColors[category]);
+      const shape = createMarker(item, iconColors[category]);
       shape.addTo(layers[category]);
     });
   }
@@ -522,8 +536,47 @@ window.addEventListener("DOMContentLoaded", async () => {
   populateLayer("kose");
   populateLayer("lampy");
   populateLayer("kontejnery");
-  populateLayer("zelen");
   populateLayer("hladina");
+
+  function greenspaceByType(type) {
+    const normalized = type === "zahony" ? "zahony" : "trava";
+    return dataZelene.filter((area) => (area.type || "trava") === normalized);
+  }
+
+  function populateGreenspaceLayers() {
+    const travaAreas = greenspaceByType("trava");
+    const zahonyAreas = greenspaceByType("zahony");
+    layers.zelenTrava.clearLayers();
+    layers.zelenZahony.clearLayers();
+
+    travaAreas.forEach((area) => {
+      const polygon = createPolygon(area, iconColors.zelenTrava, greenspaceStyles.trava);
+      polygon.addTo(layers.zelenTrava);
+    });
+
+    zahonyAreas.forEach((area) => {
+      const polygon = createPolygon(area, iconColors.zelenZahony, greenspaceStyles.zahony);
+      polygon.addTo(layers.zelenZahony);
+    });
+  }
+
+  populateGreenspaceLayers();
+
+  function updateGreenspaceToggleState() {
+    if (!greenspaceToggle) return;
+    const buttons = greenspaceToggle.querySelectorAll("[data-greenspace]");
+    buttons.forEach((btn) => btn.classList.toggle("active", btn.dataset.greenspace === greenspaceMode));
+  }
+
+  function setGreenspaceMode(mode) {
+    const normalized = mode === "zahony" ? "zahony" : "trava";
+    if (greenspaceMode === normalized) return;
+    greenspaceMode = normalized;
+    updateGreenspaceToggleState();
+    if (currentCategory === "zelen") {
+      setActiveCategory("zelen");
+    }
+  }
 
   function updateCounters() {
     if (counters.kose) counters.kose.textContent = dataKose.length;
@@ -588,13 +641,18 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   function setActiveCategory(category) {
     if (!category) return;
+    currentCategory = category;
 
     const isStreamView = category === "hladina";
     const isWasteView = category === "odpad";
     const isMapCategory = mapCategories.includes(category);
+    const isGreenspace = category === "zelen";
+    const activeGreenspaceLayer = greenspaceMode === "zahony" ? "zelenZahony" : "zelenTrava";
+
     // Always keep the map layers in sync with the chosen category.
     Object.entries(layers).forEach(([key, layer]) => {
-      if (key === category) {
+      const shouldShow = isGreenspace ? key === activeGreenspaceLayer : key === category;
+      if (shouldShow) {
         map.addLayer(layer);
       } else {
         map.removeLayer(layer);
@@ -612,6 +670,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (targetStat) targetStat.classList.add('active');
 
     if (isMapCategory) {
+      const greenspaceData = greenspaceByType(greenspaceMode);
       const activeData =
         category === "kose"
           ? dataKose
@@ -619,7 +678,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             ? dataLampy
             : category === "kontejnery"
               ? dataKontejnery
-              : dataZelene;
+              : greenspaceData;
 
       const coords =
         category === "zelen" ? activeData.flatMap((area) => area.coords) : activeData.map((item) => [item.lat, item.lng]);
@@ -639,7 +698,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             : category === "kontejnery"
               ? "Kontejnery"
               : category === "zelen"
-                ? "Údržba zeleně"
+                ? greenspaceMode === "zahony" ? "Údržba zeleně · záhony" : "Údržba zeleně · tráva"
                 : category === "hladina"
                   ? "Hladina potoka"
                   : "Odpad & sběrný dvůr";
@@ -648,6 +707,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     // Switch the visible view explicitly so returning from the stream panel always shows the map again.
     if (mapOverlay) mapOverlay.classList.toggle("hidden", !isMapCategory);
+    if (greenspaceToggle) greenspaceToggle.classList.toggle("hidden", !isGreenspace);
+    if (isGreenspace) updateGreenspaceToggleState();
     if (mapView) mapView.classList.toggle("hidden", !isMapCategory);
     if (streamView) streamView.classList.toggle("hidden", !isStreamView);
     if (wasteView) wasteView.classList.toggle("hidden", !isWasteView);
@@ -862,6 +923,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   const refreshButton = document.getElementById("refreshStreamBtn");
   if (refreshButton) {
     refreshButton.addEventListener("click", () => refreshStreamData(true));
+  }
+  if (greenspaceToggle) {
+    greenspaceToggle.querySelectorAll("[data-greenspace]").forEach((btn) => {
+      btn.addEventListener("click", () => setGreenspaceMode(btn.dataset.greenspace));
+    });
+    updateGreenspaceToggleState();
   }
   fetchStreamLevel();
 });

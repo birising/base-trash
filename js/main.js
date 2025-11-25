@@ -667,6 +667,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     const isWasteView = category === "odpad";
     const isMapCategory = mapCategories.includes(category);
     const isGreenspace = category === "zelen";
+
+    // Always start the greenspace view with all layers visible so the map
+    // matches the reference state (fbc023d) and users can then toggle layers off.
+    if (isGreenspace) {
+      greenspaceVisibility.trava = true;
+      greenspaceVisibility.zahony = true;
+      updateGreenspaceToggleState();
+    }
     const greenspaceEnabled = {
       zelenTrava: greenspaceVisibility.trava,
       zelenZahony: greenspaceVisibility.zahony,

@@ -378,9 +378,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     `;
   }
 
-  function buildIcon(category, colorOverride) {
+  function buildIcon(category, colorOverride, options = {}) {
     const symbol = iconSymbols[category];
     if (!symbol) return null;
+    const { badge, text } = options;
     const sizing = iconSizes[category] || { size: [40, 44], anchor: [20, 42], popup: [0, -32] };
     const color = colorOverride || iconColors[category];
     return L.divIcon({
@@ -388,7 +389,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       html: `
         <div class="marker-icon marker-${category}" style="--marker-color:${color}">
           <span class="marker-emoji">${symbol.emoji}</span>
-          <span class="marker-label">${symbol.label}</span>
+          <span class="marker-label">${text ?? symbol.label}</span>
+          ${badge ? `<span class="marker-badge">${badge}</span>` : ""}
         </div>
       `,
       iconSize: sizing.size,
@@ -399,10 +401,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   function createMarker(item, color) {
     const { lat, lng, name } = item;
+    const popupTitle = item.category === "lampy" && item.id != null ? `Lampa #${item.id}` : name;
     const useIcon = item.category === "kose" || item.category === "lampy";
     const binStatus = item.category === "kose" ? evaluateBinStatus(item) : null;
     const marker = useIcon
-      ? L.marker([lat, lng], { icon: buildIcon(item.category, binStatus?.color || color) })
+      ? L.marker([lat, lng], {
+          icon: buildIcon(item.category, binStatus?.color || color, {
+            badge: item.category === "lampy" ? item.id : undefined,
+            text: item.category === "lampy" ? null : undefined,
+          }),
+        })
       : L.circleMarker([lat, lng], {
           radius: 8,
           color,
@@ -411,7 +419,7 @@ window.addEventListener("DOMContentLoaded", async () => {
           fillOpacity: 0.85,
         });
 
-    let popupContent = `<strong>${name}</strong>`;
+    let popupContent = `<strong>${popupTitle}</strong>`;
     if (item.category === "kose") {
       const status = binStatus || evaluateBinStatus(item);
       const fill = item.fillLevel != null ? `${item.fillLevel}%` : "–";
@@ -432,7 +440,7 @@ window.addEventListener("DOMContentLoaded", async () => {
           <div class="status-chip-row">${statusBadges}</div>
         </div>`;
     } else if (item.category === "lampy") {
-      const subject = encodeURIComponent(`Porucha lampy – ${name}`);
+      const subject = encodeURIComponent(`Porucha lampy – ${popupTitle}`);
       const body = encodeURIComponent(
         "Popište závadu a případně přidejte fotku. Děkujeme!"
       );

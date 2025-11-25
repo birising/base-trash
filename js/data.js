@@ -419,20 +419,3 @@ async function loadAllData() {
   streamHistory = streamCsv.values;
 }
 
-export {
-  DATA_BASE_URL,
-  DATA_PATHS,
-  dataKose,
-  dataLampy,
-  dataKontejnery,
-  dataZelene,
-  dataHladina,
-  koseTelemetry,
-  streamHistory,
-  streamHistoryTimes,
-  loadAllData,
-  fallbackKose,
-  fallbackLampy,
-  fallbackKontejnery,
-  fallbackZelene,
-};

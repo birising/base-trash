@@ -74,9 +74,18 @@ window.addEventListener("DOMContentLoaded", async () => {
     kose: "#1b8a63",
     lampy: "#f28c38",
     kontejnery: "#4ab7ff",
-    zelen: "#7dd3fc",
+    zelen: "#0ea5e9",
     hladina: "#7c3aed",
     odpad: "#67e8f9",
+  };
+
+  const greenspaceStyle = {
+    color: "#0284c7",
+    weight: 3,
+    fillColor: "#38bdf8",
+    fillOpacity: 0.45,
+    dashArray: "10 6",
+    lineJoin: "round",
   };
 
   const iconSymbols = {
@@ -449,13 +458,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   function createPolygon(area, color) {
-    const polygon = L.polygon(area.coords, {
-      color,
-      weight: 2,
-      fillColor: color,
-      fillOpacity: 0.2,
-      dashArray: "6 4",
-    });
+    const polygon = L.polygon(area.coords, greenspaceStyle);
 
     const subject = encodeURIComponent(`Údržba zeleně – ${area.name}`);
     const body = encodeURIComponent(
@@ -475,6 +478,19 @@ window.addEventListener("DOMContentLoaded", async () => {
     `;
 
     polygon.bindPopup(popupContent);
+
+    polygon.on("mouseover", () => {
+      polygon.bringToFront();
+      polygon.setStyle({
+        color: "#0369a1",
+        weight: 4,
+        fillOpacity: 0.6,
+      });
+    });
+
+    polygon.on("mouseout", () => {
+      polygon.setStyle(greenspaceStyle);
+    });
     return polygon;
   }
 

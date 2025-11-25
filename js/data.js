@@ -1,128 +1,79 @@
-const dataBaseUrl = window.DATA_BASE_URL || "./data";
+// Data loading and fallback utilities
 
-const fallbackKoseDefinitions = [
-  {
-    id: "K-01",
-    lat: 50.130144,
-    lng: 14.219936,
-    name: "Koš plný",
-    description: null,
-    category: "kose",
-  },
-  {
-    id: "K-02",
-    lat: 50.128687,
-    lng: 14.221423,
-    name: "Koš",
-    description: null,
-    category: "kose",
-  },
-  {
-    id: "K-03",
-    lat: 50.129602,
-    lng: 14.221984,
-    name: "Koš",
-    description: null,
-    category: "kose",
-  },
-  {
-    id: "K-04",
-    lat: 50.132469,
-    lng: 14.220607,
-    name: "Koš",
-    description: null,
-    category: "kose",
-  },
-  {
-    id: "K-05",
-    lat: 50.132801,
-    lng: 14.220461,
-    name: "Koš",
-    description: null,
-    category: "kose",
-  },
-  {
-    id: "K-06",
-    lat: 50.133472,
-    lng: 14.225753,
-    name: "Koš",
-    description: null,
-    category: "kose",
-  },
-  {
-    id: "K-07",
-    lat: 50.132557,
-    lng: 14.220691,
-    name: "Koš",
-    description: null,
-    category: "kose",
-  },
-];
+const DATA_BASE_URL = window.DATA_BASE_URL || "";
+const DATA_PATHS = {
+  kose: `${DATA_BASE_URL}data/kose.json`,
+  kontejnery: `${DATA_BASE_URL}data/kontejnery.json`,
+  lampy: `${DATA_BASE_URL}data/lampy.json`,
+  zelene: `${DATA_BASE_URL}data/zelene.json`,
+  koseCsv: `${DATA_BASE_URL}data/kose_telemetry.csv`,
+  hladinaCsv: `${DATA_BASE_URL}data/hladina.csv`,
+};
 
-const fallbackKoseTelemetry = [
-  { id: "K-01", fillLevel: 92, lastUpdated: "2030-01-02T08:15:00+01:00", batteryLevel: 82 },
-  { id: "K-02", fillLevel: 40, lastUpdated: "2030-01-02T06:30:00+01:00", batteryLevel: 9 },
-  { id: "K-03", fillLevel: 55, lastUpdated: "2024-10-01T07:00:00+02:00", batteryLevel: 74 },
-  { id: "K-04", fillLevel: 28, lastUpdated: "2030-01-02T09:20:00+01:00", batteryLevel: 80 },
-  { id: "K-05", fillLevel: 68, lastUpdated: "2030-01-01T21:05:00+01:00", batteryLevel: 35 },
-  { id: "K-06", fillLevel: 47, lastUpdated: "2030-01-02T07:45:00+01:00", batteryLevel: 59 },
-  { id: "K-07", fillLevel: 18, lastUpdated: "2030-01-02T08:55:00+01:00", batteryLevel: 92 },
-];
-
-const fallbackKontejnery = [
-  { lat: 50.132911, lng: 14.224212, name: "Zimni udrzba", description: null, category: "zimni_udrzba" },
-  { lat: 50.132602, lng: 14.224192, name: "Zimni udrzba", description: null, category: "zimni_udrzba" },
-  { lat: 50.130817, lng: 14.221791, name: "Zimni udrba", description: null, category: "zimni_udrzba" },
-  { lat: 50.132204, lng: 14.222392, name: "Zimni idezba", description: null, category: "zimni_udrzba" },
+const fallbackKose = [
+  { lat: 50.130144, lng: 14.219936, name: "Koš plný", description: null, category: "kose", id: "K-001" },
+  { lat: 50.128687, lng: 14.221423, name: "Koš", description: null, category: "kose", id: "K-002" },
+  { lat: 50.129602, lng: 14.221984, name: "Koš", description: null, category: "kose", id: "K-003" },
+  { lat: 50.132469, lng: 14.220607, name: "Koš", description: null, category: "kose", id: "K-004" },
+  { lat: 50.132801, lng: 14.220461, name: "Koš", description: null, category: "kose", id: "K-005" },
+  { lat: 50.133472, lng: 14.225753, name: "Koš", description: null, category: "kose", id: "K-006" },
+  { lat: 50.132557, lng: 14.220691, name: "Koš", description: null, category: "kose", id: "K-007" },
 ];
 
 const fallbackLampy = [
-  { lat: 50.133935, lng: 14.222031, name: "Rozbita lampa", description: null, category: "lampy", id: 1 },
-  { lat: 50.132683, lng: 14.22153, name: "Rozbita", description: null, category: "lampy", id: 2 },
-  { lat: 50.130526, lng: 14.220269, name: "Lampa rozbita", description: null, category: "lampy", id: 3 },
-  { lat: 50.132075, lng: 14.225998, name: "Lampa rozbita", description: null, category: "lampy", id: 4 },
-  { lat: 50.130589, lng: 14.221878, name: "Lampa 15", description: null, category: "lampy", id: 5 },
-  { lat: 50.130105, lng: 14.222052, name: "Lampa", description: null, category: "lampy", id: 6 },
-  { lat: 50.131003, lng: 14.221204, name: "Lampa", description: null, category: "lampy", id: 7 },
-  { lat: 50.13117, lng: 14.220722, name: "Lampa", description: null, category: "lampy", id: 8 },
-  { lat: 50.130949, lng: 14.220521, name: "Lampa", description: null, category: "lampy", id: 9 },
-  { lat: 50.130093, lng: 14.219836, name: "Lampa", description: null, category: "lampy", id: 10 },
-  { lat: 50.129781, lng: 14.219071, name: "Lampa", description: null, category: "lampy", id: 11 },
-  { lat: 50.131421, lng: 14.220844, name: "Lampa", description: null, category: "lampy", id: 12 },
-  { lat: 50.132316, lng: 14.220784, name: "Lampa", description: null, category: "lampy", id: 13 },
-  { lat: 50.132836, lng: 14.220645, name: "Lampa", description: null, category: "lampy", id: 14 },
-  { lat: 50.133054, lng: 14.220365, name: "Lampa", description: null, category: "lampy", id: 15 },
-  { lat: 50.133314, lng: 14.21992, name: "Lampa", description: null, category: "lampy", id: 16 },
-  { lat: 50.133076, lng: 14.219179, name: "Lampa", description: null, category: "lampy", id: 17 },
-  { lat: 50.133666, lng: 14.220194, name: "Lampa", description: null, category: "lampy", id: 18 },
-  { lat: 50.133295, lng: 14.221099, name: "Lampa", description: null, category: "lampy", id: 19 },
-  { lat: 50.133599, lng: 14.221485, name: "Lampa", description: null, category: "lampy", id: 20 },
-  { lat: 50.133897, lng: 14.221747, name: "Lampa", description: null, category: "lampy", id: 21 },
-  { lat: 50.132773, lng: 14.221132, name: "Lampa", description: null, category: "lampy", id: 22 },
-  { lat: 50.132649, lng: 14.22213, name: "Lampa", description: null, category: "lampy", id: 23 },
-  { lat: 50.132459, lng: 14.222365, name: "Lampa", description: null, category: "lampy", id: 24 },
-  { lat: 50.132207, lng: 14.222406, name: "Lampa", description: null, category: "lampy", id: 25 },
-  { lat: 50.132609, lng: 14.222559, name: "Lampa", description: null, category: "lampy", id: 26 },
-  { lat: 50.132825, lng: 14.222919, name: "Lampa", description: null, category: "lampy", id: 27 },
-  { lat: 50.133015, lng: 14.223248, name: "Lampa", description: null, category: "lampy", id: 28 },
-  { lat: 50.13304, lng: 14.223699, name: "Lampa", description: null, category: "lampy", id: 29 },
-  { lat: 50.132968, lng: 14.2241, name: "Lampa", description: null, category: "lampy", id: 30 },
-  { lat: 50.133074, lng: 14.224404, name: "Lampa", description: null, category: "lampy", id: 31 },
-  { lat: 50.133565, lng: 14.224416, name: "Lampa", description: null, category: "lampy", id: 32 },
-  { lat: 50.133423, lng: 14.224041, name: "Lampa", description: null, category: "lampy", id: 33 },
-  { lat: 50.133372, lng: 14.224993, name: "Lampa", description: null, category: "lampy", id: 34 },
-  { lat: 50.132633, lng: 14.224092, name: "Lampa", description: null, category: "lampy", id: 35 },
-  { lat: 50.132452, lng: 14.223862, name: "Lampa", description: null, category: "lampy", id: 36 },
-  { lat: 50.132232, lng: 14.224346, name: "Lampa", description: null, category: "lampy", id: 37 },
-  { lat: 50.132147, lng: 14.225015, name: "Lampa", description: null, category: "lampy", id: 38 },
-  { lat: 50.132281, lng: 14.223662, name: "Lampa", description: null, category: "lampy", id: 39 },
-  { lat: 50.132101, lng: 14.222946, name: "Lampa", description: null, category: "lampy", id: 40 },
-  { lat: 50.132001, lng: 14.222607, name: "Lampa", description: null, category: "lampy", id: 41 },
-  { lat: 50.131776, lng: 14.22183, name: "Lampa", description: null, category: "lampy", id: 42 },
-  { lat: 50.131564, lng: 14.221154, name: "Lampa", description: null, category: "lampy", id: 43 },
-  { lat: 50.131401, lng: 14.22157, name: "Lampa", description: null, category: "lampy", id: 44 },
-  { lat: 50.131108, lng: 14.221686, name: "Lampa", description: null, category: "lampy", id: 45 },
-  { lat: 50.130743, lng: 14.220386, name: "lampa", description: null, category: "lampy", id: 46 },
+  { lat: 50.133935, lng: 14.222031, name: "Rozbitá lampa", description: null, category: "lampy", id: "L-001" },
+  { lat: 50.132683, lng: 14.22153, name: "Rozbitá", description: null, category: "lampy", id: "L-002" },
+  { lat: 50.130526, lng: 14.220269, name: "Lampa rozbitá", description: null, category: "lampy", id: "L-003" },
+  { lat: 50.132075, lng: 14.225998, name: "Lampa rozbitá", description: null, category: "lampy", id: "L-004" },
+  { lat: 50.130589, lng: 14.221878, name: "Lampa 15", description: null, category: "lampy", id: "L-005" },
+  { lat: 50.130105, lng: 14.222052, name: "Lampa", description: null, category: "lampy", id: "L-006" },
+  { lat: 50.131003, lng: 14.221204, name: "Lampa", description: null, category: "lampy", id: "L-007" },
+  { lat: 50.13117, lng: 14.220722, name: "Lampa", description: null, category: "lampy", id: "L-008" },
+  { lat: 50.130949, lng: 14.220521, name: "Lampa", description: null, category: "lampy", id: "L-009" },
+  { lat: 50.130093, lng: 14.219836, name: "Lampa", description: null, category: "lampy", id: "L-010" },
+  { lat: 50.129781, lng: 14.219071, name: "Lampa", description: null, category: "lampy", id: "L-011" },
+  { lat: 50.131421, lng: 14.220844, name: "Lampa", description: null, category: "lampy", id: "L-012" },
+  { lat: 50.132316, lng: 14.220784, name: "Lampa", description: null, category: "lampy", id: "L-013" },
+  { lat: 50.132836, lng: 14.220645, name: "Lampa", description: null, category: "lampy", id: "L-014" },
+  { lat: 50.133054, lng: 14.220365, name: "Lampa", description: null, category: "lampy", id: "L-015" },
+  { lat: 50.133314, lng: 14.21992, name: "Lampa", description: null, category: "lampy", id: "L-016" },
+  { lat: 50.133076, lng: 14.219179, name: "Lampa", description: null, category: "lampy", id: "L-017" },
+  { lat: 50.133666, lng: 14.220194, name: "Lampa", description: null, category: "lampy", id: "L-018" },
+  { lat: 50.133295, lng: 14.221099, name: "Lampa", description: null, category: "lampy", id: "L-019" },
+  { lat: 50.133599, lng: 14.221485, name: "Lampa", description: null, category: "lampy", id: "L-020" },
+  { lat: 50.133897, lng: 14.221747, name: "Lampa", description: null, category: "lampy", id: "L-021" },
+  { lat: 50.132773, lng: 14.221132, name: "Lampa", description: null, category: "lampy", id: "L-022" },
+  { lat: 50.132649, lng: 14.22213, name: "Lampa", description: null, category: "lampy", id: "L-023" },
+  { lat: 50.132459, lng: 14.222365, name: "Lampa", description: null, category: "lampy", id: "L-024" },
+  { lat: 50.132207, lng: 14.222406, name: "Lampa", description: null, category: "lampy", id: "L-025" },
+  { lat: 50.132609, lng: 14.222559, name: "Lampa", description: null, category: "lampy", id: "L-026" },
+  { lat: 50.132825, lng: 14.222919, name: "Lampa", description: null, category: "lampy", id: "L-027" },
+  { lat: 50.133015, lng: 14.223248, name: "Lampa", description: null, category: "lampy", id: "L-028" },
+  { lat: 50.13304, lng: 14.223699, name: "Lampa", description: null, category: "lampy", id: "L-029" },
+  { lat: 50.132968, lng: 14.2241, name: "Lampa", description: null, category: "lampy", id: "L-030" },
+  { lat: 50.133074, lng: 14.224404, name: "Lampa", description: null, category: "lampy", id: "L-031" },
+  { lat: 50.133565, lng: 14.224416, name: "Lampa", description: null, category: "lampy", id: "L-032" },
+  { lat: 50.133423, lng: 14.224041, name: "Lampa", description: null, category: "lampy", id: "L-033" },
+  { lat: 50.133372, lng: 14.224993, name: "Lampa", description: null, category: "lampy", id: "L-034" },
+  { lat: 50.132633, lng: 14.224092, name: "Lampa", description: null, category: "lampy", id: "L-035" },
+  { lat: 50.132452, lng: 14.223862, name: "Lampa", description: null, category: "lampy", id: "L-036" },
+  { lat: 50.132232, lng: 14.224346, name: "Lampa", description: null, category: "lampy", id: "L-037" },
+  { lat: 50.132147, lng: 14.225015, name: "Lampa", description: null, category: "lampy", id: "L-038" },
+  { lat: 50.132281, lng: 14.223662, name: "Lampa", description: null, category: "lampy", id: "L-039" },
+  { lat: 50.132101, lng: 14.222946, name: "Lampa", description: null, category: "lampy", id: "L-040" },
+  { lat: 50.132001, lng: 14.222607, name: "Lampa", description: null, category: "lampy", id: "L-041" },
+  { lat: 50.131776, lng: 14.22183, name: "Lampa", description: null, category: "lampy", id: "L-042" },
+  { lat: 50.131564, lng: 14.221154, name: "Lampa", description: null, category: "lampy", id: "L-043" },
+  { lat: 50.131401, lng: 14.22157, name: "Lampa", description: null, category: "lampy", id: "L-044" },
+  { lat: 50.131108, lng: 14.221686, name: "Lampa", description: null, category: "lampy", id: "L-045" },
+  { lat: 50.130743, lng: 14.220386, name: "Lampa", description: null, category: "lampy", id: "L-046" },
+];
+
+const fallbackKontejnery = [
+  { lat: 50.132911, lng: 14.224212, name: "Zimní údržba", description: null, category: "kontejnery" },
+  { lat: 50.132602, lng: 14.224192, name: "Zimní údržba", description: null, category: "kontejnery" },
+  { lat: 50.130817, lng: 14.221791, name: "Zimní údržba", description: null, category: "kontejnery" },
+  { lat: 50.132204, lng: 14.222392, name: "Zimní údržba", description: null, category: "kontejnery" },
 ];
 
 const fallbackZelene = [
@@ -232,50 +183,6 @@ const fallbackZelene = [
     ],
   },
   {
-    name: "Záhon u lávky",
-    description: "Křoviny a tráva okolo lávky u potoka",
-    category: "zelen",
-    type: "zahony",
-    lastMowed: "2024-06-10 09:20",
-    frequency: "1× za 2 týdny",
-    coords: [
-      [50.132615, 14.222558],
-      [50.132711, 14.22247],
-      [50.13272, 14.222498],
-      [50.132718, 14.222527],
-      [50.132711, 14.222541],
-      [50.132711, 14.222561],
-      [50.132705, 14.222572],
-      [50.132697, 14.222578],
-      [50.132685, 14.22259],
-      [50.132672, 14.222592],
-      [50.132657, 14.222586],
-      [50.132648, 14.222584],
-      [50.132638, 14.222581],
-    ],
-  },
-  {
-    name: "Pás u chodníku",
-    description: "Úzký travnatý pás u pěší trasy",
-    category: "zelen",
-    type: "zahony",
-    lastMowed: "2024-06-12 07:40",
-    frequency: "1× za 2 týdny",
-    coords: [
-      [50.132461, 14.22237],
-      [50.132433, 14.222372],
-      [50.132422, 14.222378],
-      [50.13241, 14.222391],
-      [50.132383, 14.222409],
-      [50.132377, 14.222433],
-      [50.132439, 14.222466],
-      [50.132483, 14.222458],
-      [50.132495, 14.222432],
-      [50.132487, 14.222409],
-      [50.132477, 14.222392],
-    ],
-  },
-  {
     name: "Okraj hřiště",
     description: "Tráva a nízké keře u sportoviště",
     category: "zelen",
@@ -328,421 +235,204 @@ const fallbackZelene = [
     ],
   },
   {
-    name: "Květinové záhony u návsi",
-    description: "Pruh záhonů s trvalkami a keři",
+    name: "Květinový záhon u návsi",
+    description: "Malý květinový záhon u návsi",
     category: "zelen",
     type: "zahony",
-    lastMowed: "2024-06-19 07:30",
+    lastMowed: "2024-06-22 09:10",
     frequency: "1× týdně péče o záhony",
     coords: [
-      [50.13232, 14.22274],
-      [50.13229, 14.22263],
-      [50.13224, 14.22262],
-      [50.1322, 14.22271],
-      [50.13224, 14.2228],
-      [50.13229, 14.22282],
+      [50.131769, 14.221016],
+      [50.131767, 14.221035],
+      [50.131761, 14.221041],
+      [50.131755, 14.221053],
+      [50.131742, 14.221057],
+      [50.131732, 14.221059],
+      [50.131728, 14.221045],
+      [50.131724, 14.221027],
+      [50.131728, 14.221006],
+      [50.131743, 14.220985],
+      [50.131759, 14.22099],
+      [50.131775, 14.220998],
+      [50.131778, 14.221013],
     ],
   },
 ];
 
 let dataKose = [];
-let dataKontejnery = [];
 let dataLampy = [];
+let dataKontejnery = [];
 let dataZelene = [];
-
-function ensureLampIds(lamps) {
-  return lamps.map((lamp, index) => ({ ...lamp, id: lamp.id ?? index + 1 }));
-}
-
-const dataHladina = [
-  {
-    lat: 50.1309,
-    lng: 14.2227,
-    name: "Senzor hladiny potoka",
-    description: "Běloky – úroveň vody",
-    category: "hladina",
-    sensorId: 24470,
-  },
-];
-
-const wasteSchedule = {
-  frequency: "Každých 14 dní",
-  lastPickup: "17.11.2025",
-  intervalDays: 14,
-  contactEmail: "info@beloky.cz",
-};
-
-// Primární zdroj hladiny a seznam záložních adres (kvůli CORS a mixovanému obsahu na GitHub Pages).
-const streamSourceUrl = "http://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
-const streamFetchCandidates = [
-  // Bez-CORS proxy vracející čistý HTML obsah
-  `https://api.allorigins.win/raw?url=${encodeURIComponent(streamSourceUrl)}`,
-  // Textový snapshot (markdown) vhodný pro čtení regexem, pokud HTML nejde načíst
-  `https://r.jina.ai/${streamSourceUrl}`,
-  `https://r.jina.ai/${streamSourceUrl.replace("http://", "https://")}`,
-  `https://cors.isomorphic-git.org/${streamSourceUrl}`,
-  `https://cors.isomorphic-git.org/${streamSourceUrl.replace("http://", "https://")}`,
-  streamSourceUrl.replace("http://", "https://"),
-  streamSourceUrl,
-];
-
-const fallbackStreamCsv = `
-2025-11-23 12:10:00;20
-2025-11-23 12:20:00;21
-2025-11-23 12:30:00;21
-2025-11-23 12:40:00;21
-2025-11-23 12:50:00;21
-2025-11-23 13:00:00;20
-2025-11-23 13:10:00;18
-2025-11-23 13:20:00;18
-2025-11-23 13:30:00;18
-2025-11-23 13:40:00;18
-2025-11-23 13:50:00;20
-2025-11-23 14:00:00;20
-2025-11-23 14:10:00;21
-2025-11-23 14:20:00;21
-2025-11-23 14:30:00;22
-2025-11-23 14:40:00;23
-2025-11-23 14:50:00;23
-2025-11-23 15:00:00;23
-2025-11-23 15:10:00;23
-2025-11-23 15:20:00;22
-2025-11-23 15:30:00;22
-2025-11-23 15:40:00;22
-2025-11-23 15:50:00;22
-2025-11-23 16:00:00;22
-2025-11-23 16:10:00;22
-2025-11-23 16:20:00;22
-2025-11-23 16:30:00;23
-2025-11-23 16:40:00;23
-2025-11-23 16:50:00;23
-2025-11-23 17:00:00;23
-2025-11-23 17:10:00;23
-2025-11-23 17:20:00;23
-2025-11-23 17:30:00;23
-2025-11-23 17:40:00;23
-2025-11-23 17:50:00;24
-2025-11-23 18:00:00;23
-2025-11-23 18:10:00;23
-2025-11-23 18:20:00;23
-2025-11-23 18:30:00;24
-2025-11-23 18:40:00;24
-2025-11-23 18:50:00;24
-2025-11-23 19:00:00;24
-2025-11-23 19:10:00;24
-2025-11-23 19:20:00;24
-2025-11-23 19:30:00;24
-2025-11-23 19:40:00;25
-2025-11-23 19:50:00;24
-2025-11-23 20:00:00;24
-2025-11-23 20:10:00;24
-2025-11-23 20:20:00;24
-2025-11-23 20:30:00;24
-2025-11-23 20:40:00;25
-2025-11-23 20:50:00;24
-2025-11-23 21:00:00;24
-2025-11-23 21:10:00;25
-2025-11-23 21:20:00;25
-2025-11-23 21:30:00;25
-2025-11-23 21:40:00;25
-2025-11-23 21:50:00;24
-2025-11-23 22:00:00;24
-2025-11-23 22:10:00;25
-2025-11-23 22:20:00;25
-2025-11-23 22:30:00;25
-2025-11-23 22:40:00;25
-2025-11-23 22:50:00;24
-2025-11-23 23:00:00;25
-2025-11-23 23:10:00;25
-2025-11-23 23:20:00;25
-2025-11-23 23:30:00;25
-2025-11-23 23:40:00;25
-2025-11-23 23:50:00;25
-2025-11-24 00:00:00;24
-2025-11-24 00:10:00;24
-2025-11-24 00:20:00;24
-2025-11-24 00:30:00;24
-2025-11-24 00:40:00;24
-2025-11-24 00:50:00;24
-2025-11-24 01:00:00;24
-2025-11-24 01:10:00;24
-2025-11-24 01:20:00;25
-2025-11-24 01:30:00;24
-2025-11-24 01:40:00;24
-2025-11-24 01:50:00;24
-2025-11-24 02:00:00;24
-2025-11-24 02:10:00;24
-2025-11-24 02:20:00;24
-2025-11-24 02:30:00;24
-2025-11-24 02:40:00;24
-2025-11-24 02:50:00;24
-2025-11-24 03:00:00;24
-2025-11-24 03:10:00;23
-2025-11-24 03:20:00;24
-2025-11-24 03:30:00;23
-2025-11-24 03:40:00;24
-2025-11-24 03:50:00;23
-2025-11-24 04:00:00;23
-2025-11-24 04:10:00;23
-2025-11-24 04:20:00;23
-2025-11-24 04:30:00;24
-2025-11-24 04:40:00;23
-2025-11-24 04:50:00;24
-2025-11-24 05:00:00;23
-2025-11-24 05:10:00;23
-2025-11-24 05:20:00;23
-2025-11-24 05:30:00;24
-2025-11-24 05:40:00;23
-2025-11-24 05:50:00;23
-2025-11-24 06:00:00;23
-2025-11-24 06:10:00;24
-2025-11-24 06:20:00;23
-2025-11-24 06:30:00;23
-2025-11-24 06:40:00;23
-2025-11-24 06:50:00;24
-2025-11-24 07:00:00;23
-2025-11-24 07:10:00;23
-2025-11-24 07:20:00;24
-2025-11-24 07:30:00;23
-2025-11-24 07:40:00;23
-2025-11-24 07:50:00;23
-2025-11-24 08:00:00;23
-2025-11-24 08:10:00;23
-2025-11-24 08:20:00;23
-2025-11-24 08:30:00;23
-2025-11-24 08:40:00;23
-2025-11-24 08:50:00;23
-2025-11-24 09:00:00;23
-2025-11-24 09:10:00;23
-2025-11-24 09:20:00;23
-2025-11-24 09:30:00;23
-2025-11-24 09:40:00;23
-2025-11-24 09:50:00;23
-2025-11-24 10:00:00;22
-2025-11-24 10:10:00;22
-2025-11-24 10:20:00;23
-2025-11-24 10:30:00;22
-2025-11-24 10:40:00;22
-2025-11-24 10:50:00;22
-2025-11-24 11:00:00;22
-2025-11-24 11:10:00;22
-2025-11-24 11:20:00;22
-2025-11-24 11:30:00;21
-2025-11-24 11:40:00;22
-2025-11-24 11:50:00;21
-2025-11-24 12:00:00;21
-`;
-const floodThresholds = [
-  { label: "SPA 1", value: 90, color: "#22c55e" },
-  { label: "SPA 2", value: 100, color: "#facc15" },
-  { label: "SPA 3", value: 120, color: "#f97316" },
-];
-
-const STREAM_MAX_WINDOW_HOURS = 24;
+let dataHladina = [];
+let koseTelemetry = [];
 let streamHistory = [];
 let streamHistoryTimes = [];
-const streamState = {
-  level: "Načítám…",
-  updated: "Základní údaje",
-  numeric: null,
-  status: "Načítám…",
-};
 
-function parseStreamCsv(csvText = "") {
-  return csvText
+function csvToRows(text) {
+  return text
+    .trim()
     .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [ts, value] = line.split(";").map((p) => p.trim());
-      const numeric = Number(value?.replace(",", "."));
-      const parsedDate = Date.parse(ts.replace(" ", "T"));
-      return {
-        ts,
-        date: Number.isFinite(parsedDate) ? new Date(parsedDate) : null,
-        numeric: Number.isFinite(numeric) ? numeric : null,
-      };
-    })
-    .filter((entry) => entry.numeric != null);
+    .map((line) => line.split(";").map((cell) => cell.trim()));
 }
 
-function trimStreamWindow() {
-  const latestTime = [...streamHistoryTimes].reverse().find((d) => d instanceof Date && Number.isFinite(d.getTime()));
-  if (latestTime instanceof Date) {
-    const cutoff = latestTime.getTime() - STREAM_MAX_WINDOW_HOURS * 60 * 60 * 1000;
-    while (
-      streamHistoryTimes.length &&
-      streamHistoryTimes[0] instanceof Date &&
-      Number.isFinite(streamHistoryTimes[0].getTime()) &&
-      streamHistoryTimes[0].getTime() < cutoff
-    ) {
-      streamHistoryTimes.shift();
-      streamHistory.shift();
-    }
-  }
-
-  // Safety net: keep a reasonable number of points even if timestamps chybí
-  const maxPoints = 6 * STREAM_MAX_WINDOW_HOURS; // e.g. 10min interval ~144 bodů
-  while (streamHistory.length > maxPoints) {
-    streamHistory.shift();
-    streamHistoryTimes.shift();
-  }
+function parseNumber(value) {
+  if (value === undefined || value === null) return null;
+  const n = Number(value.toString().replace(",", "."));
+  return Number.isFinite(n) ? n : null;
 }
 
-function pushStreamReading(value, timestamp = new Date()) {
-  if (value == null || Number.isNaN(value)) return;
-  const safeTime =
-    timestamp instanceof Date && Number.isFinite(timestamp.getTime()) ? timestamp : new Date();
-  streamHistory.push(value);
-  streamHistoryTimes.push(safeTime);
-  trimStreamWindow();
+function parseCsvWithHeader(text) {
+  const [header, ...rows] = csvToRows(text);
+  return rows.map((row) => Object.fromEntries(row.map((cell, idx) => [header[idx], cell])));
 }
 
-function setStreamHistory(entries) {
-  if (!entries || !entries.length) return;
-  entries.sort((a, b) => {
-    const aTime = a.date ? a.date.getTime() : 0;
-    const bTime = b.date ? b.date.getTime() : 0;
-    return aTime - bTime;
-  });
-
-  streamHistory = [];
-  streamHistoryTimes = [];
-  entries.forEach((entry) => {
-    if (entry.numeric != null) {
-      pushStreamReading(entry.numeric, entry.date);
+function parseHladinaCsv(text) {
+  const rows = csvToRows(text);
+  const times = [];
+  const values = [];
+  rows.forEach(([dateStr, valueStr]) => {
+    const value = parseNumber(valueStr);
+    const date = new Date(dateStr.replace(" ", "T") + "+01:00");
+    if (Number.isFinite(value) && !Number.isNaN(date.getTime())) {
+      times.push(date);
+      values.push(value);
     }
   });
-
-  const latest = entries.at(-1);
-  streamState.numeric = latest.numeric;
-  streamState.level = `${latest.numeric} cm`;
-  streamState.updated = latest.date
-    ? latest.date.toLocaleString("cs-CZ", { timeZone: "Europe/Prague" })
-    : latest.ts;
-  streamState.status = "CSV data (hladina.csv)";
+  return { times, values };
 }
 
-async function loadStreamHistory() {
-  const url = `${dataBaseUrl}/hladina.csv`;
-  try {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const csv = await response.text();
-    const parsed = parseStreamCsv(csv);
-    if (parsed.length) {
-      setStreamHistory(parsed);
-      return parsed;
-    }
-    throw new Error("Prázdný soubor hladiny");
-  } catch (error) {
-    console.warn(`Nepodařilo se načíst hladinovou historii (${url})`, error);
-    const fallbackParsed = parseStreamCsv(fallbackStreamCsv);
-    setStreamHistory(fallbackParsed);
-    return fallbackParsed;
-  }
+function parsePickupDate(input) {
+  if (!input) return new Date();
+  const [day, month, year] = input.split(".").map((v) => Number(v));
+  return new Date(year, month - 1, day);
 }
 
-async function loadDataset(name, fallback = []) {
-  const url = `${dataBaseUrl}/${name}.json`;
+function formatDate(date) {
+  return date.toLocaleDateString("cs-CZ", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function formatClock(date) {
+  return date.toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" });
+}
+
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load ${url}`);
+  return res.json();
+}
+
+async function fetchText(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load ${url}`);
+  return res.text();
+}
+
+async function loadDataset(name, fallback) {
   try {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await response.json();
-    return Array.isArray(payload) ? payload : fallback;
-  } catch (error) {
-    console.warn(`Nepodařilo se načíst dataset ${name} (${url})`, error);
+    const url = DATA_PATHS[name];
+    const response = await fetchJson(url);
+    return response;
+  } catch (err) {
+    console.warn(`Using fallback for ${name}`, err);
     return fallback;
   }
 }
 
-function parseKoseTelemetry(csvText) {
-  const lines = csvText
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  if (!lines.length) return [];
-  const header = lines.shift().split(",").map((h) => h.trim().toLowerCase());
-  const idx = {
-    id: header.indexOf("id"),
-    fillLevel: header.indexOf("filllevel"),
-    lastUpdated: header.indexOf("lastupdated"),
-    batteryLevel: header.indexOf("batterylevel"),
-  };
-
-  return lines
-    .map((row) => row.split(",").map((cell) => cell.trim()))
-    .map((cells) => ({
-      id: idx.id >= 0 ? cells[idx.id] : undefined,
-      fillLevel: idx.fillLevel >= 0 ? Number(cells[idx.fillLevel]) : undefined,
-      lastUpdated: idx.lastUpdated >= 0 ? cells[idx.lastUpdated] : undefined,
-      batteryLevel: idx.batteryLevel >= 0 ? Number(cells[idx.batteryLevel]) : undefined,
-    }))
-    .filter((entry) => entry.id);
-}
-
-function pickLatestTelemetry(entries) {
-  const latest = new Map();
-  entries.forEach((entry, index) => {
-    const current = latest.get(entry.id);
-    const timeValue = Date.parse(entry.lastUpdated || "");
-    const currentTime = current ? Date.parse(current.lastUpdated || "") : -Infinity;
-    const isNewer = Number.isFinite(timeValue) && timeValue >= currentTime;
-    const fallbackNewer = !Number.isFinite(timeValue) && current === undefined;
-    if (isNewer || fallbackNewer) {
-      latest.set(entry.id, { ...entry, order: index });
-    }
-  });
-  return latest;
-}
-
-function mergeKose(definitions, telemetryEntries) {
-  const latestTelemetry = pickLatestTelemetry(telemetryEntries);
-  return definitions.map((def) => {
-    const telem = latestTelemetry.get(def.id);
-    return {
-      ...def,
-      category: "kose",
-      fillLevel: telem?.fillLevel ?? null,
-      lastUpdated: telem?.lastUpdated ?? "–",
-      batteryLevel: telem?.batteryLevel ?? null,
-    };
-  });
-}
-
-async function loadKoseTelemetry() {
-  const url = `${dataBaseUrl}/kose_telemetry.csv`;
+async function loadCsvDataset(name, fallbackParser) {
   try {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const csv = await response.text();
-    const parsed = parseKoseTelemetry(csv);
-    return parsed.length ? parsed : fallbackKoseTelemetry;
-  } catch (error) {
-    console.warn(`Nepodařilo se načíst telemetrii košů (${url})`, error);
-    return fallbackKoseTelemetry;
+    const url = DATA_PATHS[name];
+    const text = await fetchText(url);
+    return fallbackParser(text);
+  } catch (err) {
+    console.warn(`Using fallback for ${name}`, err);
+    return fallbackParser(null);
   }
 }
 
+function parseBinTelemetryCsv(text) {
+  if (!text) {
+    return [
+      { id: "K-001", battery: 12, fill: 94, lastUpdate: new Date(Date.now() - 4 * 60 * 60 * 1000) },
+      { id: "K-002", battery: 80, fill: 32, lastUpdate: new Date(Date.now() - 40 * 60 * 1000) },
+      { id: "K-003", battery: 14, fill: 50, lastUpdate: new Date(Date.now() - 6 * 60 * 60 * 1000) },
+      { id: "K-004", battery: 55, fill: 20, lastUpdate: new Date(Date.now() - 26 * 60 * 60 * 1000) },
+      { id: "K-005", battery: 88, fill: 10, lastUpdate: new Date(Date.now() - 90 * 60 * 1000) },
+      { id: "K-006", battery: 67, fill: 45, lastUpdate: new Date(Date.now() - 50 * 60 * 1000) },
+      { id: "K-007", battery: 96, fill: 15, lastUpdate: new Date(Date.now() - 30 * 60 * 1000) },
+    ];
+  }
+
+  const rows = parseCsvWithHeader(text);
+  const byId = new Map();
+
+  rows.forEach((row) => {
+    const id = row.id || row.ID;
+    if (!id) return;
+    const fill = parseNumber(row.fill ?? row.fill_pct ?? row.naplnost);
+    const battery = parseNumber(row.battery ?? row.bat ?? row.bat_pct);
+    const ts = row.timestamp || row.ts || row.time || row.datetime || row.cas;
+    const when = ts ? new Date(ts.replace(" ", "T") + "+01:00") : new Date();
+    if (!Number.isFinite(when.getTime())) return;
+    const existing = byId.get(id);
+    if (!existing || when > existing.lastUpdate) {
+      byId.set(id, {
+        id,
+        fill,
+        battery,
+        lastUpdate: when,
+      });
+    }
+  });
+
+  return Array.from(byId.values());
+}
+
+function parseStreamCsv(text) {
+  if (!text) {
+    const now = new Date();
+    const past = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+    return {
+      times: [past, now],
+      values: [18, 20],
+    };
+  }
+  return parseHladinaCsv(text);
+}
+
 async function loadAllData() {
-  const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory] = await Promise.all([
-    loadDataset("kose", fallbackKoseDefinitions),
-    loadKoseTelemetry(),
+  const [kose, lampy, kontejnery, zelene] = await Promise.all([
+    loadDataset("kose", fallbackKose),
     loadDataset("lampy", fallbackLampy),
     loadDataset("kontejnery", fallbackKontejnery),
     loadDataset("zelene", fallbackZelene),
-    loadStreamHistory(),
   ]);
 
-  dataKose = mergeKose(koseDefinitions, koseTelemetry);
-  dataLampy = ensureLampIds(lampy);
+  dataKose = kose;
+  dataLampy = lampy;
   dataKontejnery = kontejnery;
   dataZelene = zelene;
+
+  koseTelemetry = await loadCsvDataset("koseCsv", parseBinTelemetryCsv);
+
+  const streamCsv = await loadCsvDataset("hladinaCsv", parseStreamCsv);
+  streamHistoryTimes = streamCsv.times;
+  streamHistory = streamCsv.values;
 }
 
-function showMapError(message) {
-  const mapContainer = document.getElementById("map");
-  if (!mapContainer) return;
-  mapContainer.innerHTML = `<div class="map-error">${message}</div>`;
-}
-
+export {
+  DATA_BASE_URL,
+  DATA_PATHS,
+  dataKose,
+  dataLampy,
+  dataKontejnery,
+  dataZelene,
+  dataHladina,
+  koseTelemetry,
+  streamHistory,
+  streamHistoryTimes,
+  loadAllData,
+  fallbackKose,
+  fallbackLampy,
+  fallbackKontejnery,
+  fallbackZelene,
+};

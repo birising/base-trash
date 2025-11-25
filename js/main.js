@@ -150,7 +150,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
 
-  let greenspaceMode = "trava";
+  const greenspaceVisibility = {
+    trava: true,
+    zahony: true,
+  };
   let currentCategory = "kose";
 
   const BIN_THRESHOLDS = {
@@ -565,13 +568,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   function updateGreenspaceToggleState() {
     if (!greenspaceToggle) return;
     const buttons = greenspaceToggle.querySelectorAll("[data-greenspace]");
-    buttons.forEach((btn) => btn.classList.toggle("active", btn.dataset.greenspace === greenspaceMode));
+    buttons.forEach((btn) => {
+      const key = btn.dataset.greenspace === "zahony" ? "zahony" : "trava";
+      btn.classList.toggle("active", !!greenspaceVisibility[key]);
+    });
   }
 
-  function setGreenspaceMode(mode) {
-    const normalized = mode === "zahony" ? "zahony" : "trava";
-    if (greenspaceMode === normalized) return;
-    greenspaceMode = normalized;
+  function toggleGreenspace(type) {
+    const key = type === "zahony" ? "zahony" : "trava";
+    greenspaceVisibility[key] = !greenspaceVisibility[key];
+
+    if (!greenspaceVisibility.trava && !greenspaceVisibility.zahony) {
+      greenspaceVisibility[key] = true;
+    }
+
     updateGreenspaceToggleState();
     if (currentCategory === "zelen") {
       setActiveCategory("zelen");
@@ -647,11 +657,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     const isWasteView = category === "odpad";
     const isMapCategory = mapCategories.includes(category);
     const isGreenspace = category === "zelen";
-    const activeGreenspaceLayer = greenspaceMode === "zahony" ? "zelenZahony" : "zelenTrava";
+    const greenspaceEnabled = {
+      zelenTrava: greenspaceVisibility.trava,
+      zelenZahony: greenspaceVisibility.zahony,
+    };
 
     // Always keep the map layers in sync with the chosen category.
     Object.entries(layers).forEach(([key, layer]) => {
-      const shouldShow = isGreenspace ? key === activeGreenspaceLayer : key === category;
+      const shouldShow = isGreenspace ? !!greenspaceEnabled[key] : key === category;
       if (shouldShow) {
         map.addLayer(layer);
       } else {
@@ -670,7 +683,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (targetStat) targetStat.classList.add('active');
 
     if (isMapCategory) {
-      const greenspaceData = greenspaceByType(greenspaceMode);
+      const greenspaceData = [
+        ...(greenspaceVisibility.trava ? greenspaceByType("trava") : []),
+        ...(greenspaceVisibility.zahony ? greenspaceByType("zahony") : []),
+      ];
+
       const activeData =
         category === "kose"
           ? dataKose
@@ -678,7 +695,9 @@ window.addEventListener("DOMContentLoaded", async () => {
             ? dataLampy
             : category === "kontejnery"
               ? dataKontejnery
-              : greenspaceData;
+              : greenspaceData.length
+                ? greenspaceData
+                : dataZelene;
 
       const coords =
         category === "zelen" ? activeData.flatMap((area) => area.coords) : activeData.map((item) => [item.lat, item.lng]);
@@ -698,7 +717,11 @@ window.addEventListener("DOMContentLoaded", async () => {
             : category === "kontejnery"
               ? "Kontejnery"
               : category === "zelen"
-                ? greenspaceMode === "zahony" ? "Údržba zeleně · záhony" : "Údržba zeleně · tráva"
+                ? greenspaceVisibility.trava && greenspaceVisibility.zahony
+                  ? "Údržba zeleně · všechny vrstvy"
+                  : greenspaceVisibility.zahony
+                    ? "Údržba zeleně · záhony"
+                    : "Údržba zeleně · tráva"
                 : category === "hladina"
                   ? "Hladina potoka"
                   : "Odpad & sběrný dvůr";
@@ -926,7 +949,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
   if (greenspaceToggle) {
     greenspaceToggle.querySelectorAll("[data-greenspace]").forEach((btn) => {
-      btn.addEventListener("click", () => setGreenspaceMode(btn.dataset.greenspace));
+      btn.addEventListener("click", () => toggleGreenspace(btn.dataset.greenspace));
     });
     updateGreenspaceToggleState();
   }

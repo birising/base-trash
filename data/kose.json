@@ -1,0 +1,58 @@
+[
+  {
+    "id": "K-01",
+    "lat": 50.130144,
+    "lng": 14.219936,
+    "name": "Koš plný",
+    "description": null,
+    "category": "kose"
+  },
+  {
+    "id": "K-02",
+    "lat": 50.128687,
+    "lng": 14.221423,
+    "name": "Koš",
+    "description": null,
+    "category": "kose"
+  },
+  {
+    "id": "K-03",
+    "lat": 50.129602,
+    "lng": 14.221984,
+    "name": "Koš",
+    "description": null,
+    "category": "kose"
+  },
+  {
+    "id": "K-04",
+    "lat": 50.132469,
+    "lng": 14.220607,
+    "name": "Koš",
+    "description": null,
+    "category": "kose"
+  },
+  {
+    "id": "K-05",
+    "lat": 50.132801,
+    "lng": 14.220461,
+    "name": "Koš",
+    "description": null,
+    "category": "kose"
+  },
+  {
+    "id": "K-06",
+    "lat": 50.133472,
+    "lng": 14.225753,
+    "name": "Koš",
+    "description": null,
+    "category": "kose"
+  },
+  {
+    "id": "K-07",
+    "lat": 50.132557,
+    "lng": 14.220691,
+    "name": "Koš",
+    "description": null,
+    "category": "kose"
+  }
+]

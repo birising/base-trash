@@ -649,6 +649,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   Object.values(layers).forEach((layer) => layer.addTo(map));
 
+  function showMapView() {
+    if (mapOverlay) mapOverlay.classList.remove("hidden");
+    if (greenspaceToggle) greenspaceToggle.classList.toggle("hidden", currentCategory !== "zelen");
+    if (mapView) mapView.classList.remove("hidden");
+    if (streamView) streamView.classList.add("hidden");
+    if (wasteView) wasteView.classList.add("hidden");
+    refreshMapSize(0);
+    refreshMapSize(180);
+  }
+
   function setActiveCategory(category) {
     if (!category) return;
     currentCategory = category;
@@ -729,23 +739,23 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Switch the visible view explicitly so returning from the stream panel always shows the map again.
-    if (mapOverlay) mapOverlay.classList.toggle("hidden", !isMapCategory);
-    if (greenspaceToggle) greenspaceToggle.classList.toggle("hidden", !isGreenspace);
-    if (isGreenspace) updateGreenspaceToggleState();
-    if (mapView) mapView.classList.toggle("hidden", !isMapCategory);
-    if (streamView) streamView.classList.toggle("hidden", !isStreamView);
-    if (wasteView) wasteView.classList.toggle("hidden", !isWasteView);
+    if (isMapCategory) {
+      showMapView();
+      if (isGreenspace) updateGreenspaceToggleState();
+    } else {
+      if (mapOverlay) mapOverlay.classList.add("hidden");
+      if (greenspaceToggle) greenspaceToggle.classList.add("hidden");
+      if (mapView) mapView.classList.add("hidden");
+      if (streamView) streamView.classList.toggle("hidden", !isStreamView);
+      if (wasteView) wasteView.classList.toggle("hidden", !isWasteView);
+    }
 
     if (isMapCategory && window.innerWidth <= 960 && mapView) {
       requestAnimationFrame(() => mapView.scrollIntoView({ behavior: "smooth", block: "start" }));
     }
 
     // Refresh the map size after toggling visibility to avoid a blank map when coming back from other views.
-    if (isMapCategory) {
-      refreshMapSize(0);
-      refreshMapSize(180);
-      refreshMapSize(420);
-    }
+    if (isMapCategory) refreshMapSize(420);
   }
 
   function setupSidebarToggle() {

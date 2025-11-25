@@ -579,6 +579,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   Object.values(layers).forEach((layer) => layer.addTo(map));
 
   function setActiveCategory(category) {
+    if (!category) return;
+
     const isStreamView = category === "hladina";
     const isWasteView = category === "odpad";
     const isMapCategory = mapCategories.includes(category);
@@ -650,6 +652,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (isMapCategory) {
       refreshMapSize(0);
       refreshMapSize(180);
+      refreshMapSize(420);
     }
   }
 
@@ -719,6 +722,14 @@ window.addEventListener("DOMContentLoaded", async () => {
             document.body.classList.remove("overlay-visible");
             document.getElementById("sidebar").classList.add("sidebar-hidden");
             document.getElementById("menuToggle").setAttribute("aria-expanded", "false");
+
+            // Ensure the map is visible and sized correctly when returning from stream/waste on mobile.
+            if (mapCategories.includes(category)) {
+              if (mapView) mapView.classList.remove("hidden");
+              if (mapOverlay) mapOverlay.classList.remove("hidden");
+              refreshMapSize(0);
+              refreshMapSize(220);
+            }
           }
         })
       );

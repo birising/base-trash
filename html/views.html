@@ -54,9 +54,16 @@
   <div class="map-overlay" id="mapOverlay">
     <div class="pill" id="activeCategoryLabel">Koše</div>
     <div class="pill secondary">Automatické přiblížení</div>
-    <div class="pill-group hidden" id="greenspaceToggle" aria-label="Přepnutí typu údržby zeleně">
-      <button class="pill-button active" type="button" data-greenspace="trava">Tráva</button>
-      <button class="pill-button" type="button" data-greenspace="zahony">Záhony</button>
+    <div class="layer-switcher hidden" id="greenspaceLayers" aria-label="Vrstevník údržby zeleně">
+      <div class="layer-switcher-title">Údržba zeleně</div>
+      <label class="layer-switcher-row">
+        <input type="checkbox" data-greenspace-layer="trava" checked />
+        <span>Tráva</span>
+      </label>
+      <label class="layer-switcher-row">
+        <input type="checkbox" data-greenspace-layer="zahony" checked />
+        <span>Záhony</span>
+      </label>
     </div>
   </div>
   <div id="mapView" class="view map-view">

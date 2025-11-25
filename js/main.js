@@ -642,6 +642,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (streamView) streamView.classList.toggle("hidden", !isStreamView);
     if (wasteView) wasteView.classList.toggle("hidden", !isWasteView);
 
+    if (isMapCategory && window.innerWidth <= 960 && mapView) {
+      requestAnimationFrame(() => mapView.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+
     // Refresh the map size after toggling visibility to avoid a blank map when coming back from other views.
     if (isMapCategory) {
       refreshMapSize(0);
@@ -835,6 +839,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   initNav();
   refreshMapSize(0);
   window.addEventListener("resize", () => refreshMapSize(80));
+  window.addEventListener("orientationchange", () => refreshMapSize(120));
   const refreshButton = document.getElementById("refreshStreamBtn");
   if (refreshButton) {
     refreshButton.addEventListener("click", () => refreshStreamData(true));

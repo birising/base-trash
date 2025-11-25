@@ -1,6 +1,7 @@
 .stream-view {
   padding: 18px;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .stream-grid {
@@ -200,6 +201,7 @@
 .waste-view {
   padding: 18px;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .waste-grid {
@@ -613,6 +615,18 @@
   #map {
     height: 70vh;
     min-height: 520px;
+  }
+}
+
+@media (max-width: 640px) {
+  .view,
+  .map-view {
+    min-height: 420px;
+  }
+
+  #map {
+    height: 68vh;
+    min-height: 420px;
   }
 }
 

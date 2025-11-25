@@ -616,7 +616,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                 ? "Údržba zeleně"
                 : category === "hladina"
                   ? "Hladina potoka"
-                  : "Odvoz odpadu";
+                  : "Odpad & sběrný dvůr";
       categoryLabel.textContent = `${labelText}`;
     }
 

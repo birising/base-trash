@@ -372,171 +372,17 @@ const wasteSchedule = {
   contactEmail: "info@beloky.cz",
 };
 
-// Primární zdroj hladiny a seznam záložních adres (kvůli CORS a mixovanému obsahu na GitHub Pages).
-const streamSourceUrl = "http://hladiny-vox.pwsplus.eu/Senzors/Details/24470";
-const streamFetchCandidates = [
-  // Bez-CORS proxy vracející čistý HTML obsah
-  `https://api.allorigins.win/raw?url=${encodeURIComponent(streamSourceUrl)}`,
-  // Textový snapshot (markdown) vhodný pro čtení regexem, pokud HTML nejde načíst
-  `https://r.jina.ai/${streamSourceUrl}`,
-  `https://r.jina.ai/${streamSourceUrl.replace("http://", "https://")}`,
-  `https://cors.isomorphic-git.org/${streamSourceUrl}`,
-  `https://cors.isomorphic-git.org/${streamSourceUrl.replace("http://", "https://")}`,
-  streamSourceUrl.replace("http://", "https://"),
-  streamSourceUrl,
-];
 
-const fallbackStreamCsv = `
-2025-11-23 12:10:00;20
-2025-11-23 12:20:00;21
-2025-11-23 12:30:00;21
-2025-11-23 12:40:00;21
-2025-11-23 12:50:00;21
-2025-11-23 13:00:00;20
-2025-11-23 13:10:00;18
-2025-11-23 13:20:00;18
-2025-11-23 13:30:00;18
-2025-11-23 13:40:00;18
-2025-11-23 13:50:00;20
-2025-11-23 14:00:00;20
-2025-11-23 14:10:00;21
-2025-11-23 14:20:00;21
-2025-11-23 14:30:00;22
-2025-11-23 14:40:00;23
-2025-11-23 14:50:00;23
-2025-11-23 15:00:00;23
-2025-11-23 15:10:00;23
-2025-11-23 15:20:00;22
-2025-11-23 15:30:00;22
-2025-11-23 15:40:00;22
-2025-11-23 15:50:00;22
-2025-11-23 16:00:00;22
-2025-11-23 16:10:00;22
-2025-11-23 16:20:00;22
-2025-11-23 16:30:00;23
-2025-11-23 16:40:00;23
-2025-11-23 16:50:00;23
-2025-11-23 17:00:00;23
-2025-11-23 17:10:00;23
-2025-11-23 17:20:00;23
-2025-11-23 17:30:00;23
-2025-11-23 17:40:00;23
-2025-11-23 17:50:00;24
-2025-11-23 18:00:00;23
-2025-11-23 18:10:00;23
-2025-11-23 18:20:00;23
-2025-11-23 18:30:00;24
-2025-11-23 18:40:00;24
-2025-11-23 18:50:00;24
-2025-11-23 19:00:00;24
-2025-11-23 19:10:00;24
-2025-11-23 19:20:00;24
-2025-11-23 19:30:00;24
-2025-11-23 19:40:00;25
-2025-11-23 19:50:00;24
-2025-11-23 20:00:00;24
-2025-11-23 20:10:00;24
-2025-11-23 20:20:00;24
-2025-11-23 20:30:00;24
-2025-11-23 20:40:00;25
-2025-11-23 20:50:00;24
-2025-11-23 21:00:00;24
-2025-11-23 21:10:00;25
-2025-11-23 21:20:00;25
-2025-11-23 21:30:00;25
-2025-11-23 21:40:00;25
-2025-11-23 21:50:00;24
-2025-11-23 22:00:00;24
-2025-11-23 22:10:00;25
-2025-11-23 22:20:00;25
-2025-11-23 22:30:00;25
-2025-11-23 22:40:00;25
-2025-11-23 22:50:00;24
-2025-11-23 23:00:00;25
-2025-11-23 23:10:00;25
-2025-11-23 23:20:00;25
-2025-11-23 23:30:00;25
-2025-11-23 23:40:00;25
-2025-11-23 23:50:00;25
-2025-11-24 00:00:00;24
-2025-11-24 00:10:00;24
-2025-11-24 00:20:00;24
-2025-11-24 00:30:00;24
-2025-11-24 00:40:00;24
-2025-11-24 00:50:00;24
-2025-11-24 01:00:00;24
-2025-11-24 01:10:00;24
-2025-11-24 01:20:00;25
-2025-11-24 01:30:00;24
-2025-11-24 01:40:00;24
-2025-11-24 01:50:00;24
-2025-11-24 02:00:00;24
-2025-11-24 02:10:00;24
-2025-11-24 02:20:00;24
-2025-11-24 02:30:00;24
-2025-11-24 02:40:00;24
-2025-11-24 02:50:00;24
-2025-11-24 03:00:00;24
-2025-11-24 03:10:00;23
-2025-11-24 03:20:00;24
-2025-11-24 03:30:00;23
-2025-11-24 03:40:00;24
-2025-11-24 03:50:00;23
-2025-11-24 04:00:00;23
-2025-11-24 04:10:00;23
-2025-11-24 04:20:00;23
-2025-11-24 04:30:00;24
-2025-11-24 04:40:00;23
-2025-11-24 04:50:00;24
-2025-11-24 05:00:00;23
-2025-11-24 05:10:00;23
-2025-11-24 05:20:00;23
-2025-11-24 05:30:00;24
-2025-11-24 05:40:00;23
-2025-11-24 05:50:00;23
-2025-11-24 06:00:00;23
-2025-11-24 06:10:00;24
-2025-11-24 06:20:00;23
-2025-11-24 06:30:00;23
-2025-11-24 06:40:00;23
-2025-11-24 06:50:00;24
-2025-11-24 07:00:00;23
-2025-11-24 07:10:00;23
-2025-11-24 07:20:00;24
-2025-11-24 07:30:00;23
-2025-11-24 07:40:00;23
-2025-11-24 07:50:00;23
-2025-11-24 08:00:00;23
-2025-11-24 08:10:00;23
-2025-11-24 08:20:00;23
-2025-11-24 08:30:00;23
-2025-11-24 08:40:00;23
-2025-11-24 08:50:00;23
-2025-11-24 09:00:00;23
-2025-11-24 09:10:00;23
-2025-11-24 09:20:00;23
-2025-11-24 09:30:00;23
-2025-11-24 09:40:00;23
-2025-11-24 09:50:00;23
-2025-11-24 10:00:00;22
-2025-11-24 10:10:00;22
-2025-11-24 10:20:00;23
-2025-11-24 10:30:00;22
-2025-11-24 10:40:00;22
-2025-11-24 10:50:00;22
-2025-11-24 11:00:00;22
-2025-11-24 11:10:00;22
-2025-11-24 11:20:00;22
-2025-11-24 11:30:00;21
-2025-11-24 11:40:00;22
-2025-11-24 11:50:00;21
-2025-11-24 12:00:00;21
-`;
 const floodThresholds = [
   { label: "SPA 1", value: 90, color: "#22c55e" },
   { label: "SPA 2", value: 100, color: "#facc15" },
   { label: "SPA 3", value: 120, color: "#f97316" },
 ];
+
+// CSV snapshot (10 min interval) hostovaný na S3 – hlavní zdroj pro graf i aktuální stav.
+const streamCsvUrl = "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/water_level.csv";
+// Prohlížeče blokují přímý přístup kvůli CORS; použijeme proxy, ale zdroj zůstává S3.
+const streamCsvProxyUrl = `https://cors.isomorphic-git.org/${streamCsvUrl}`;
 
 const STREAM_MAX_WINDOW_HOURS = 24;
 let streamHistory = [];
@@ -620,26 +466,48 @@ function setStreamHistory(entries) {
   streamState.updated = latest.date
     ? latest.date.toLocaleString("cs-CZ", { timeZone: "Europe/Prague" })
     : latest.ts;
-  streamState.status = "CSV data (hladina.csv)";
+  streamState.status = "Data z water_level.csv (S3)";
+}
+
+async function fetchStreamCsvWithProxy() {
+  const sources = [
+    { url: streamCsvUrl, label: new URL(streamCsvUrl).hostname },
+    { url: streamCsvProxyUrl, label: `${new URL(streamCsvUrl).hostname} · proxy` },
+  ];
+
+  let lastError = null;
+  for (const source of sources) {
+    try {
+      const response = await fetch(source.url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const csv = await response.text();
+      const parsed = parseStreamCsv(csv);
+      if (!parsed.length) throw new Error("Prázdný soubor water_level.csv");
+
+      streamState.status = `Data z water_level.csv · ${source.label}`;
+      return parsed;
+    } catch (error) {
+      lastError = error;
+      console.warn(`Nepodařilo se načíst water_level.csv (${source.url})`, error);
+    }
+  }
+
+  throw lastError ?? new Error("Nepodařilo se načíst water_level.csv");
 }
 
 async function loadStreamHistory() {
-  const url = `${dataBaseUrl}/hladina.csv`;
   try {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const csv = await response.text();
-    const parsed = parseStreamCsv(csv);
-    if (parsed.length) {
-      setStreamHistory(parsed);
-      return parsed;
-    }
-    throw new Error("Prázdný soubor hladiny");
+    const parsed = await fetchStreamCsvWithProxy();
+    setStreamHistory(parsed);
+    return parsed;
   } catch (error) {
-    console.warn(`Nepodařilo se načíst hladinovou historii (${url})`, error);
-    const fallbackParsed = parseStreamCsv(fallbackStreamCsv);
-    setStreamHistory(fallbackParsed);
-    return fallbackParsed;
+    streamHistory = [];
+    streamHistoryTimes = [];
+    streamState.numeric = null;
+    streamState.level = "Data nedostupná";
+    streamState.updated = "–";
+    streamState.status = "Nepodařilo se načíst water_level.csv";
+    return [];
   }
 }
 

@@ -58,9 +58,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
   baseLayer.addTo(map);
 
-  const toolbarZoom = L.control.zoom({ position: "topright" });
-  toolbarZoom.addTo(map);
-
   const defaultView = [50.1322, 14.222];
   map.setView(defaultView, 16);
 
@@ -143,14 +140,17 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
   const mapOverlay = document.getElementById("mapOverlay");
-  const greenspaceToggle = document.getElementById("greenspaceToggle");
+  const greenspaceLayersControl = document.getElementById("greenspaceLayers");
+  const greenspaceLayerInputs = greenspaceLayersControl
+    ? greenspaceLayersControl.querySelectorAll("[data-greenspace-layer]")
+    : [];
   const mapView = document.getElementById("mapView");
   const streamView = document.getElementById("streamView");
   const wasteView = document.getElementById("wasteView");
 
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
 
-  let greenspaceMode = "trava";
+  const greenspaceVisibility = { trava: true, zahony: true };
   let currentCategory = "kose";
 
   const BIN_THRESHOLDS = {
@@ -562,20 +562,19 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   populateGreenspaceLayers();
 
-  function updateGreenspaceToggleState() {
-    if (!greenspaceToggle) return;
-    const buttons = greenspaceToggle.querySelectorAll("[data-greenspace]");
-    buttons.forEach((btn) => btn.classList.toggle("active", btn.dataset.greenspace === greenspaceMode));
+  function visibleGreenspaceData() {
+    const areas = [];
+    if (greenspaceVisibility.trava) areas.push(...greenspaceByType("trava"));
+    if (greenspaceVisibility.zahony) areas.push(...greenspaceByType("zahony"));
+    return areas;
   }
 
-  function setGreenspaceMode(mode) {
-    const normalized = mode === "zahony" ? "zahony" : "trava";
-    if (greenspaceMode === normalized) return;
-    greenspaceMode = normalized;
-    updateGreenspaceToggleState();
-    if (currentCategory === "zelen") {
-      setActiveCategory("zelen");
-    }
+  function syncGreenspaceLayerInputs() {
+    if (!greenspaceLayerInputs.length) return;
+    greenspaceLayerInputs.forEach((input) => {
+      const key = input.dataset.greenspaceLayer === "zahony" ? "zahony" : "trava";
+      input.checked = greenspaceVisibility[key];
+    });
   }
 
   function updateCounters() {
@@ -647,11 +646,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     const isWasteView = category === "odpad";
     const isMapCategory = mapCategories.includes(category);
     const isGreenspace = category === "zelen";
-    const activeGreenspaceLayer = greenspaceMode === "zahony" ? "zelenZahony" : "zelenTrava";
 
     // Always keep the map layers in sync with the chosen category.
     Object.entries(layers).forEach(([key, layer]) => {
-      const shouldShow = isGreenspace ? key === activeGreenspaceLayer : key === category;
+      const isTravaLayer = key === "zelenTrava";
+      const isZahonyLayer = key === "zelenZahony";
+      const shouldShow = isGreenspace
+        ? (isTravaLayer && greenspaceVisibility.trava) || (isZahonyLayer && greenspaceVisibility.zahony)
+        : key === category;
       if (shouldShow) {
         map.addLayer(layer);
       } else {
@@ -670,7 +672,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (targetStat) targetStat.classList.add('active');
 
     if (isMapCategory) {
-      const greenspaceData = greenspaceByType(greenspaceMode);
+      const greenspaceData = visibleGreenspaceData();
       const activeData =
         category === "kose"
           ? dataKose
@@ -698,7 +700,11 @@ window.addEventListener("DOMContentLoaded", async () => {
             : category === "kontejnery"
               ? "Kontejnery"
               : category === "zelen"
-                ? greenspaceMode === "zahony" ? "Údržba zeleně · záhony" : "Údržba zeleně · tráva"
+                ? greenspaceVisibility.trava && greenspaceVisibility.zahony
+                  ? "Údržba zeleně · všechny vrstvy"
+                  : greenspaceVisibility.trava
+                    ? "Údržba zeleně · tráva"
+                    : "Údržba zeleně · záhony"
                 : category === "hladina"
                   ? "Hladina potoka"
                   : "Odpad & sběrný dvůr";
@@ -707,8 +713,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     // Switch the visible view explicitly so returning from the stream panel always shows the map again.
     if (mapOverlay) mapOverlay.classList.toggle("hidden", !isMapCategory);
-    if (greenspaceToggle) greenspaceToggle.classList.toggle("hidden", !isGreenspace);
-    if (isGreenspace) updateGreenspaceToggleState();
+    if (greenspaceLayersControl) greenspaceLayersControl.classList.toggle("hidden", !isGreenspace);
+    if (isGreenspace) syncGreenspaceLayerInputs();
     if (mapView) mapView.classList.toggle("hidden", !isMapCategory);
     if (streamView) streamView.classList.toggle("hidden", !isStreamView);
     if (wasteView) wasteView.classList.toggle("hidden", !isWasteView);
@@ -852,45 +858,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function fetchStreamLevel() {
-    let lastError = null;
-    for (const candidate of streamFetchCandidates) {
-      try {
-        const response = await fetch(candidate, { cache: "no-store", mode: "cors" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const html = await response.text();
-
-        const { valueFromText, timeFromText, numeric } = extractStreamData(html);
-        if (numeric != null && !Number.isNaN(numeric)) {
-          const parsedTime = parseTimestamp(timeFromText) || new Date();
-          pushStreamReading(numeric, parsedTime);
-          streamState.numeric = streamHistory.at(-1);
-          streamState.level = `${streamState.numeric} cm`;
-        } else if (valueFromText) {
-          streamState.level = valueFromText;
-        }
-        if (timeFromText) {
-          const parsedTime = parseTimestamp(timeFromText);
-          streamState.updated = parsedTime
-            ? parsedTime.toLocaleString("cs-CZ", { timeZone: "Europe/Prague" })
-            : timeFromText;
-        }
-
-        streamState.updated = streamState.updated || new Date().toLocaleString("cs-CZ");
-        streamState.status = `Live data (${new URL(candidate).hostname}) · ${new Date().toLocaleTimeString("cs-CZ")}`;
-        lastError = null;
-        break;
-      } catch (err) {
-        lastError = err;
-        continue;
-      }
-    }
-
-    if (lastError) {
-      streamState.level = streamState.level || `${streamHistory.at(-1)} cm`;
-      streamState.updated = streamState.updated || "Zdroj nepřístupný";
-      streamState.numeric = streamState.numeric || streamHistory.at(-1);
-      streamState.status = "Zdroj nepřístupný (CORS / blokováno)";
-      console.warn("Chyba při načítání hladiny", lastError);
+    try {
+      const parsed = await fetchStreamCsvWithProxy();
+      setStreamHistory(parsed);
+    } catch (err) {
+      console.warn("Chyba při načítání hladiny", err);
+      streamHistory = [];
+      streamHistoryTimes = [];
+      streamState.numeric = null;
+      streamState.level = "Data nedostupná";
+      streamState.updated = "–";
+      streamState.status = "Nepodařilo se načíst water_level.csv";
     }
 
     populateLayer("hladina");
@@ -924,11 +902,23 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (refreshButton) {
     refreshButton.addEventListener("click", () => refreshStreamData(true));
   }
-  if (greenspaceToggle) {
-    greenspaceToggle.querySelectorAll("[data-greenspace]").forEach((btn) => {
-      btn.addEventListener("click", () => setGreenspaceMode(btn.dataset.greenspace));
+  if (greenspaceLayerInputs.length) {
+    greenspaceLayerInputs.forEach((input) => {
+      input.addEventListener("change", () => {
+        const key = input.dataset.greenspaceLayer === "zahony" ? "zahony" : "trava";
+        const enabled = input.checked;
+        const currentlyVisible = Object.values(greenspaceVisibility).filter(Boolean).length;
+        if (!enabled && currentlyVisible === 1) {
+          input.checked = true;
+          return;
+        }
+        greenspaceVisibility[key] = enabled;
+        if (currentCategory === "zelen") {
+          setActiveCategory("zelen");
+        }
+      });
     });
-    updateGreenspaceToggleState();
+    syncGreenspaceLayerInputs();
   }
   fetchStreamLevel();
 });

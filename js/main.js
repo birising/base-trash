@@ -58,9 +58,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
   baseLayer.addTo(map);
 
-  const toolbarZoom = L.control.zoom({ position: "topright" });
-  toolbarZoom.addTo(map);
-
   const defaultView = [50.1322, 14.222];
   map.setView(defaultView, 16);
 

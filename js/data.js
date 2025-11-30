@@ -809,21 +809,25 @@ async function loadKriminalitaData() {
       error = fetchError;
       
       // If direct fetch fails, try CORS proxies
-      for (const proxyUrl of proxyServices) {
+      console.log('Přímý fetch selhal, zkouším CORS proxy...');
+      for (let i = 0; i < proxyServices.length; i++) {
+        const proxyUrl = proxyServices[i];
         try {
+          console.log(`Zkouším proxy ${i + 1}/${proxyServices.length}: ${proxyUrl.substring(0, 50)}...`);
           const proxyController = new AbortController();
-          const proxyTimeoutId = setTimeout(() => proxyController.abort(), 15000);
+          const proxyTimeoutId = setTimeout(() => proxyController.abort(), 20000);
           
           const proxyResponse = await fetch(proxyUrl, {
             signal: proxyController.signal,
             headers: {
-              'Accept': 'application/geo+json, application/json'
+              'Accept': 'application/geo+json, application/json, text/plain'
             }
           });
           
           clearTimeout(proxyTimeoutId);
           
           if (!proxyResponse.ok) {
+            console.warn(`Proxy ${i + 1} vrátil HTTP ${proxyResponse.status}`);
             continue;
           }
           
@@ -834,26 +838,39 @@ async function loadKriminalitaData() {
               const parsed = JSON.parse(text);
               // Validate it's actually GeoJSON
               if (parsed && (parsed.type === 'FeatureCollection' || parsed.features)) {
+                console.log(`Proxy ${i + 1} úspěšný! Načteno ${parsed.features?.length || 0} záznamů`);
                 geojson = parsed;
                 error = null;
                 break;
+              } else {
+                console.warn(`Proxy ${i + 1} vrátil data, ale není to GeoJSON`);
               }
             } catch (parseError) {
               // If parsing fails, try to extract JSON from HTML response (some proxies wrap it)
               const jsonMatch = text.match(/\{[\s\S]*"type"\s*:\s*"FeatureCollection"[\s\S]*\}/);
               if (jsonMatch) {
                 try {
-                  geojson = JSON.parse(jsonMatch[0]);
-                  error = null;
-                  break;
+                  const extracted = JSON.parse(jsonMatch[0]);
+                  if (extracted && (extracted.type === 'FeatureCollection' || extracted.features)) {
+                    console.log(`Proxy ${i + 1} úspěšný (extrahováno z HTML)! Načteno ${extracted.features?.length || 0} záznamů`);
+                    geojson = extracted;
+                    error = null;
+                    break;
+                  }
                 } catch (e) {
+                  console.warn(`Proxy ${i + 1} - chyba při parsování extrahovaného JSON:`, e);
                   continue;
                 }
+              } else {
+                console.warn(`Proxy ${i + 1} - nelze extrahovat JSON z odpovědi`);
               }
               continue;
             }
+          } else {
+            console.warn(`Proxy ${i + 1} vrátil příliš krátkou odpověď (${text?.length || 0} znaků)`);
           }
         } catch (proxyError) {
+          console.warn(`Proxy ${i + 1} selhal:`, proxyError.message);
           continue;
         }
       }
@@ -861,8 +878,16 @@ async function loadKriminalitaData() {
     
     if (!geojson) {
       const errorMsg = error?.message || 'Neznámá chyba';
-      const isCorsError = errorMsg.includes('CORS') || errorMsg.includes('Access-Control') || errorMsg.includes('access control');
-      throw new Error(isCorsError ? 'CORS chyba při načítání dat kriminality' : errorMsg);
+      const isCorsError = errorMsg.includes('CORS') || errorMsg.includes('Access-Control') || errorMsg.includes('access control') || errorMsg.includes('Failed to fetch');
+      
+      // Log detailed error for debugging
+      console.error('Kriminalita data loading failed:', {
+        error: errorMsg,
+        isCorsError,
+        triedProxies: proxyServices.length
+      });
+      
+      throw new Error(isCorsError ? 'CORS chyba při načítání dat kriminality - zkuste obnovit stránku' : errorMsg);
     }
     
     if (geojson && geojson.features) {
@@ -949,18 +974,36 @@ async function loadAllData() {
     dataZelene = getValue(zelene, fallbackZelene);
     dataKriminalita = getValue(_kriminalita, []);
     
-    // Load codebooks for kriminalita (only if we have data)
-    if (dataKriminalita.length > 0) {
+    // Load codebooks for kriminalita (always try, even if data failed - might be useful later)
+    try {
       await loadKriminalitaCodebooks();
+    } catch (codebookError) {
+      console.warn('Chyba při načítání číselníků kriminality:', codebookError);
     }
     
-    // Log any failures
+    // Log any failures with more detail for kriminalita
     [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita].forEach((result, index) => {
       if (result.status === 'rejected') {
         const names = ['kose', 'kose_telemetry', 'lampy', 'kontejnery', 'zelene', 'streamHistory', 'kriminalita'];
-        console.warn(`Chyba při načítání ${names[index]}:`, result.reason);
+        if (names[index] === 'kriminalita') {
+          console.error(`Chyba při načítání ${names[index]}:`, result.reason);
+          console.error('Detail chyby:', {
+            reason: result.reason,
+            message: result.reason?.message,
+            stack: result.reason?.stack
+          });
+        } else {
+          console.warn(`Chyba při načítání ${names[index]}:`, result.reason);
+        }
       }
     });
+    
+    // Log success for debugging
+    if (dataKriminalita && dataKriminalita.length > 0) {
+      console.log(`Kriminalita data načtena: ${dataKriminalita.length} záznamů`);
+    } else {
+      console.warn('Kriminalita data nejsou k dispozici (prázdné nebo chyba)');
+    }
   } catch (error) {
     console.error('Kritická chyba při načítání dat:', error);
     // Use all fallbacks as last resort

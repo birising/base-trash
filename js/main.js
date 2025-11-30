@@ -87,8 +87,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await loadAllData();
   
-  // Re-render kriminalita if view is visible and data loaded
-  if (kriminalitaView && !kriminalitaView.classList.contains('hidden') && dataKriminalita && dataKriminalita.length > 0) {
+  // Re-render kriminalita if view is visible (function handles all states)
+  if (kriminalitaView && !kriminalitaView.classList.contains('hidden')) {
     renderKriminalita();
   }
 

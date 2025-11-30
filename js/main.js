@@ -1001,10 +1001,17 @@ Odkaz do aplikace: ${appUrl}`;
     
     const feedUrl = 'https://pkr.kr-stredocesky.cz/pkr/zasahy-jpo/feed.xml';
     
-    // Try direct fetch first
+    // Try multiple CORS proxy services
+    const proxyServices = [
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`,
+      `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`,
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feedUrl)}`
+    ];
+    
     let xmlText = null;
     let error = null;
     
+    // Try direct fetch first
     try {
       const response = await fetch(feedUrl, {
         method: 'GET',
@@ -1020,23 +1027,30 @@ Odkaz do aplikace: ${appUrl}`;
       xmlText = await response.text();
     } catch (fetchError) {
       error = fetchError;
-      // Try CORS proxy as fallback
-      const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`;
       
-      try {
-        const proxyResponse = await fetch(corsProxyUrl, {
-          method: 'GET'
-        });
-        
-        if (!proxyResponse.ok) {
-          throw new Error(`Proxy HTTP ${proxyResponse.status}`);
+      // Try each proxy service in sequence
+      for (const proxyUrl of proxyServices) {
+        try {
+          const proxyResponse = await fetch(proxyUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/rss+xml, application/xml, text/xml'
+            }
+          });
+          
+          if (!proxyResponse.ok) {
+            continue; // Try next proxy
+          }
+          
+          xmlText = await proxyResponse.text();
+          if (xmlText && xmlText.length > 100) { // Basic validation
+            error = null; // Success with proxy
+            break;
+          }
+        } catch (proxyError) {
+          // Try next proxy
+          continue;
         }
-        
-        xmlText = await proxyResponse.text();
-        error = null; // Success with proxy
-      } catch (proxyError) {
-        console.warn('CORS proxy also failed:', proxyError);
-        // Keep original error
       }
     }
     

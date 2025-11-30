@@ -768,7 +768,7 @@ Odkaz do aplikace: ${appUrl}`;
     if (counters.lampy) counters.lampy.textContent = dataLampy.length;
     if (counters.kontejnery) counters.kontejnery.textContent = dataKontejnery.length;
     if (counters.zelen) counters.zelen.textContent = dataZelene.length;
-    if (counters.kriminalita) counters.kriminalita.textContent = dataKriminalita.length;
+    if (counters.kriminalita) counters.kriminalita.textContent = (dataKriminalita && dataKriminalita.length) ? dataKriminalita.length : 0;
     if (counters.hladina) {
       counters.hladina.textContent = streamState.level ? streamState.level : `${dataHladina.length} senzor`;
     }
@@ -1012,7 +1012,18 @@ Odkaz do aplikace: ${appUrl}`;
     if (kriminalitaView) {
       if (isKriminalitaView) {
         kriminalitaView.classList.remove("hidden");
-        renderKriminalita();
+        // Re-render when view becomes visible (data might have loaded)
+        if (dataKriminalita && dataKriminalita.length > 0) {
+          renderKriminalita();
+        } else if (dataKriminalita && dataKriminalita.length === 0) {
+          // Data loaded but empty - show empty state
+          renderKriminalita();
+        } else {
+          // Data still loading
+          if (kriminalitaList) {
+            kriminalitaList.innerHTML = '<div class="loading-state">Načítám data kriminality…</div>';
+          }
+        }
       } else {
         kriminalitaView.classList.add("hidden");
       }
@@ -1268,6 +1279,12 @@ Odkaz do aplikace: ${appUrl}`;
 
   function renderKriminalita() {
     if (!kriminalitaList) return;
+    
+    // Check if data is still loading
+    if (dataKriminalita === undefined || dataKriminalita === null) {
+      kriminalitaList.innerHTML = '<div class="loading-state">Načítám data kriminality…</div>';
+      return;
+    }
     
     if (dataKriminalita.length === 0) {
       kriminalitaList.innerHTML = '<div class="empty-state">Žádná data kriminality k zobrazení.</div>';

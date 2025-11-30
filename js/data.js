@@ -777,20 +777,77 @@ async function loadKriminalitaData() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
     
-    const response = await fetch('https://kriminalita.policie.gov.cz/api/v2/downloads/2025_532070.geojson', {
-      signal: controller.signal,
-      headers: {
-        'Accept': 'application/geo+json, application/json'
+    const feedUrl = 'https://kriminalita.policie.gov.cz/api/v2/downloads/2025_532070.geojson';
+    
+    // Try multiple approaches: direct fetch, then CORS proxies
+    const proxyServices = [
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`,
+      `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`,
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feedUrl)}`
+    ];
+    
+    let geojson = null;
+    let error = null;
+    
+    // Try direct fetch first
+    try {
+      const response = await fetch(feedUrl, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/geo+json, application/json'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      
+      geojson = await response.json();
+    } catch (fetchError) {
+      error = fetchError;
+      
+      // If direct fetch fails, try CORS proxies
+      for (const proxyUrl of proxyServices) {
+        try {
+          const proxyController = new AbortController();
+          const proxyTimeoutId = setTimeout(() => proxyController.abort(), 15000);
+          
+          const proxyResponse = await fetch(proxyUrl, {
+            signal: proxyController.signal,
+            headers: {
+              'Accept': 'application/geo+json, application/json'
+            }
+          });
+          
+          clearTimeout(proxyTimeoutId);
+          
+          if (!proxyResponse.ok) {
+            continue;
+          }
+          
+          const text = await proxyResponse.text();
+          if (text && text.length > 100) { // Basic validation
+            try {
+              geojson = JSON.parse(text);
+              error = null;
+              break;
+            } catch (parseError) {
+              continue;
+            }
+          }
+        } catch (proxyError) {
+          continue;
+        }
+      }
     }
     
-    const geojson = await response.json();
+    if (!geojson) {
+      const errorMsg = error?.message || 'Neznámá chyba';
+      const isCorsError = errorMsg.includes('CORS') || errorMsg.includes('Access-Control') || errorMsg.includes('access control');
+      throw new Error(isCorsError ? 'CORS chyba při načítání dat kriminality' : errorMsg);
+    }
     
     if (geojson && geojson.features) {
       dataKriminalita = geojson.features.map(feature => {
@@ -814,10 +871,6 @@ async function loadKriminalitaData() {
   } catch (error) {
     if (error.name === 'AbortError') {
       throw new Error('Timeout při načítání dat kriminality (15s)');
-    }
-    const errorMsg = error.message || String(error);
-    if (errorMsg.includes('CORS') || errorMsg.includes('Access-Control') || errorMsg.includes('access control') || errorMsg.includes('Failed to fetch')) {
-      throw new Error('CORS chyba při načítání dat kriminality');
     }
     throw error;
   }
@@ -855,6 +908,9 @@ async function loadKriminalitaCodebooks() {
 
 async function loadAllData() {
   try {
+    // Initialize kriminalita as empty array to indicate it's being loaded
+    dataKriminalita = [];
+    
     const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita] = await Promise.allSettled([
       loadDataset("kose", fallbackKoseDefinitions),
       loadKoseTelemetry(),
@@ -877,8 +933,10 @@ async function loadAllData() {
     dataZelene = getValue(zelene, fallbackZelene);
     dataKriminalita = getValue(_kriminalita, []);
     
-    // Load codebooks for kriminalita
-    await loadKriminalitaCodebooks();
+    // Load codebooks for kriminalita (only if we have data)
+    if (dataKriminalita.length > 0) {
+      await loadKriminalitaCodebooks();
+    }
     
     // Log any failures
     [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita].forEach((result, index) => {

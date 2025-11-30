@@ -111,11 +111,22 @@ window.addEventListener("DOMContentLoaded", async () => {
     attributionControl: false,
   });
 
-  const baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "© OpenStreetMap přispěvatelé",
-  });
-  baseLayer.addTo(map);
+  let baseLayer;
+  try {
+    baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "© OpenStreetMap přispěvatelé",
+      errorTileUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='256' height='256' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3ENačítám...%3C/text%3E%3C/svg%3E",
+    });
+    baseLayer.addTo(map);
+    
+    // Handle tile loading errors
+    baseLayer.on('tileerror', (error) => {
+      console.warn('Map tile loading error:', error);
+    });
+  } catch (error) {
+    console.error("Chyba při vytváření mapových dlaždic:", error);
+  }
 
   const defaultView = [50.1322, 14.222];
   map.setView(defaultView, 16);
@@ -1049,15 +1060,27 @@ window.addEventListener("DOMContentLoaded", async () => {
   async function fetchStreamLevel() {
     try {
       const parsed = await fetchStreamCsv();
-      setStreamHistory(parsed);
+      if (parsed && parsed.length > 0) {
+        setStreamHistory(parsed);
+      } else {
+        throw new Error("Prázdná data z CSV");
+      }
     } catch (err) {
-      console.warn("Chyba při načítání hladiny", err);
-      streamHistory = [];
-      streamHistoryTimes = [];
-      streamState.numeric = null;
-      streamState.level = "Data nedostupná";
-      streamState.updated = "–";
-      streamState.status = "Nepodařilo se načíst data hladiny";
+      // Silently handle CORS errors - fallback should have been tried
+      const errorMsg = err.message || String(err);
+      if (!errorMsg.includes('CORS') && !errorMsg.includes('access control')) {
+        console.warn("Chyba při načítání hladiny:", err);
+      }
+      
+      // Only reset if we don't have any data
+      if (!streamHistory.length) {
+        streamHistory = [];
+        streamHistoryTimes = [];
+        streamState.numeric = null;
+        streamState.level = streamState.level || "Data nedostupná";
+        streamState.updated = streamState.updated || "–";
+        streamState.status = streamState.status || "Nepodařilo se načíst data hladiny";
+      }
     }
 
     populateLayer("hladina");

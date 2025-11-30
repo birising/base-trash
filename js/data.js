@@ -583,7 +583,8 @@ async function fetchStreamCsv() {
     // If all fails, throw original error
     if (error.name === 'AbortError') {
       throw new Error("Timeout při načítání dat hladiny (přes 15s)");
-    } else if (error instanceof TypeError && error.message.includes('fetch')) {
+    } else if (error instanceof TypeError && (errorMessage.includes('fetch') || errorMessage.includes('Failed to fetch'))) {
+      // This is likely a CORS or network error - try fallback silently
       throw new Error("Síťová chyba při načítání dat hladiny (zkontrolujte CORS nastavení S3)");
     } else {
       throw error;

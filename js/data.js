@@ -963,14 +963,15 @@ async function loadAllData() {
     // Initialize kriminalita as empty array to indicate it's being loaded
     dataKriminalita = [];
     
-    const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita] = await Promise.allSettled([
+    // Load kriminalita asynchronously in background - don't block app initialization
+    // It will be loaded separately after the main app is ready
+    const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory] = await Promise.allSettled([
       loadDataset("kose", fallbackKoseDefinitions),
       loadKoseTelemetry(),
       loadDataset("lampy", fallbackLampy),
       loadDataset("kontejnery", fallbackKontejnery),
       loadDataset("zelene", fallbackZelene),
       loadStreamHistory(),
-      loadKriminalitaData(),
     ]);
 
     // Extract values from settled promises, use fallback on rejection
@@ -983,10 +984,34 @@ async function loadAllData() {
     dataLampy = ensureLampIds(getValue(lampy, fallbackLampy));
     dataKontejnery = getValue(kontejnery, fallbackKontejnery);
     dataZelene = getValue(zelene, fallbackZelene);
-    dataKriminalita = getValue(_kriminalita, []);
+    // Note: dataKriminalita will be loaded asynchronously after app initialization
     
-    // Load codebooks for kriminalita (always try, even if data failed - might be useful later)
-    // Do this BEFORE any rendering happens
+    // Log any failures
+    [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory].forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const names = ['kose', 'kose_telemetry', 'lampy', 'kontejnery', 'zelene', 'streamHistory'];
+        console.warn(`Chyba při načítání ${names[index]}:`, result.reason);
+      }
+    });
+    
+  } catch (error) {
+    console.error('Kritická chyba při načítání dat:', error);
+    // Use all fallbacks as last resort
+    dataKose = mergeKose(fallbackKoseDefinitions, fallbackKoseTelemetry);
+    dataLampy = ensureLampIds(fallbackLampy);
+    dataKontejnery = fallbackKontejnery;
+    dataZelene = fallbackZelene;
+    dataKriminalita = [];
+  }
+}
+
+// Load kriminalita data asynchronously in background (non-blocking)
+async function loadKriminalitaDataAsync() {
+  try {
+    console.log('Začínám asynchronní načítání dat kriminality...');
+    const kriminalitaData = await loadKriminalitaData();
+    
+    // Load codebooks for kriminalita
     try {
       await loadKriminalitaCodebooks();
       console.log('Číselníky kriminality načteny:', {
@@ -998,37 +1023,29 @@ async function loadAllData() {
       console.warn('Chyba při načítání číselníků kriminality:', codebookError);
     }
     
-    // Log any failures with more detail for kriminalita
-    [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita].forEach((result, index) => {
-      if (result.status === 'rejected') {
-        const names = ['kose', 'kose_telemetry', 'lampy', 'kontejnery', 'zelene', 'streamHistory', 'kriminalita'];
-        if (names[index] === 'kriminalita') {
-          console.error(`Chyba při načítání ${names[index]}:`, result.reason);
-          console.error('Detail chyby:', {
-            reason: result.reason,
-            message: result.reason?.message,
-            stack: result.reason?.stack
-          });
-        } else {
-          console.warn(`Chyba při načítání ${names[index]}:`, result.reason);
-        }
-      }
-    });
-    
     // Log success for debugging
-    if (dataKriminalita && dataKriminalita.length > 0) {
-      console.log(`Kriminalita data načtena: ${dataKriminalita.length} záznamů`);
+    if (kriminalitaData && kriminalitaData.length > 0) {
+      console.log(`Kriminalita data načtena asynchronně: ${kriminalitaData.length} záznamů`);
     } else {
       console.warn('Kriminalita data nejsou k dispozici (prázdné nebo chyba)');
     }
+    
+    // Trigger re-render if kriminalita view is currently active
+    if (typeof renderKriminalita === 'function') {
+      renderKriminalita();
+    }
+    
+    return kriminalitaData;
   } catch (error) {
-    console.error('Kritická chyba při načítání dat:', error);
-    // Use all fallbacks as last resort
-    dataKose = mergeKose(fallbackKoseDefinitions, fallbackKoseTelemetry);
-    dataLampy = ensureLampIds(fallbackLampy);
-    dataKontejnery = fallbackKontejnery;
-    dataZelene = fallbackZelene;
+    console.error('Chyba při asynchronním načítání dat kriminality:', error);
     dataKriminalita = [];
+    
+    // Still trigger render to show error state
+    if (typeof renderKriminalita === 'function') {
+      renderKriminalita();
+    }
+    
+    return [];
   }
 }
 

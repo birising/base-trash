@@ -1863,4 +1863,12 @@ Odkaz do aplikace: ${appUrl}`;
     syncGreenspaceLayerInputs();
   }
   fetchStreamLevel();
+  
+  // Load kriminalita data asynchronously in background (non-blocking)
+  // This allows the app to display immediately while kriminalita loads separately
+  if (typeof loadKriminalitaDataAsync === 'function') {
+    loadKriminalitaDataAsync().catch(error => {
+      console.error('Nepodařilo se načíst data kriminality na pozadí:', error);
+    });
+  }
 });

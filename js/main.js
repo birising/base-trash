@@ -542,15 +542,30 @@ window.addEventListener("DOMContentLoaded", async () => {
         </div>`;
     } else if (item.category === "lampy") {
       const subject = encodeURIComponent(`Porucha lampy – ${popupTitle}`);
-      const body = encodeURIComponent(
-        "Popište závadu a případně přidejte fotku. Děkujeme!"
-      );
+      
+      // GPS souřadnice
+      const gpsCoords = `${item.lat}, ${item.lng}`;
+      
+      // Odkaz do aplikace s GPS souřadnicemi
+      const appUrl = `${window.location.origin}${window.location.pathname}#map=${item.lat},${item.lng},18`;
+      
+      // Tělo emailu s GPS souřadnicemi a odkazem
+      const bodyText = `Popište závadu a případně přidejte fotku. Děkujeme!
+
+GPS souřadnice: ${gpsCoords}
+Odkaz do aplikace: ${appUrl}`;
+      const body = encodeURIComponent(bodyText);
+      
+      // Email s CC
+      const emailTo = "oubelokykancelar@seznam.cz";
+      const emailCc = "oubeloky@seznam.cz";
+      
       popupContent += `
         <div class="popup-details">
           <div><span>Stav:</span><strong>Potřebuje ověření?</strong></div>
         </div>
         <div class="popup-actions">
-          <a class="popup-button" href="mailto:info@beloky.cz?subject=${subject}&body=${body}">Nahlásit závadu</a>
+          <a class="popup-button" href="mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}">Nahlásit závadu</a>
         </div>`;
     } else if (item.category === "hladina") {
       const levelText = streamState.level ? `${streamState.level}` : "Načítám…";

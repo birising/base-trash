@@ -328,7 +328,8 @@
 @media (max-width: 960px) {
   .stream-view,
   .waste-view,
-  .hasici-view {
+  .hasici-view,
+  .kriminalita-view {
     padding: 14px;
   }
 
@@ -926,6 +927,144 @@
   }
   
   .hasici-title {
+    font-size: 16px;
+  }
+}
+
+/* Kriminalita view styles */
+.kriminalita-view {
+  padding: 18px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.kriminalita-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.kriminalita-item {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  background: linear-gradient(145deg, rgba(24, 38, 61, 0.92), rgba(12, 23, 41, 0.88));
+  box-shadow: var(--glow);
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.kriminalita-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+}
+
+.kriminalita-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.kriminalita-date {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kriminalita-state {
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.kriminalita-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.kriminalita-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.kriminalita-relevance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kriminalita-mp {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.kriminalita-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: color 0.2s ease, gap 0.2s ease;
+}
+
+.kriminalita-link:hover {
+  color: var(--accent-strong);
+  gap: 8px;
+}
+
+/* Light theme for kriminalita */
+:root[data-theme="light"] .kriminalita-item {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme="light"] .kriminalita-item:hover {
+  border-color: rgba(15, 23, 42, 0.15);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+}
+
+:root[data-theme="light"] .kriminalita-title {
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .kriminalita-link {
+  color: #059669;
+}
+
+:root[data-theme="light"] .kriminalita-link:hover {
+  color: #047857;
+}
+
+@media (max-width: 960px) {
+  .kriminalita-view {
+    padding: 12px;
+  }
+  
+  .kriminalita-item {
+    padding: 14px;
+  }
+  
+  .kriminalita-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .kriminalita-title {
     font-size: 16px;
   }
 }

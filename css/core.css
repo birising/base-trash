@@ -841,7 +841,8 @@ body {
   .sidebar,
   .stream-view,
   .waste-view,
-  .hasici-view {
+  .hasici-view,
+  .kriminalita-view {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }

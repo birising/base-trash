@@ -242,8 +242,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   const wasteView = document.getElementById("wasteView");
   const hasiciView = document.getElementById("hasiciView");
   const hasiciList = document.getElementById("hasiciList");
+  const kriminalitaView = document.getElementById("kriminalitaView");
+  const kriminalitaList = document.getElementById("kriminalitaList");
 
-  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "kriminalita"];
+  const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
   let currentCategory = null;
@@ -704,7 +706,6 @@ Odkaz do aplikace: ${appUrl}`;
     if (category === "lampy") source = dataLampy;
     if (category === "kontejnery") source = dataKontejnery;
     if (category === "hladina") source = dataHladina;
-    if (category === "kriminalita") source = dataKriminalita;
 
     source.forEach((item) => {
       const shape = createMarker(item, iconColors[category]);
@@ -722,7 +723,6 @@ Odkaz do aplikace: ${appUrl}`;
   populateLayer("lampy");
   populateLayer("kontejnery");
   populateLayer("hladina");
-  populateLayer("kriminalita");
 
   function greenspaceByType(type) {
     const normalized = type === "zahony" ? "zahony" : "trava";
@@ -836,7 +836,8 @@ Odkaz do aplikace: ${appUrl}`;
     const isStreamView = category === "hladina";
     const isWasteView = category === "odpad";
     const isHasiciView = category === "hasici";
-    const isMapCategory = mapCategories.includes(category);
+    const isKriminalitaView = category === "kriminalita";
+    const isMapCategory = mapCategories.includes(category) && category !== "kriminalita";
     const isGreenspace = category === "zelen";
 
     // Always keep the map layers in sync with the chosen category.
@@ -1006,6 +1007,14 @@ Odkaz do aplikace: ${appUrl}`;
         loadHasiciData();
       } else {
         hasiciView.classList.add("hidden");
+      }
+    }
+    if (kriminalitaView) {
+      if (isKriminalitaView) {
+        kriminalitaView.classList.remove("hidden");
+        renderKriminalita();
+      } else {
+        kriminalitaView.classList.add("hidden");
       }
     }
 
@@ -1391,6 +1400,7 @@ Odkaz do aplikace: ${appUrl}`;
     if (streamView) streamView.classList.add("hidden");
     if (wasteView) wasteView.classList.add("hidden");
     if (hasiciView) hasiciView.classList.add("hidden");
+    if (kriminalitaView) kriminalitaView.classList.add("hidden");
     if (mapOverlay) mapOverlay.classList.add("hidden");
     
     // Remove active state from all cards and nav items
@@ -1594,8 +1604,8 @@ Odkaz do aplikace: ${appUrl}`;
               let closestPolygon = null;
               let minDistance = Infinity;
               
-              // Check both greenspace layers and kriminalita layer
-              [layers.zelenTrava, layers.zelenZahony, layers.kriminalita].forEach((layer) => {
+              // Check both greenspace layers
+              [layers.zelenTrava, layers.zelenZahony].forEach((layer) => {
                 layer.eachLayer((polygon) => {
                   if (polygon instanceof L.Polygon) {
                     const bounds = polygon.getBounds();

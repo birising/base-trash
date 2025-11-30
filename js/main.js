@@ -737,39 +737,56 @@ window.addEventListener("DOMContentLoaded", async () => {
     const isGreenspace = category === "zelen";
 
     // Always keep the map layers in sync with the chosen category.
-    // First ensure map view is visible before adding layers
+    // CRITICAL: Show map view FIRST before any map operations
     if (isMapCategory && mapView) {
       mapView.classList.remove("hidden");
-      // Immediately invalidate size so map can calculate dimensions
-      setTimeout(() => map.invalidateSize(), 0);
+      // Force immediate DOM update
+      mapView.offsetHeight; // Trigger reflow
+      
+      // Immediately invalidate size - map must be visible for this to work
+      setTimeout(() => {
+        if (map) {
+          map.invalidateSize();
+        }
+      }, 0);
     }
     
-    // Add/remove layers based on category
-    Object.entries(layers).forEach(([key, layer]) => {
-      const isTravaLayer = key === "zelenTrava";
-      const isZahonyLayer = key === "zelenZahony";
-      const shouldShow = isGreenspace
-        ? (isTravaLayer && greenspaceVisibility.trava) || (isZahonyLayer && greenspaceVisibility.zahony)
-        : key === category;
-      
-      // Check if layer is already on map to avoid duplicate adds
-      const isOnMap = map.hasLayer(layer);
-      
-      if (shouldShow) {
-        if (!isOnMap) {
-          map.addLayer(layer);
+    // Add/remove layers based on category - only after map view is visible
+    if (isMapCategory) {
+      // Small delay to ensure map view is rendered
+      requestAnimationFrame(() => {
+        Object.entries(layers).forEach(([key, layer]) => {
+          const isTravaLayer = key === "zelenTrava";
+          const isZahonyLayer = key === "zelenZahony";
+          const shouldShow = isGreenspace
+            ? (isTravaLayer && greenspaceVisibility.trava) || (isZahonyLayer && greenspaceVisibility.zahony)
+            : key === category;
+          
+          // Check if layer is already on map to avoid duplicate adds
+          const isOnMap = map.hasLayer(layer);
+          
+          if (shouldShow) {
+            if (!isOnMap) {
+              map.addLayer(layer);
+            }
+          } else {
+            if (isOnMap) {
+              map.removeLayer(layer);
+            }
+          }
+        });
+        
+        // Ensure map is properly sized after layer changes
+        if (map) {
+          map.invalidateSize();
         }
-      } else {
-        if (isOnMap) {
+      });
+    } else {
+      // Remove all layers if not a map category
+      Object.entries(layers).forEach(([key, layer]) => {
+        if (map && map.hasLayer(layer)) {
           map.removeLayer(layer);
         }
-      }
-    });
-    
-    // Ensure map is properly sized after layer changes
-    if (isMapCategory) {
-      requestAnimationFrame(() => {
-        map.invalidateSize();
       });
     }
 

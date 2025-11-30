@@ -210,7 +210,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
-  let currentCategory = "kose";
+  let currentCategory = null;
   const DEFAULT_CATEGORY = "kose";
 
   const backButton = document.getElementById("backButton");
@@ -702,7 +702,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   Object.values(layers).forEach((layer) => layer.addTo(map));
 
   function setActiveCategory(category) {
-    if (!category) return;
+    if (!category) {
+      showDashboard();
+      return;
+    }
     currentCategory = category;
 
     const isStreamView = category === "hladina";
@@ -800,8 +803,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   function updateBackButtonVisibility() {
     if (!backButton) return;
     const isMobile = window.innerWidth <= 960;
-    const isDefaultCategory = currentCategory === DEFAULT_CATEGORY;
-    const shouldShow = isMobile && !isDefaultCategory;
+    const hasActiveCategory = currentCategory !== null;
+    const shouldShow = isMobile && hasActiveCategory;
     
     if (shouldShow) {
       backButton.classList.remove("hidden");
@@ -811,11 +814,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   function goToDashboard() {
-    setActiveCategory(DEFAULT_CATEGORY);
-    // Scroll to top on mobile
-    if (window.innerWidth <= 960) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    showDashboard();
   }
 
   function setupSidebarToggle() {
@@ -873,12 +872,41 @@ window.addEventListener("DOMContentLoaded", async () => {
     ensureInitialState();
   }
 
+  function showDashboard() {
+    // Hide all views and show dashboard
+    if (mapView) mapView.classList.add("hidden");
+    if (streamView) streamView.classList.add("hidden");
+    if (wasteView) wasteView.classList.add("hidden");
+    if (mapOverlay) mapOverlay.classList.add("hidden");
+    
+    // Remove active state from all cards and nav items
+    document.querySelectorAll('.stat-card.active, .nav-item.active').forEach(el => {
+      el.classList.remove('active');
+    });
+    
+    // Scroll to top on mobile
+    if (window.innerWidth <= 960) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    
+    // Update back button visibility
+    currentCategory = null;
+    updateBackButtonVisibility();
+  }
+
   function initNav() {
     const buttonSelectors = [".nav-item", ".stat-card"];
     buttonSelectors.forEach((selector) => {
       document.querySelectorAll(selector).forEach((btn) =>
         btn.addEventListener("click", () => {
           const category = btn.dataset.category;
+          
+          // If clicking on already active category, return to dashboard
+          if (currentCategory === category && btn.classList.contains('active')) {
+            showDashboard();
+            return;
+          }
+          
           setActiveCategory(category);
           if (window.innerWidth <= 960) {
             document.body.classList.remove("overlay-visible");
@@ -997,7 +1025,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     updateBackButtonVisibility();
   });
 
-  setActiveCategory(DEFAULT_CATEGORY);
+  // Start with dashboard view (no category selected)
+  showDashboard();
   setupSidebarToggle();
   initNav();
   refreshMapSize(0);

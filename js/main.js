@@ -86,9 +86,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   await loadAllData();
-  
-  // Update counters after data is loaded
-  updateCounters();
 
   let mapContainer = document.getElementById("map");
   if (!mapContainer) {

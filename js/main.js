@@ -629,8 +629,9 @@ Odkaz do aplikace: ${appUrl}`;
   }
 
   function populateLayer(category) {
+    if (!layers[category]) return;
     layers[category].clearLayers();
-    if (markerMap[category]) {
+    if (markerMap && markerMap[category]) {
       markerMap[category].clear();
     }
     let source = [];
@@ -644,7 +645,7 @@ Odkaz do aplikace: ${appUrl}`;
       shape.addTo(layers[category]);
       
       // Store marker reference for deep linking
-      if (markerMap[category]) {
+      if (markerMap && markerMap[category]) {
         const key = item.id != null ? `id:${item.id}` : `coords:${item.lat},${item.lng}`;
         markerMap[category].set(key, shape);
       }

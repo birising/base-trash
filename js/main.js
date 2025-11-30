@@ -998,8 +998,14 @@ Odkaz do aplikace: ${appUrl}`;
     
     hasiciList.innerHTML = '<div class="loading-state">Načítám zásahy…</div>';
     
+    const feedUrl = 'https://pkr.kr-stredocesky.cz/pkr/zasahy-jpo/feed.xml';
+    
+    // Try direct fetch first
+    let xmlText = null;
+    let error = null;
+    
     try {
-      const response = await fetch('https://pkr.kr-stredocesky.cz/pkr/zasahy-jpo/feed.xml', {
+      const response = await fetch(feedUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/rss+xml, application/xml, text/xml'
@@ -1010,9 +1016,54 @@ Odkaz do aplikace: ${appUrl}`;
         throw new Error(`HTTP ${response.status}`);
       }
       
-      const xmlText = await response.text();
+      xmlText = await response.text();
+    } catch (fetchError) {
+      error = fetchError;
+      // Try CORS proxy as fallback
+      const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`;
+      
+      try {
+        const proxyResponse = await fetch(corsProxyUrl, {
+          method: 'GET'
+        });
+        
+        if (!proxyResponse.ok) {
+          throw new Error(`Proxy HTTP ${proxyResponse.status}`);
+        }
+        
+        xmlText = await proxyResponse.text();
+        error = null; // Success with proxy
+      } catch (proxyError) {
+        console.warn('CORS proxy also failed:', proxyError);
+        // Keep original error
+      }
+    }
+    
+    if (!xmlText) {
+      const errorMsg = error?.message || 'Neznámá chyba';
+      const isCorsError = errorMsg.includes('CORS') || errorMsg.includes('Access-Control') || errorMsg.includes('access control');
+      
+      hasiciList.innerHTML = `
+        <div class="error-state">
+          <p>Nepodařilo se načíst zásahy hasičů.</p>
+          <p class="error-detail">${isCorsError ? 'Server neumožňuje přístup z tohoto webu (CORS).' : errorMsg}</p>
+          <p class="error-detail" style="margin-top: 12px; font-size: 13px; opacity: 0.7;">
+            Zkuste obnovit stránku nebo kontaktujte správce aplikace.
+          </p>
+        </div>
+      `;
+      return;
+    }
+    
+    try {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      
+      // Check for parsing errors
+      const parseError = xmlDoc.querySelector('parsererror');
+      if (parseError) {
+        throw new Error('Chyba při parsování XML');
+      }
       
       const items = xmlDoc.querySelectorAll('item');
       const zasahy = Array.from(items).slice(0, 50).map(item => {
@@ -1021,8 +1072,9 @@ Odkaz do aplikace: ${appUrl}`;
         const description = item.querySelector('description')?.textContent || '';
         const pubDate = item.querySelector('pubDate')?.textContent || '';
         
-        // Parse description
-        const descParts = description.split('<br>').map(p => p.trim()).filter(Boolean);
+        // Parse description - handle HTML entities
+        const descText = description.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+        const descParts = descText.split('<br>').map(p => p.trim()).filter(Boolean);
         const stav = descParts.find(p => p.startsWith('stav:'))?.replace('stav:', '').trim() || 'neupřesněno';
         const ukonceni = descParts.find(p => p.startsWith('ukončení:'))?.replace('ukončení:', '').trim() || null;
         const misto = descParts.filter(p => !p.startsWith('stav:') && !p.startsWith('ukončení:') && !p.startsWith('okres')).join(', ') || '';
@@ -1047,12 +1099,12 @@ Odkaz do aplikace: ${appUrl}`;
       });
       
       renderHasici(zasahy);
-    } catch (error) {
-      console.error('Chyba při načítání zásahů:', error);
+    } catch (parseError) {
+      console.error('Chyba při parsování RSS:', parseError);
       hasiciList.innerHTML = `
         <div class="error-state">
-          <p>Nepodařilo se načíst zásahy hasičů.</p>
-          <p class="error-detail">${error.message}</p>
+          <p>Chyba při zpracování dat zásahů.</p>
+          <p class="error-detail">${parseError.message}</p>
         </div>
       `;
     }

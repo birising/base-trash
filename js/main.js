@@ -982,7 +982,15 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   function showDashboard() {
     // Hide all views and show dashboard
-    if (mapView) mapView.classList.add("hidden");
+    if (mapView) {
+      mapView.classList.add("hidden");
+      // Remove all layers from map when hiding
+      Object.values(layers).forEach((layer) => {
+        if (map && map.hasLayer(layer)) {
+          map.removeLayer(layer);
+        }
+      });
+    }
     if (streamView) streamView.classList.add("hidden");
     if (wasteView) wasteView.classList.add("hidden");
     if (mapOverlay) mapOverlay.classList.add("hidden");
@@ -1158,11 +1166,22 @@ window.addEventListener("DOMContentLoaded", async () => {
     updateBackButtonVisibility();
   });
 
+  // Initialize map first, then show dashboard
+  // Map needs to be initialized even if hidden
+  if (map) {
+    map.invalidateSize();
+  }
+  
   // Start with dashboard view (no category selected)
   showDashboard();
   setupSidebarToggle();
   initNav();
-  refreshMapSize(0);
+  
+  // Ensure map is ready even if hidden
+  if (map) {
+    refreshMapSize(0);
+    refreshMapSize(200);
+  }
   window.addEventListener("orientationchange", () => {
     refreshMapSize(120);
     updateBackButtonVisibility();

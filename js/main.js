@@ -1017,18 +1017,8 @@ Odkaz do aplikace: ${appUrl}`;
     if (kriminalitaView) {
       if (isKriminalitaView) {
         kriminalitaView.classList.remove("hidden");
-        // Re-render when view becomes visible (data might have loaded)
-        if (dataKriminalita && dataKriminalita.length > 0) {
-          renderKriminalita();
-        } else if (dataKriminalita && dataKriminalita.length === 0) {
-          // Data loaded but empty - show empty state
-          renderKriminalita();
-        } else {
-          // Data still loading
-          if (kriminalitaList) {
-            kriminalitaList.innerHTML = '<div class="loading-state">Načítám data kriminality…</div>';
-          }
-        }
+        // Always try to render - function handles loading/empty states
+        renderKriminalita();
       } else {
         kriminalitaView.classList.add("hidden");
       }
@@ -1285,14 +1275,23 @@ Odkaz do aplikace: ${appUrl}`;
   function renderKriminalita() {
     if (!kriminalitaList) return;
     
-    // Check if data is still loading
-    if (dataKriminalita === undefined || dataKriminalita === null) {
+    // Check if data is still loading (not yet initialized)
+    if (typeof dataKriminalita === 'undefined' || dataKriminalita === null) {
       kriminalitaList.innerHTML = '<div class="loading-state">Načítám data kriminality…</div>';
       return;
     }
     
-    if (dataKriminalita.length === 0) {
-      kriminalitaList.innerHTML = '<div class="empty-state">Žádná data kriminality k zobrazení.</div>';
+    // Check if data loaded but is empty
+    if (!Array.isArray(dataKriminalita) || dataKriminalita.length === 0) {
+      kriminalitaList.innerHTML = `
+        <div class="error-state">
+          <p>Žádná data kriminality k zobrazení.</p>
+          <p class="error-detail">Data se nepodařilo načíst nebo jsou prázdná.</p>
+          <p class="error-detail" style="margin-top: 12px; font-size: 13px; opacity: 0.7;">
+            Zkuste obnovit stránku nebo kontaktujte správce aplikace.
+          </p>
+        </div>
+      `;
       return;
     }
     
@@ -1304,18 +1303,18 @@ Odkaz do aplikace: ${appUrl}`;
     const getTypeNames = (typeCodes) => {
       if (!typeCodes || !Array.isArray(typeCodes) || typeCodes.length === 0) return ['Neznámý typ'];
       return typeCodes.map(code => {
-        const type = kriminalitaTypes[code];
+        const type = (typeof kriminalitaTypes !== 'undefined' && kriminalitaTypes) ? kriminalitaTypes[code] : null;
         return type?.popis?.cs || type?.nazev?.cs || `Typ ${code}`;
       });
     };
     
     const getStateName = (stateCode) => {
-      const state = kriminalitaStates[stateCode];
+      const state = (typeof kriminalitaStates !== 'undefined' && kriminalitaStates) ? kriminalitaStates[stateCode] : null;
       return state?.nazev?.cs || `Stav ${stateCode}`;
     };
     
     const getRelevanceName = (relevanceCode) => {
-      const relevance = kriminalitaRelevance[relevanceCode];
+      const relevance = (typeof kriminalitaRelevance !== 'undefined' && kriminalitaRelevance) ? kriminalitaRelevance[relevanceCode] : null;
       return relevance?.nazev?.cs || `Relevance ${relevanceCode}`;
     };
     

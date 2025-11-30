@@ -830,10 +830,26 @@ async function loadKriminalitaData() {
           const text = await proxyResponse.text();
           if (text && text.length > 100) { // Basic validation
             try {
-              geojson = JSON.parse(text);
-              error = null;
-              break;
+              // Try to parse as JSON
+              const parsed = JSON.parse(text);
+              // Validate it's actually GeoJSON
+              if (parsed && (parsed.type === 'FeatureCollection' || parsed.features)) {
+                geojson = parsed;
+                error = null;
+                break;
+              }
             } catch (parseError) {
+              // If parsing fails, try to extract JSON from HTML response (some proxies wrap it)
+              const jsonMatch = text.match(/\{[\s\S]*"type"\s*:\s*"FeatureCollection"[\s\S]*\}/);
+              if (jsonMatch) {
+                try {
+                  geojson = JSON.parse(jsonMatch[0]);
+                  error = null;
+                  break;
+                } catch (e) {
+                  continue;
+                }
+              }
               continue;
             }
           }

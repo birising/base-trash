@@ -120,9 +120,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
     baseLayer.addTo(map);
     
-    // Handle tile loading errors
-    baseLayer.on('tileerror', (error) => {
-      console.warn('Map tile loading error:', error);
+    // Handle tile loading errors silently - errorTileUrl already provides fallback
+    // Don't spam console with tile errors as they're common and handled gracefully
+    baseLayer.on('tileerror', () => {
+      // Silently handle - errorTileUrl will show fallback image
     });
   } catch (error) {
     console.error("Chyba při vytváření mapových dlaždic:", error);

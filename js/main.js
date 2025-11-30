@@ -607,7 +607,7 @@ Odkaz do aplikace: ${appUrl}`;
         <div><span>Popis:</span><strong>${area.description || "Zeleň"}</strong></div>
       </div>
       <div class="popup-actions">
-        <a class="popup-button" href="mailto:info@beloky.cz?subject=${subject}&body=${body}">Nahlásit posekání</a>
+        <a class="popup-button" href="mailto:info@beloky.cz?subject=${subject}&body=${body}">Požádat o údržbu</a>
       </div>
     `;
 

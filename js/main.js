@@ -235,6 +235,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   const mapView = document.getElementById("mapView");
   const streamView = document.getElementById("streamView");
   const wasteView = document.getElementById("wasteView");
+  const hasiciView = document.getElementById("hasiciView");
+  const hasiciList = document.getElementById("hasiciList");
 
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
 
@@ -777,6 +779,7 @@ Odkaz do aplikace: ${appUrl}`;
 
     const isStreamView = category === "hladina";
     const isWasteView = category === "odpad";
+    const isHasiciView = category === "hasici";
     const isMapCategory = mapCategories.includes(category);
     const isGreenspace = category === "zelen";
 
@@ -939,6 +942,14 @@ Odkaz do aplikace: ${appUrl}`;
         wasteView.classList.add("hidden");
       }
     }
+    if (hasiciView) {
+      if (isHasiciView) {
+        hasiciView.classList.remove("hidden");
+        loadHasiciData();
+      } else {
+        hasiciView.classList.add("hidden");
+      }
+    }
 
     if (isMapCategory && window.innerWidth <= 960 && mapView) {
       requestAnimationFrame(() => mapView.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -980,6 +991,132 @@ Odkaz do aplikace: ${appUrl}`;
     } else {
       backButton.classList.add("hidden");
     }
+  }
+
+  async function loadHasiciData() {
+    if (!hasiciList) return;
+    
+    hasiciList.innerHTML = '<div class="loading-state">Načítám zásahy…</div>';
+    
+    try {
+      const response = await fetch('https://pkr.kr-stredocesky.cz/pkr/zasahy-jpo/feed.xml', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/rss+xml, application/xml, text/xml'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const xmlText = await response.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      
+      const items = xmlDoc.querySelectorAll('item');
+      const zasahy = Array.from(items).slice(0, 50).map(item => {
+        const title = item.querySelector('title')?.textContent || 'Bez názvu';
+        const link = item.querySelector('link')?.textContent || '';
+        const description = item.querySelector('description')?.textContent || '';
+        const pubDate = item.querySelector('pubDate')?.textContent || '';
+        
+        // Parse description
+        const descParts = description.split('<br>').map(p => p.trim()).filter(Boolean);
+        const stav = descParts.find(p => p.startsWith('stav:'))?.replace('stav:', '').trim() || 'neupřesněno';
+        const ukonceni = descParts.find(p => p.startsWith('ukončení:'))?.replace('ukončení:', '').trim() || null;
+        const misto = descParts.filter(p => !p.startsWith('stav:') && !p.startsWith('ukončení:') && !p.startsWith('okres')).join(', ') || '';
+        const okres = descParts.find(p => p.startsWith('okres'))?.replace('okres', '').trim() || '';
+        
+        // Parse date
+        let dateObj = null;
+        if (pubDate) {
+          dateObj = new Date(pubDate);
+        }
+        
+        return {
+          title,
+          link,
+          stav,
+          ukonceni,
+          misto,
+          okres,
+          date: dateObj,
+          description
+        };
+      });
+      
+      renderHasici(zasahy);
+    } catch (error) {
+      console.error('Chyba při načítání zásahů:', error);
+      hasiciList.innerHTML = `
+        <div class="error-state">
+          <p>Nepodařilo se načíst zásahy hasičů.</p>
+          <p class="error-detail">${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  function renderHasici(zasahy) {
+    if (!hasiciList) return;
+    
+    if (zasahy.length === 0) {
+      hasiciList.innerHTML = '<div class="empty-state">Žádné zásahy k zobrazení.</div>';
+      return;
+    }
+    
+    const formatDate = (date) => {
+      if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '–';
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      if (diffMins < 1) return 'právě teď';
+      if (diffMins < 60) return `před ${diffMins} min`;
+      if (diffHours < 24) return `před ${diffHours} h`;
+      if (diffDays < 7) return `před ${diffDays} dny`;
+      
+      return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
+    
+    const getStatusColor = (stav) => {
+      if (stav.includes('nová') || stav.includes('probíhá')) return '#ef4444';
+      if (stav.includes('ukončená')) return '#22c55e';
+      return '#f59e0b';
+    };
+    
+    const getStatusIcon = (stav) => {
+      if (stav.includes('nová') || stav.includes('probíhá')) return '🔴';
+      if (stav.includes('ukončená')) return '✅';
+      return '🟡';
+    };
+    
+    hasiciList.innerHTML = zasahy.map(zasah => {
+      const statusColor = getStatusColor(zasah.stav);
+      const statusIcon = getStatusIcon(zasah.stav);
+      const timeAgo = formatDate(zasah.date);
+      
+      return `
+        <div class="hasici-item">
+          <div class="hasici-item-header">
+            <div class="hasici-status" style="color: ${statusColor}">
+              <span class="hasici-status-icon">${statusIcon}</span>
+              <span class="hasici-status-text">${zasah.stav}</span>
+            </div>
+            <div class="hasici-time">${timeAgo}</div>
+          </div>
+          <h3 class="hasici-title">${zasah.title}</h3>
+          <div class="hasici-details">
+            ${zasah.misto ? `<div class="hasici-location">📍 ${zasah.misto}${zasah.okres ? `, ${zasah.okres}` : ''}</div>` : ''}
+            ${zasah.ukonceni ? `<div class="hasici-end">Ukončení: ${zasah.ukonceni}</div>` : ''}
+          </div>
+          ${zasah.link ? `<a href="${zasah.link}" target="_blank" rel="noopener" class="hasici-link">Více informací →</a>` : ''}
+        </div>
+      `;
+    }).join('');
   }
 
   function goToDashboard() {
@@ -1054,6 +1191,7 @@ Odkaz do aplikace: ${appUrl}`;
     }
     if (streamView) streamView.classList.add("hidden");
     if (wasteView) wasteView.classList.add("hidden");
+    if (hasiciView) hasiciView.classList.add("hidden");
     if (mapOverlay) mapOverlay.classList.add("hidden");
     
     // Remove active state from all cards and nav items

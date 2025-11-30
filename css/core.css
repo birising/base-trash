@@ -840,7 +840,8 @@ body {
   .content,
   .sidebar,
   .stream-view,
-  .waste-view {
+  .waste-view,
+  .hasici-view {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }

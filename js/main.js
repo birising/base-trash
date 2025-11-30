@@ -699,7 +699,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   updateWasteDashboard();
   updateCounters();
 
-  Object.values(layers).forEach((layer) => layer.addTo(map));
+  // Don't add all layers at once - they will be added when category is selected
+  // Object.values(layers).forEach((layer) => layer.addTo(map));
 
   function setActiveCategory(category) {
     if (!category) {
@@ -720,9 +721,13 @@ window.addEventListener("DOMContentLoaded", async () => {
       const shouldShow = isGreenspace
         ? (isTravaLayer && greenspaceVisibility.trava) || (isZahonyLayer && greenspaceVisibility.zahony)
         : key === category;
-      if (shouldShow) {
+      
+      // Check if layer is already on map to avoid duplicate adds
+      const isOnMap = map.hasLayer(layer);
+      
+      if (shouldShow && !isOnMap) {
         map.addLayer(layer);
-      } else {
+      } else if (!shouldShow && isOnMap) {
         map.removeLayer(layer);
       }
     });
@@ -778,12 +783,42 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Switch the visible view explicitly so returning from the stream panel always shows the map again.
-    if (mapOverlay) mapOverlay.classList.toggle("hidden", !isMapCategory);
-    if (greenspaceLayersControl) greenspaceLayersControl.classList.toggle("hidden", !isGreenspace);
-    if (isGreenspace) syncGreenspaceLayerInputs();
-    if (mapView) mapView.classList.toggle("hidden", !isMapCategory);
-    if (streamView) streamView.classList.toggle("hidden", !isStreamView);
-    if (wasteView) wasteView.classList.toggle("hidden", !isWasteView);
+    if (mapOverlay) {
+      if (isMapCategory) {
+        mapOverlay.classList.remove("hidden");
+      } else {
+        mapOverlay.classList.add("hidden");
+      }
+    }
+    if (greenspaceLayersControl) {
+      if (isGreenspace) {
+        greenspaceLayersControl.classList.remove("hidden");
+        syncGreenspaceLayerInputs();
+      } else {
+        greenspaceLayersControl.classList.add("hidden");
+      }
+    }
+    if (mapView) {
+      if (isMapCategory) {
+        mapView.classList.remove("hidden");
+      } else {
+        mapView.classList.add("hidden");
+      }
+    }
+    if (streamView) {
+      if (isStreamView) {
+        streamView.classList.remove("hidden");
+      } else {
+        streamView.classList.add("hidden");
+      }
+    }
+    if (wasteView) {
+      if (isWasteView) {
+        wasteView.classList.remove("hidden");
+      } else {
+        wasteView.classList.add("hidden");
+      }
+    }
 
     if (isMapCategory && window.innerWidth <= 960 && mapView) {
       requestAnimationFrame(() => mapView.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -907,18 +942,26 @@ window.addEventListener("DOMContentLoaded", async () => {
             return;
           }
           
+          // Set active category - this will handle view switching and map layers
           setActiveCategory(category);
+          
           if (window.innerWidth <= 960) {
             document.body.classList.remove("overlay-visible");
-            document.getElementById("sidebar").classList.add("sidebar-hidden");
-            document.getElementById("menuToggle").setAttribute("aria-expanded", "false");
+            const sidebar = document.getElementById("sidebar");
+            const menuToggle = document.getElementById("menuToggle");
+            if (sidebar) sidebar.classList.add("sidebar-hidden");
+            if (menuToggle) menuToggle.setAttribute("aria-expanded", "false");
 
-            // Ensure the map is visible and sized correctly when returning from stream/waste on mobile.
+            // Ensure the map is visible and sized correctly when showing map category on mobile
             if (mapCategories.includes(category)) {
-              if (mapView) mapView.classList.remove("hidden");
-              if (mapOverlay) mapOverlay.classList.remove("hidden");
-              refreshMapSize(0);
-              refreshMapSize(220);
+              // Map view should already be shown by setActiveCategory, but ensure it's visible
+              if (mapView) {
+                mapView.classList.remove("hidden");
+                // Force map refresh after showing
+                refreshMapSize(0);
+                refreshMapSize(220);
+                refreshMapSize(400);
+              }
             }
           }
         })

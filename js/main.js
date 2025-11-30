@@ -86,6 +86,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   await loadAllData();
+  
+  // Re-render kriminalita if view is visible and data loaded
+  if (kriminalitaView && !kriminalitaView.classList.contains('hidden') && dataKriminalita && dataKriminalita.length > 0) {
+    renderKriminalita();
+  }
 
   let mapContainer = document.getElementById("map");
   if (!mapContainer) {

@@ -546,14 +546,16 @@ window.addEventListener("DOMContentLoaded", async () => {
       // GPS souřadnice
       const gpsCoords = `${item.lat}, ${item.lng}`;
       
-      // Odkaz na Google Maps s GPS souřadnicemi
-      const mapsUrl = `https://www.google.com/maps?q=${item.lat},${item.lng}`;
+      // Odkaz do aplikace s konkrétní lampou
+      const appUrl = item.id != null 
+        ? `${window.location.origin}${window.location.pathname}#lampy/${item.id}`
+        : `${window.location.origin}${window.location.pathname}#lampy/${item.lat},${item.lng}`;
       
-      // Tělo emailu s GPS souřadnicemi a odkazem na mapu
+      // Tělo emailu s GPS souřadnicemi a odkazem do aplikace
       const bodyText = `Popište závadu a případně přidejte fotku. Děkujeme!
 
 GPS souřadnice: ${gpsCoords}
-Odkaz na mapu: ${mapsUrl}`;
+Odkaz do aplikace: ${appUrl}`;
       const body = encodeURIComponent(bodyText);
       
       // Email s CC
@@ -621,6 +623,9 @@ Odkaz na mapu: ${mapsUrl}`;
 
   function populateLayer(category) {
     layers[category].clearLayers();
+    if (markerMap[category]) {
+      markerMap[category].clear();
+    }
     let source = [];
     if (category === "kose") source = dataKose;
     if (category === "lampy") source = dataLampy;
@@ -630,6 +635,12 @@ Odkaz na mapu: ${mapsUrl}`;
     source.forEach((item) => {
       const shape = createMarker(item, iconColors[category]);
       shape.addTo(layers[category]);
+      
+      // Store marker reference for deep linking
+      if (markerMap[category]) {
+        const key = item.id != null ? `id:${item.id}` : `coords:${item.lat},${item.lng}`;
+        markerMap[category].set(key, shape);
+      }
     });
   }
 
@@ -1204,10 +1215,58 @@ Odkaz na mapu: ${mapsUrl}`;
     map.invalidateSize();
   }
   
-  // Start with "údržba zeleně" (zelen) as default category
-  setActiveCategory("zelen");
+  // Handle deep linking from URL hash (e.g., #lampy/1 or #lampy/50.133935,14.222031)
+  function handleDeepLink() {
+    const hash = window.location.hash.slice(1); // Remove #
+    if (!hash) return;
+    
+    const match = hash.match(/^(\w+)\/(.+)$/);
+    if (!match) return;
+    
+    const [, category, identifier] = match;
+    if (!mapCategories.includes(category) || !markerMap[category]) return;
+    
+    // Wait for data to load and markers to be populated
+    setTimeout(() => {
+      let marker = null;
+      
+      // Try to find by ID first
+      if (/^\d+$/.test(identifier)) {
+        marker = markerMap[category].get(`id:${identifier}`);
+      }
+      
+      // If not found by ID, try coordinates
+      if (!marker && identifier.includes(',')) {
+        marker = markerMap[category].get(`coords:${identifier}`);
+      }
+      
+      if (marker) {
+        // Set active category and show map
+        setActiveCategory(category);
+        
+        // Wait for map to be ready, then zoom to marker and open popup
+        setTimeout(() => {
+          if (map && marker) {
+            map.setView(marker.getLatLng(), 18);
+            marker.openPopup();
+          }
+        }, 300);
+      } else {
+        // If marker not found, just open the category
+        setActiveCategory(category);
+      }
+    }, 500);
+  }
+  
+  // Start with "údržba zeleně" (zelen) as default category, unless deep link is present
+  if (!window.location.hash || !window.location.hash.match(/^#\w+\//)) {
+    setActiveCategory("zelen");
+  }
   setupSidebarToggle();
   initNav();
+  
+  // Handle deep link after initialization
+  handleDeepLink();
   
   // Ensure map is ready
   if (map) {

@@ -516,7 +516,15 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   function createMarker(item, color) {
     const { lat, lng, name } = item;
-    const popupTitle = item.category === "lampy" && item.id != null ? `Lampa #${item.id}` : name;
+    let popupTitle = name;
+    if (item.category === "lampy" && item.id != null) {
+      popupTitle = `Lampa #${item.id}`;
+    } else if (item.category === "kriminalita") {
+      const typeNames = item.types && item.types.length > 0 
+        ? item.types.map(code => kriminalitaTypes[code]?.popis?.cs || kriminalitaTypes[code]?.nazev?.cs || `Typ ${code}`).join(', ')
+        : 'Trestný čin';
+      popupTitle = typeNames;
+    }
     const useIcon = item.category === "kose" || item.category === "lampy" || item.category === "kriminalita";
     const binStatus = item.category === "kose" ? evaluateBinStatus(item) : null;
     const marker = useIcon

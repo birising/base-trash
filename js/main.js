@@ -153,6 +153,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     kose: "#1b8a63",
     lampy: "#f28c38",
     kontejnery: "#4ab7ff",
+    kriminalita: "#ef4444",
     zelenTrava: "#0ea5e9",
     zelenZahony: "#ec4899",
     hladina: "#7c3aed",
@@ -186,6 +187,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const iconSizes = {
     kose: { size: [42, 46], anchor: [21, 44], popup: [0, -34] },
     lampy: { size: [26, 30], anchor: [13, 28], popup: [0, -24] },
+    kriminalita: { size: [28, 32], anchor: [14, 30], popup: [0, -26] },
   };
 
   const layers = {
@@ -196,6 +198,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     zelenZahony: L.layerGroup(),
     hladina: L.layerGroup(),
     odpad: L.layerGroup(),
+    kriminalita: L.layerGroup(),
   };
   
   // Store marker references by category and ID/coordinates for deep linking
@@ -203,6 +206,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     kose: new Map(),
     lampy: new Map(),
     kontejnery: new Map(),
+    kriminalita: new Map(),
   };
 
   const counters = {
@@ -239,7 +243,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const hasiciView = document.getElementById("hasiciView");
   const hasiciList = document.getElementById("hasiciList");
 
-  const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
+  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "kriminalita"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
   let currentCategory = null;
@@ -513,13 +517,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   function createMarker(item, color) {
     const { lat, lng, name } = item;
     const popupTitle = item.category === "lampy" && item.id != null ? `Lampa #${item.id}` : name;
-    const useIcon = item.category === "kose" || item.category === "lampy";
+    const useIcon = item.category === "kose" || item.category === "lampy" || item.category === "kriminalita";
     const binStatus = item.category === "kose" ? evaluateBinStatus(item) : null;
     const marker = useIcon
       ? L.marker([lat, lng], {
           icon: buildIcon(item.category, binStatus?.color || color, {
             badge: item.category === "lampy" ? item.id : undefined,
-            text: item.category === "lampy" ? null : undefined,
+            text: item.category === "lampy" ? null : (item.category === "kriminalita" ? null : undefined),
           }),
         })
       : L.circleMarker([lat, lng], {
@@ -587,6 +591,46 @@ Odkaz do aplikace: ${appUrl}`;
           <div><span>Úroveň vody:</span><strong>${levelText}</strong></div>
           <div><span>Poslední data:</span><strong>${updatedText}</strong></div>
         </div>`;
+    } else if (item.category === "kriminalita") {
+      const formatDate = (date) => {
+        if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '–';
+        return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      };
+      
+      const getTypeNames = (typeCodes) => {
+        if (!typeCodes || !Array.isArray(typeCodes) || typeCodes.length === 0) return ['Neznámý typ'];
+        return typeCodes.map(code => {
+          const type = kriminalitaTypes[code];
+          return type?.popis?.cs || type?.nazev?.cs || `Typ ${code}`;
+        });
+      };
+      
+      const getStateName = (stateCode) => {
+        const state = kriminalitaStates[stateCode];
+        return state?.nazev?.cs || `Stav ${stateCode}`;
+      };
+      
+      const getRelevanceName = (relevanceCode) => {
+        const relevance = kriminalitaRelevance[relevanceCode];
+        return relevance?.nazev?.cs || `Relevance ${relevanceCode}`;
+      };
+      
+      const dateStr = formatDate(item.date);
+      const typeNames = getTypeNames(item.types);
+      const stateName = getStateName(item.state);
+      const relevanceName = getRelevanceName(item.relevance);
+      
+      popupContent += `
+        <div class="popup-details">
+          <div><span>Datum:</span><strong>${dateStr}</strong></div>
+          <div><span>Stav:</span><strong>${stateName}</strong></div>
+          <div><span>Relevance:</span><strong>${relevanceName}</strong></div>
+          <div><span>Typ:</span><strong>${typeNames.join(', ')}</strong></div>
+          ${item.mp ? '<div><span>Místní působnost:</span><strong>Ano</strong></div>' : ''}
+        </div>
+        <div class="popup-actions">
+          <a class="popup-button" href="https://kriminalita.policie.gov.cz" target="_blank" rel="noopener">Zdroj dat →</a>
+        </div>`;
     }
 
     marker.bindPopup(popupContent);
@@ -652,6 +696,7 @@ Odkaz do aplikace: ${appUrl}`;
     if (category === "lampy") source = dataLampy;
     if (category === "kontejnery") source = dataKontejnery;
     if (category === "hladina") source = dataHladina;
+    if (category === "kriminalita") source = dataKriminalita;
 
     source.forEach((item) => {
       const shape = createMarker(item, iconColors[category]);
@@ -669,6 +714,7 @@ Odkaz do aplikace: ${appUrl}`;
   populateLayer("lampy");
   populateLayer("kontejnery");
   populateLayer("hladina");
+  populateLayer("kriminalita");
 
   function greenspaceByType(type) {
     const normalized = type === "zahony" ? "zahony" : "trava";
@@ -714,6 +760,7 @@ Odkaz do aplikace: ${appUrl}`;
     if (counters.lampy) counters.lampy.textContent = dataLampy.length;
     if (counters.kontejnery) counters.kontejnery.textContent = dataKontejnery.length;
     if (counters.zelen) counters.zelen.textContent = dataZelene.length;
+    if (counters.kriminalita) counters.kriminalita.textContent = dataKriminalita.length;
     if (counters.hladina) {
       counters.hladina.textContent = streamState.level ? streamState.level : `${dataHladina.length} senzor`;
     }
@@ -878,6 +925,8 @@ Odkaz do aplikace: ${appUrl}`;
       const labelText =
         category === "kose"
           ? "Koše"
+          : category === "kriminalita"
+            ? "Kriminalita"
           : category === "lampy"
             ? "Lampy"
             : category === "kontejnery"
@@ -1537,8 +1586,8 @@ Odkaz do aplikace: ${appUrl}`;
               let closestPolygon = null;
               let minDistance = Infinity;
               
-              // Check both greenspace layers
-              [layers.zelenTrava, layers.zelenZahony].forEach((layer) => {
+              // Check both greenspace layers and kriminalita layer
+              [layers.zelenTrava, layers.zelenZahony, layers.kriminalita].forEach((layer) => {
                 layer.eachLayer((polygon) => {
                   if (polygon instanceof L.Polygon) {
                     const bounds = polygon.getBounds();

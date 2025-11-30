@@ -348,6 +348,10 @@ const fallbackZelene = [
 let dataKose = [];
 let dataKontejnery = [];
 let dataLampy = [];
+let dataKriminalita = [];
+let kriminalitaTypes = {};
+let kriminalitaRelevance = {};
+let kriminalitaStates = {};
 let dataZelene = [];
 
 function ensureLampIds(lamps) {
@@ -768,15 +772,97 @@ async function loadKoseTelemetry() {
   }
 }
 
+async function loadKriminalitaData() {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    
+    const response = await fetch('https://kriminalita.policie.gov.cz/api/v2/downloads/2025_532070.geojson', {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/geo+json, application/json'
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const geojson = await response.json();
+    
+    if (geojson && geojson.features) {
+      dataKriminalita = geojson.features.map(feature => {
+        const props = feature.properties || {};
+        const coords = feature.geometry?.coordinates || [];
+        return {
+          id: props.id,
+          lat: coords[1],
+          lng: coords[0],
+          date: props.date ? new Date(props.date) : null,
+          state: props.state,
+          relevance: props.relevance,
+          types: props.types || [],
+          mp: props.mp || false,
+          category: 'kriminalita'
+        };
+      });
+    }
+    
+    return dataKriminalita;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Timeout při načítání dat kriminality (15s)');
+    }
+    const errorMsg = error.message || String(error);
+    if (errorMsg.includes('CORS') || errorMsg.includes('Access-Control') || errorMsg.includes('access control') || errorMsg.includes('Failed to fetch')) {
+      throw new Error('CORS chyba při načítání dat kriminality');
+    }
+    throw error;
+  }
+}
+
+async function loadKriminalitaCodebooks() {
+  try {
+    const [typesRes, relevanceRes, statesRes] = await Promise.allSettled([
+      fetch(`${dataBaseUrl}/types.json`).then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))),
+      fetch(`${dataBaseUrl}/relevance.json`).then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))),
+      fetch(`${dataBaseUrl}/states.json`).then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+    ]);
+    
+    if (typesRes.status === 'fulfilled' && typesRes.value?.polozky) {
+      typesRes.value.polozky.forEach(item => {
+        kriminalitaTypes[item.kod] = item;
+      });
+    }
+    
+    if (relevanceRes.status === 'fulfilled' && relevanceRes.value?.polozky) {
+      relevanceRes.value.polozky.forEach(item => {
+        kriminalitaRelevance[item.kod] = item;
+      });
+    }
+    
+    if (statesRes.status === 'fulfilled' && statesRes.value?.polozky) {
+      statesRes.value.polozky.forEach(item => {
+        kriminalitaStates[item.kod] = item;
+      });
+    }
+  } catch (error) {
+    console.warn('Chyba při načítání číselníků kriminality:', error);
+  }
+}
+
 async function loadAllData() {
   try {
-    const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory] = await Promise.allSettled([
+    const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita] = await Promise.allSettled([
       loadDataset("kose", fallbackKoseDefinitions),
       loadKoseTelemetry(),
       loadDataset("lampy", fallbackLampy),
       loadDataset("kontejnery", fallbackKontejnery),
       loadDataset("zelene", fallbackZelene),
       loadStreamHistory(),
+      loadKriminalitaData(),
     ]);
 
     // Extract values from settled promises, use fallback on rejection
@@ -789,11 +875,15 @@ async function loadAllData() {
     dataLampy = ensureLampIds(getValue(lampy, fallbackLampy));
     dataKontejnery = getValue(kontejnery, fallbackKontejnery);
     dataZelene = getValue(zelene, fallbackZelene);
+    dataKriminalita = getValue(_kriminalita, []);
+    
+    // Load codebooks for kriminalita
+    await loadKriminalitaCodebooks();
     
     // Log any failures
-    [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory].forEach((result, index) => {
+    [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita].forEach((result, index) => {
       if (result.status === 'rejected') {
-        const names = ['kose', 'kose_telemetry', 'lampy', 'kontejnery', 'zelene', 'streamHistory'];
+        const names = ['kose', 'kose_telemetry', 'lampy', 'kontejnery', 'zelene', 'streamHistory', 'kriminalita'];
         console.warn(`Chyba při načítání ${names[index]}:`, result.reason);
       }
     });
@@ -804,6 +894,7 @@ async function loadAllData() {
     dataLampy = ensureLampIds(fallbackLampy);
     dataKontejnery = fallbackKontejnery;
     dataZelene = fallbackZelene;
+    dataKriminalita = [];
   }
 }
 

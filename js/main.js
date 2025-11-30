@@ -721,6 +721,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     const isGreenspace = category === "zelen";
 
     // Always keep the map layers in sync with the chosen category.
+    // First ensure map view is visible before adding layers
+    if (isMapCategory && mapView) {
+      mapView.classList.remove("hidden");
+    }
+    
     Object.entries(layers).forEach(([key, layer]) => {
       const isTravaLayer = key === "zelenTrava";
       const isZahonyLayer = key === "zelenZahony";
@@ -810,11 +815,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
     if (mapView) {
       if (isMapCategory) {
+        // Show map view first
         mapView.classList.remove("hidden");
-        // Force map refresh when showing map view
+        // Force map refresh when showing map view - critical for proper rendering
         requestAnimationFrame(() => {
+          map.invalidateSize();
           refreshMapSize(0);
-          refreshMapSize(100);
+          refreshMapSize(50);
+          refreshMapSize(150);
           refreshMapSize(300);
         });
       } else {

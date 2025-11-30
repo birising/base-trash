@@ -1105,7 +1105,8 @@ Odkaz do aplikace: ${appUrl}`;
       
       // Process JSON data if available
       if (jsonData && jsonData.items) {
-        zasahy = jsonData.items.slice(0, 50).map(item => {
+        // Load more items to have enough after filtering
+        zasahy = jsonData.items.slice(0, 200).map(item => {
           const title = item.title || 'Bez názvu';
           const link = item.link || '';
           const description = item.description || '';
@@ -1146,7 +1147,8 @@ Odkaz do aplikace: ${appUrl}`;
         }
         
         const items = xmlDoc.querySelectorAll('item');
-        zasahy = Array.from(items).slice(0, 50).map(item => {
+        // Load more items to have enough after filtering
+        zasahy = Array.from(items).slice(0, 200).map(item => {
           const title = item.querySelector('title')?.textContent || 'Bez názvu';
           const link = item.querySelector('link')?.textContent || '';
           const description = item.querySelector('description')?.textContent || '';
@@ -1184,7 +1186,7 @@ Odkaz do aplikace: ${appUrl}`;
       const filteredZasahy = zasahy.filter(zasah => {
         const searchText = `${zasah.title} ${zasah.misto} ${zasah.okres} ${zasah.description}`.toLowerCase();
         return belokyVariants.some(variant => searchText.includes(variant.toLowerCase()));
-      });
+      }).slice(0, 50); // Limit to 50 after filtering
       
       renderHasici(filteredZasahy);
     } catch (parseError) {

@@ -1183,18 +1183,18 @@ window.addEventListener("DOMContentLoaded", async () => {
     updateBackButtonVisibility();
   });
 
-  // Initialize map first, then show dashboard
+  // Initialize map first
   // Map needs to be initialized even if hidden
   if (map) {
     map.invalidateSize();
   }
   
-  // Start with dashboard view (no category selected)
-  showDashboard();
+  // Start with "údržba zeleně" (zelen) as default category
+  setActiveCategory("zelen");
   setupSidebarToggle();
   initNav();
   
-  // Ensure map is ready even if hidden
+  // Ensure map is ready
   if (map) {
     refreshMapSize(0);
     refreshMapSize(200);

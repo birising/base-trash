@@ -536,14 +536,22 @@ async function fetchStreamCsv() {
     clearTimeout(timeoutId);
     
     // If CORS error or network error, try fallback to local file
-    const errorMessage = error.message || String(error);
+    const errorMessage = error.message || error.toString() || String(error);
+    const errorName = error.name || '';
+    
+    // Detect CORS errors - they can appear as TypeError with fetch errors
     const isCorsError = errorMessage.includes('Access-Control-Allow-Origin') || 
                         errorMessage.includes('access control checks') ||
                         errorMessage.includes('CORS') ||
-                        (error instanceof TypeError && (errorMessage.includes('fetch') || errorMessage.includes('Failed to fetch')));
+                        errorMessage.includes('Cross-Origin') ||
+                        (error instanceof TypeError && (
+                          errorMessage.includes('fetch') || 
+                          errorMessage.includes('Failed to fetch') ||
+                          errorMessage.includes('NetworkError')
+                        ));
     
     if (isCorsError || error.name === 'AbortError') {
-      console.warn("S3 CORS error, trying fallback to local file:", error.message);
+      console.warn("S3 CORS error detected, trying fallback to local file:", errorMessage);
       
       // Try fallback to local file
       try {

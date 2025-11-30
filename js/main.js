@@ -1302,20 +1302,35 @@ Odkaz do aplikace: ${appUrl}`;
     
     const getTypeNames = (typeCodes) => {
       if (!typeCodes || !Array.isArray(typeCodes) || typeCodes.length === 0) return ['Neznámý typ'];
-      return typeCodes.map(code => {
-        const type = (typeof kriminalitaTypes !== 'undefined' && kriminalitaTypes) ? kriminalitaTypes[code] : null;
-        return type?.popis?.cs || type?.nazev?.cs || `Typ ${code}`;
-      });
+      try {
+        return typeCodes.map(code => {
+          const type = (typeof kriminalitaTypes !== 'undefined' && kriminalitaTypes && kriminalitaTypes[code]) ? kriminalitaTypes[code] : null;
+          return type?.popis?.cs || type?.nazev?.cs || `Typ ${code}`;
+        });
+      } catch (e) {
+        console.warn('Chyba při získávání názvů typů:', e);
+        return typeCodes.map(code => `Typ ${code}`);
+      }
     };
     
     const getStateName = (stateCode) => {
-      const state = (typeof kriminalitaStates !== 'undefined' && kriminalitaStates) ? kriminalitaStates[stateCode] : null;
-      return state?.nazev?.cs || `Stav ${stateCode}`;
+      try {
+        const state = (typeof kriminalitaStates !== 'undefined' && kriminalitaStates && kriminalitaStates[stateCode]) ? kriminalitaStates[stateCode] : null;
+        return state?.nazev?.cs || `Stav ${stateCode}`;
+      } catch (e) {
+        console.warn('Chyba při získávání názvu stavu:', e);
+        return `Stav ${stateCode}`;
+      }
     };
     
     const getRelevanceName = (relevanceCode) => {
-      const relevance = (typeof kriminalitaRelevance !== 'undefined' && kriminalitaRelevance) ? kriminalitaRelevance[relevanceCode] : null;
-      return relevance?.nazev?.cs || `Relevance ${relevanceCode}`;
+      try {
+        const relevance = (typeof kriminalitaRelevance !== 'undefined' && kriminalitaRelevance && kriminalitaRelevance[relevanceCode]) ? kriminalitaRelevance[relevanceCode] : null;
+        return relevance?.nazev?.cs || `Relevance ${relevanceCode}`;
+      } catch (e) {
+        console.warn('Chyba při získávání názvu relevance:', e);
+        return `Relevance ${relevanceCode}`;
+      }
     };
     
     const getStateColor = (stateCode) => {
@@ -1333,30 +1348,53 @@ Odkaz do aplikace: ${appUrl}`;
       return dateB - dateA; // newest first
     });
     
-    kriminalitaList.innerHTML = sortedKriminalita.map(item => {
-      const dateStr = formatDate(item.date);
-      const typeNames = getTypeNames(item.types);
-      const stateName = getStateName(item.state);
-      const relevanceName = getRelevanceName(item.relevance);
-      const stateColor = getStateColor(item.state);
-      
-      return `
-        <div class="kriminalita-item">
-          <div class="kriminalita-item-header">
-            <div class="kriminalita-date">${dateStr}</div>
-            <div class="kriminalita-state" style="color: ${stateColor}">
-              ${stateName}
+    try {
+      kriminalitaList.innerHTML = sortedKriminalita.map(item => {
+        try {
+          const dateStr = formatDate(item.date);
+          const typeNames = getTypeNames(item.types || []);
+          const stateName = getStateName(item.state);
+          const relevanceName = getRelevanceName(item.relevance);
+          const stateColor = getStateColor(item.state);
+          
+          return `
+            <div class="kriminalita-item">
+              <div class="kriminalita-item-header">
+                <div class="kriminalita-date">${dateStr}</div>
+                <div class="kriminalita-state" style="color: ${stateColor}">
+                  ${stateName}
+                </div>
+              </div>
+              <h3 class="kriminalita-title">${typeNames.join(', ')}</h3>
+              <div class="kriminalita-details">
+                <div class="kriminalita-relevance">📍 ${relevanceName}</div>
+                ${item.mp ? '<div class="kriminalita-mp">Místní působnost: Ano</div>' : ''}
+              </div>
+              <a href="https://kriminalita.policie.gov.cz" target="_blank" rel="noopener" class="kriminalita-link">Zdroj dat →</a>
             </div>
-          </div>
-          <h3 class="kriminalita-title">${typeNames.join(', ')}</h3>
-          <div class="kriminalita-details">
-            <div class="kriminalita-relevance">📍 ${relevanceName}</div>
-            ${item.mp ? '<div class="kriminalita-mp">Místní působnost: Ano</div>' : ''}
-          </div>
-          <a href="https://kriminalita.policie.gov.cz" target="_blank" rel="noopener" class="kriminalita-link">Zdroj dat →</a>
+          `;
+        } catch (itemError) {
+          console.error('Chyba při renderování položky kriminality:', itemError, item);
+          return `
+            <div class="kriminalita-item">
+              <div class="kriminalita-item-header">
+                <div class="kriminalita-date">–</div>
+                <div class="kriminalita-state">Chyba</div>
+              </div>
+              <h3 class="kriminalita-title">Chyba při zobrazení záznamu</h3>
+            </div>
+          `;
+        }
+      }).join('');
+    } catch (renderError) {
+      console.error('Kritická chyba při renderování kriminality:', renderError);
+      kriminalitaList.innerHTML = `
+        <div class="error-state">
+          <p>Chyba při zobrazení dat kriminality.</p>
+          <p class="error-detail">${renderError.message || 'Neznámá chyba'}</p>
         </div>
       `;
-    }).join('');
+    }
   }
 
   function renderHasici(zasahy) {

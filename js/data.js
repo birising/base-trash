@@ -918,6 +918,17 @@ async function loadKriminalitaData() {
 }
 
 async function loadKriminalitaCodebooks() {
+  // Initialize as empty objects if not already initialized
+  if (typeof kriminalitaTypes === 'undefined' || !kriminalitaTypes) {
+    kriminalitaTypes = {};
+  }
+  if (typeof kriminalitaRelevance === 'undefined' || !kriminalitaRelevance) {
+    kriminalitaRelevance = {};
+  }
+  if (typeof kriminalitaStates === 'undefined' || !kriminalitaStates) {
+    kriminalitaStates = {};
+  }
+  
   try {
     const [typesRes, relevanceRes, statesRes] = await Promise.allSettled([
       fetch(`${dataBaseUrl}/types.json`).then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))),
@@ -975,8 +986,14 @@ async function loadAllData() {
     dataKriminalita = getValue(_kriminalita, []);
     
     // Load codebooks for kriminalita (always try, even if data failed - might be useful later)
+    // Do this BEFORE any rendering happens
     try {
       await loadKriminalitaCodebooks();
+      console.log('Číselníky kriminality načteny:', {
+        types: Object.keys(kriminalitaTypes).length,
+        states: Object.keys(kriminalitaStates).length,
+        relevance: Object.keys(kriminalitaRelevance).length
+      });
     } catch (codebookError) {
       console.warn('Chyba při načítání číselníků kriminality:', codebookError);
     }

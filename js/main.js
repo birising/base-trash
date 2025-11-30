@@ -799,7 +799,13 @@ window.addEventListener("DOMContentLoaded", async () => {
 
       if (coords.length) {
         const bounds = L.latLngBounds(coords);
-        map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+        // Ensure map is visible and sized before flying to bounds
+        requestAnimationFrame(() => {
+          if (map) {
+            map.invalidateSize();
+            map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+          }
+        });
       }
     }
 
@@ -879,13 +885,23 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     // Refresh the map size after toggling visibility to avoid a blank map when coming back from other views.
     if (isMapCategory) {
-      // Multiple refreshes to ensure map renders correctly
+      // Multiple refreshes to ensure map renders correctly - critical for broken maps
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 0);
       requestAnimationFrame(() => {
-        refreshMapSize(0);
-        refreshMapSize(100);
-        refreshMapSize(250);
-        refreshMapSize(500);
+        if (map) {
+          map.invalidateSize();
+          refreshMapSize(50);
+          refreshMapSize(150);
+          refreshMapSize(300);
+          refreshMapSize(500);
+        }
       });
+      // Additional refresh after a longer delay to catch any layout changes
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 600);
     }
 
     // Show/hide back button on mobile when not on default category

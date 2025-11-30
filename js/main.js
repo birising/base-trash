@@ -120,7 +120,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   const defaultView = [50.1322, 14.222];
   map.setView(defaultView, 16);
 
-  map.whenReady(() => refreshMapSize(0));
+  map.whenReady(() => {
+    refreshMapSize(0);
+    // Ensure map is properly initialized even if hidden
+    if (map) {
+      map.invalidateSize();
+    }
+  });
 
   function refreshMapSize(delay = 120) {
     setTimeout(() => map.invalidateSize(), delay);
@@ -725,10 +731,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       // Check if layer is already on map to avoid duplicate adds
       const isOnMap = map.hasLayer(layer);
       
-      if (shouldShow && !isOnMap) {
-        map.addLayer(layer);
-      } else if (!shouldShow && isOnMap) {
-        map.removeLayer(layer);
+      if (shouldShow) {
+        if (!isOnMap) {
+          map.addLayer(layer);
+        }
+      } else {
+        if (isOnMap) {
+          map.removeLayer(layer);
+        }
       }
     });
 
@@ -801,6 +811,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (mapView) {
       if (isMapCategory) {
         mapView.classList.remove("hidden");
+        // Force map refresh when showing map view
+        requestAnimationFrame(() => {
+          refreshMapSize(0);
+          refreshMapSize(100);
+          refreshMapSize(300);
+        });
       } else {
         mapView.classList.add("hidden");
       }
@@ -826,9 +842,13 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     // Refresh the map size after toggling visibility to avoid a blank map when coming back from other views.
     if (isMapCategory) {
-      refreshMapSize(0);
-      refreshMapSize(180);
-      refreshMapSize(420);
+      // Multiple refreshes to ensure map renders correctly
+      requestAnimationFrame(() => {
+        refreshMapSize(0);
+        refreshMapSize(100);
+        refreshMapSize(250);
+        refreshMapSize(500);
+      });
     }
 
     // Show/hide back button on mobile when not on default category
@@ -957,10 +977,13 @@ window.addEventListener("DOMContentLoaded", async () => {
               // Map view should already be shown by setActiveCategory, but ensure it's visible
               if (mapView) {
                 mapView.classList.remove("hidden");
-                // Force map refresh after showing
-                refreshMapSize(0);
-                refreshMapSize(220);
-                refreshMapSize(400);
+                // Force map refresh after showing - multiple refreshes for reliability
+                requestAnimationFrame(() => {
+                  refreshMapSize(0);
+                  refreshMapSize(100);
+                  refreshMapSize(250);
+                  refreshMapSize(400);
+                });
               }
             }
           }

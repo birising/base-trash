@@ -381,6 +381,7 @@ const floodThresholds = [
 
 // CSV snapshot (10 min interval) – hlavní zdroj pro graf i aktuální stav.
 const streamCsvUrl = "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/water_level.csv";
+const streamCsvFallbackUrl = `${dataBaseUrl}/hladina.csv`;
 
 const STREAM_MAX_WINDOW_HOURS = 24;
 let streamHistory = [];
@@ -534,10 +535,46 @@ async function fetchStreamCsv() {
   } catch (error) {
     clearTimeout(timeoutId);
     
+    // If CORS error or network error, try fallback to local file
+    const isCorsError = error.message.includes('Access-Control-Allow-Origin') || 
+                        error.message.includes('access control checks') ||
+                        (error instanceof TypeError && error.message.includes('fetch'));
+    
+    if (isCorsError || error.name === 'AbortError') {
+      console.warn("S3 CORS error, trying fallback to local file:", error.message);
+      
+      // Try fallback to local file
+      try {
+        const fallbackController = new AbortController();
+        const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
+        
+        const fallbackResponse = await fetch(streamCsvFallbackUrl, {
+          cache: "no-store",
+          signal: fallbackController.signal
+        });
+        clearTimeout(fallbackTimeout);
+        
+        if (!fallbackResponse.ok) {
+          throw new Error(`Fallback HTTP ${fallbackResponse.status}`);
+        }
+        
+        const csv = await fallbackResponse.text();
+        const parsed = parseStreamCsv(csv);
+        
+        if (parsed.length) {
+          streamState.status = "Data z lokálního souboru (S3 CORS blokován)";
+          return parsed;
+        }
+      } catch (fallbackError) {
+        console.warn("Fallback také selhal:", fallbackError);
+      }
+    }
+    
+    // If all fails, throw original error
     if (error.name === 'AbortError') {
       throw new Error("Timeout při načítání dat hladiny (přes 15s)");
     } else if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error("Síťová chyba při načítání dat hladiny");
+      throw new Error("Síťová chyba při načítání dat hladiny (zkontrolujte CORS nastavení S3)");
     } else {
       throw error;
     }
@@ -550,12 +587,15 @@ async function loadStreamHistory() {
     setStreamHistory(parsed);
     return parsed;
   } catch (error) {
+    console.warn("Chyba při načítání historie hladiny:", error);
     streamHistory = [];
     streamHistoryTimes = [];
     streamState.numeric = null;
-    streamState.level = "Data nedostupná";
+    streamState.level = "Data nedostupná (CORS)";
     streamState.updated = "–";
-    streamState.status = "Nepodařilo se načíst data hladiny";
+    streamState.status = error.message && error.message.includes('CORS') 
+      ? "CORS chyba - S3 bucket neumožňuje přístup z této domény"
+      : "Nepodařilo se načíst data hladiny";
     return [];
   }
 }

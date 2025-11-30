@@ -546,14 +546,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       // GPS souřadnice
       const gpsCoords = `${item.lat}, ${item.lng}`;
       
-      // Odkaz do aplikace s GPS souřadnicemi
-      const appUrl = `${window.location.origin}${window.location.pathname}#map=${item.lat},${item.lng},18`;
+      // Odkaz na Google Maps s GPS souřadnicemi
+      const mapsUrl = `https://www.google.com/maps?q=${item.lat},${item.lng}`;
       
-      // Tělo emailu s GPS souřadnicemi a odkazem
+      // Tělo emailu s GPS souřadnicemi a odkazem na mapu
       const bodyText = `Popište závadu a případně přidejte fotku. Děkujeme!
 
 GPS souřadnice: ${gpsCoords}
-Odkaz do aplikace: ${appUrl}`;
+Odkaz na mapu: ${mapsUrl}`;
       const body = encodeURIComponent(bodyText);
       
       // Email s CC

@@ -87,10 +87,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await loadAllData();
   
-  // Re-render kriminalita if view is visible (function handles all states)
-  if (kriminalitaView && !kriminalitaView.classList.contains('hidden')) {
-    renderKriminalita();
-  }
+  // Update counters after data is loaded
+  updateCounters();
 
   let mapContainer = document.getElementById("map");
   if (!mapContainer) {
@@ -242,6 +240,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const greenspaceLayerInputs = greenspaceLayersControl
     ? greenspaceLayersControl.querySelectorAll("[data-greenspace-layer]")
     : [];
+  // Get DOM elements - must be after includes are loaded
   const mapView = document.getElementById("mapView");
   const streamView = document.getElementById("streamView");
   const wasteView = document.getElementById("wasteView");

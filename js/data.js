@@ -551,9 +551,7 @@ async function fetchStreamCsv() {
                         ));
     
     if (isCorsError || error.name === 'AbortError') {
-      console.warn("S3 CORS error detected, trying fallback to local file:", errorMessage);
-      
-      // Try fallback to local file
+      // Silently try fallback to local file - don't log CORS errors if fallback works
       try {
         const fallbackController = new AbortController();
         const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
@@ -573,10 +571,12 @@ async function fetchStreamCsv() {
         
         if (parsed.length) {
           streamState.status = "Data z lokálního souboru (S3 CORS blokován)";
+          // Successfully loaded from fallback - don't throw error
           return parsed;
         }
       } catch (fallbackError) {
-        console.warn("Fallback také selhal:", fallbackError);
+        // Only log if fallback also fails
+        console.warn("S3 CORS error a fallback také selhal:", errorMessage);
       }
     }
     

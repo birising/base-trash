@@ -1179,7 +1179,14 @@ Odkaz do aplikace: ${appUrl}`;
         });
       }
       
-      renderHasici(zasahy);
+      // Filter zasahy by location - only show interventions related to Běloky
+      const belokyVariants = ['běloky', 'beloky', 'Běloky', 'Beloky'];
+      const filteredZasahy = zasahy.filter(zasah => {
+        const searchText = `${zasah.title} ${zasah.misto} ${zasah.okres} ${zasah.description}`.toLowerCase();
+        return belokyVariants.some(variant => searchText.includes(variant.toLowerCase()));
+      });
+      
+      renderHasici(filteredZasahy);
     } catch (parseError) {
       console.error('Chyba při parsování RSS:', parseError);
       hasiciList.innerHTML = `
@@ -1195,7 +1202,7 @@ Odkaz do aplikace: ${appUrl}`;
     if (!hasiciList) return;
     
     if (zasahy.length === 0) {
-      hasiciList.innerHTML = '<div class="empty-state">Žádné zásahy k zobrazení.</div>';
+      hasiciList.innerHTML = '<div class="empty-state">Žádné zásahy pro Běloky k zobrazení.</div>';
       return;
     }
     

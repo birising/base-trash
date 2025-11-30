@@ -1266,6 +1266,78 @@ Odkaz do aplikace: ${appUrl}`;
     }
   }
 
+  function renderKriminalita() {
+    if (!kriminalitaList) return;
+    
+    if (dataKriminalita.length === 0) {
+      kriminalitaList.innerHTML = '<div class="empty-state">Žádná data kriminality k zobrazení.</div>';
+      return;
+    }
+    
+    const formatDate = (date) => {
+      if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '–';
+      return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
+    
+    const getTypeNames = (typeCodes) => {
+      if (!typeCodes || !Array.isArray(typeCodes) || typeCodes.length === 0) return ['Neznámý typ'];
+      return typeCodes.map(code => {
+        const type = kriminalitaTypes[code];
+        return type?.popis?.cs || type?.nazev?.cs || `Typ ${code}`;
+      });
+    };
+    
+    const getStateName = (stateCode) => {
+      const state = kriminalitaStates[stateCode];
+      return state?.nazev?.cs || `Stav ${stateCode}`;
+    };
+    
+    const getRelevanceName = (relevanceCode) => {
+      const relevance = kriminalitaRelevance[relevanceCode];
+      return relevance?.nazev?.cs || `Relevance ${relevanceCode}`;
+    };
+    
+    const getStateColor = (stateCode) => {
+      if (stateCode === 1) return '#22c55e'; // zjištěn pachatel
+      if (stateCode === 2) return '#f59e0b'; // neobjasněno
+      if (stateCode === 3) return '#6b7280'; // skutek se nestal
+      if (stateCode === 4) return '#9ca3af'; // skutek není trestným činem
+      return '#6b7280';
+    };
+    
+    // Sort by date - newest first
+    const sortedKriminalita = [...dataKriminalita].sort((a, b) => {
+      const dateA = a.date ? a.date.getTime() : 0;
+      const dateB = b.date ? b.date.getTime() : 0;
+      return dateB - dateA; // newest first
+    });
+    
+    kriminalitaList.innerHTML = sortedKriminalita.map(item => {
+      const dateStr = formatDate(item.date);
+      const typeNames = getTypeNames(item.types);
+      const stateName = getStateName(item.state);
+      const relevanceName = getRelevanceName(item.relevance);
+      const stateColor = getStateColor(item.state);
+      
+      return `
+        <div class="kriminalita-item">
+          <div class="kriminalita-item-header">
+            <div class="kriminalita-date">${dateStr}</div>
+            <div class="kriminalita-state" style="color: ${stateColor}">
+              ${stateName}
+            </div>
+          </div>
+          <h3 class="kriminalita-title">${typeNames.join(', ')}</h3>
+          <div class="kriminalita-details">
+            <div class="kriminalita-relevance">📍 ${relevanceName}</div>
+            ${item.mp ? '<div class="kriminalita-mp">Místní působnost: Ano</div>' : ''}
+          </div>
+          <a href="https://kriminalita.policie.gov.cz" target="_blank" rel="noopener" class="kriminalita-link">Zdroj dat →</a>
+        </div>
+      `;
+    }).join('');
+  }
+
   function renderHasici(zasahy) {
     if (!hasiciList) return;
     

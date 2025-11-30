@@ -1,3 +1,8 @@
+<div class="notice-banner" role="status" aria-label="Upozornění: neoficiální aplikace, data testovací">
+  <span class="notice-label">NEOFICIÁLNÍ APLIKACE</span>
+  <span>Data jsou zatím pouze testovací.</span>
+</div>
+
 <section class="dashboard-strip" aria-label="Rychlé přehledy">
   <div class="strip-header">
     <div>
@@ -31,14 +36,6 @@
       <div class="stat-value" id="countKose">0</div>
       <div class="stat-sub">Naplněnost &amp; telemetrie</div>
     </button>
-    <button class="stat-card" data-category="lampy">
-      <div class="stat-top">
-        <span class="stat-label">Lampy</span>
-        <span class="stat-chip">Sítě</span>
-      </div>
-      <div class="stat-value" id="countLampy">0</div>
-      <div class="stat-sub">Nahlášení závad</div>
-    </button>
     <button class="stat-card" data-category="zelen">
       <div class="stat-top">
         <span class="stat-label">Údržba zeleně</span>
@@ -52,11 +49,16 @@
 
 <div class="view-container">
   <div class="map-overlay" id="mapOverlay">
-    <div class="pill" id="activeCategoryLabel">Koše</div>
-    <div class="pill secondary">Automatické přiblížení</div>
-    <div class="pill-group hidden" id="greenspaceToggle" aria-label="Přepnutí typu údržby zeleně">
-      <button class="pill-button active" type="button" data-greenspace="trava">Tráva</button>
-      <button class="pill-button" type="button" data-greenspace="zahony">Záhony</button>
+    <div class="layer-switcher hidden" id="greenspaceLayers" aria-label="Vrstevník údržby zeleně">
+      <div class="layer-switcher-title">Údržba zeleně</div>
+      <label class="layer-switcher-row">
+        <input type="checkbox" data-greenspace-layer="trava" checked />
+        <span>Tráva</span>
+      </label>
+      <label class="layer-switcher-row">
+        <input type="checkbox" data-greenspace-layer="zahony" checked />
+        <span>Záhony</span>
+      </label>
     </div>
   </div>
   <div id="mapView" class="view map-view">
@@ -86,10 +88,21 @@
         </div>
         <svg id="levelChart" viewBox="0 0 720 320" role="img" aria-label="Graf hladiny potoka"></svg>
       </div>
-      <div class="stream-card hero">
-        <div class="eyebrow">Hladina potoka</div>
-        <div class="stream-headline">Live přehled</div>
-        <p class="stream-sub">Aktuální úroveň vody a meteo kontext v jednom panelu.</p>
+        <div class="stream-card hero">
+          <div class="eyebrow">Hladina potoka</div>
+          <div class="stream-headline">Live přehled</div>
+          <p class="stream-sub">Aktuální úroveň vody a meteo kontext v jednom panelu.</p>
+          <p class="stream-sub">
+          Data přejímáme z
+          <a
+            href="http://hladiny-vox.pwsplus.eu/Senzors/Details/24470"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            hladiny-vox.pwsplus.eu (#24470)
+          </a>
+          . Pro nejčerstvější informace přejděte přímo na tuto adresu.
+        </p>
         <div class="stream-stats">
           <div class="stat">
             <div class="stat-label">Úroveň</div>
@@ -104,11 +117,16 @@
           <div class="stat compact">
             <div class="stat-label">Zdroj</div>
             <div class="stat-value live" id="streamStatus">Načítám…</div>
-            <div class="stat-sub">live scrape</div>
+            <div class="stat-sub">Online zdroj · hladiny-vox.pwsplus.eu</div>
           </div>
         </div>
-        <a class="source-link" href="http://hladiny-vox.pwsplus.eu/Senzors/Details/24470" target="_blank" rel="noopener noreferrer">
-          Zdroj dat · hladiny-vox.pwsplus.eu (24470)
+        <a
+          class="source-link"
+          href="http://hladiny-vox.pwsplus.eu/Senzors/Details/24470"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Zdroj dat · hladiny-vox.pwsplus.eu (#24470)
         </a>
       </div>
       <div class="stream-card wide">

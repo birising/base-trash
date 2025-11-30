@@ -196,6 +196,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     hladina: L.layerGroup(),
     odpad: L.layerGroup(),
   };
+  
+  // Store marker references by category and ID/coordinates for deep linking
+  const markerMap = {
+    kose: new Map(),
+    lampy: new Map(),
+    kontejnery: new Map(),
+  };
 
   const counters = {
     kose: document.getElementById("countKose"),

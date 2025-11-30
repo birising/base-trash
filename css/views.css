@@ -324,6 +324,86 @@
   }
 }
 
+/* Mobile optimizations for views */
+@media (max-width: 960px) {
+  .stream-view,
+  .waste-view {
+    padding: 14px;
+  }
+
+  .stream-grid {
+    gap: 14px;
+  }
+
+  .stream-card,
+  .waste-card {
+    padding: 14px;
+  }
+
+  .waste-grid {
+    gap: 14px;
+  }
+
+  /* Better touch targets for waste rows */
+  .waste-row {
+    min-height: 56px;
+    padding: 14px;
+  }
+
+  /* Better button sizing */
+  .button,
+  .popup-button {
+    min-height: 44px;
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+
+  /* Better chart header on mobile */
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .chart-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .chart-refresh {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  /* Better embed sizing */
+  .embed {
+    min-height: 300px;
+  }
+
+  /* Better layer switcher on mobile */
+  .layer-switcher {
+    min-width: auto;
+    width: calc(100vw - 40px);
+    max-width: 280px;
+  }
+
+  /* Better popup details */
+  .popup-details {
+    font-size: 14px;
+  }
+
+  .popup-details > div {
+    padding: 8px 0;
+  }
+
+  /* Better status chips */
+  .status-chip {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 32px;
+  }
+}
+
 .chart-frame {
   fill: rgba(255, 255, 255, 0.02);
   stroke: var(--border);

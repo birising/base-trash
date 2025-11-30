@@ -66,61 +66,100 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (window.L) return true;
     try {
       await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error("Timeout při načítání Leaflet"));
+        }, 15000);
+        
         const fallback = document.createElement("script");
         fallback.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-        fallback.onload = resolve;
-        fallback.onerror = reject;
+        fallback.integrity = "sha256-o8UgsQeW9XfrHRfPaB8NG0Ax7AnN1Le23ltnzD9i+9I=";
+        fallback.crossOrigin = "";
+        fallback.onload = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+        fallback.onerror = (error) => {
+          clearTimeout(timeout);
+          reject(error);
+        };
         document.head.appendChild(fallback);
       });
       return !!window.L;
     } catch (error) {
-      console.warn("Nepodařilo se načíst záložní Leaflet", error);
+      console.error("Nepodařilo se načíst záložní Leaflet:", error);
       return false;
     }
   };
 
   const leafletReady = await ensureLeaflet();
   if (!leafletReady) {
-    showMapError("Mapový modul se nepodařilo načíst. Zkuste obnovit stránku.");
+    showMapError("Mapový modul se nepodařilo načíst. Zkuste obnovit stránku nebo zkontrolujte připojení k internetu.");
     return;
   }
 
-  await loadAllData();
+  try {
+    await loadAllData();
+  } catch (error) {
+    console.error("Kritická chyba při načítání dat:", error);
+    showMapError("Nepodařilo se načíst všechna data. Aplikace může fungovat s omezenou funkcionalitou.");
+  }
 
   let mapContainer = document.getElementById("map");
   if (!mapContainer) {
     // Fallback, pokud se fragmenty nenačetly – vytvoříme minimální kontejner pro mapu.
-    const mapView = document.getElementById("mapView") || document.querySelector(".content");
-    mapContainer = document.createElement("div");
-    mapContainer.id = "map";
-    mapContainer.setAttribute("aria-label", "Mapa údržby obce Běloky");
-    if (mapView) {
-      mapView.classList.add("view", "map-view");
-      mapView.appendChild(mapContainer);
-    } else {
-      const fallbackWrap = document.createElement("div");
-      fallbackWrap.id = "mapView";
-      fallbackWrap.className = "view map-view";
-      fallbackWrap.appendChild(mapContainer);
-      document.body.appendChild(fallbackWrap);
+    try {
+      const mapView = document.getElementById("mapView") || document.querySelector(".content");
+      mapContainer = document.createElement("div");
+      mapContainer.id = "map";
+      mapContainer.setAttribute("aria-label", "Mapa údržby obce Běloky");
+      if (mapView) {
+        mapView.classList.add("view", "map-view");
+        mapView.appendChild(mapContainer);
+      } else {
+        const fallbackWrap = document.createElement("div");
+        fallbackWrap.id = "mapView";
+        fallbackWrap.className = "view map-view";
+        fallbackWrap.appendChild(mapContainer);
+        document.body.appendChild(fallbackWrap);
+      }
+    } catch (error) {
+      console.error("Chyba při vytváření fallback map kontejneru:", error);
+      showMapError("Nepodařilo se inicializovat mapu. Zkuste obnovit stránku.");
+      return;
     }
   }
 
-  const map = L.map("map", {
-    zoomControl: false,
-    attributionControl: false,
-  });
+  let map;
+  try {
+    map = L.map("map", {
+      zoomControl: false,
+      attributionControl: false,
+    });
+  } catch (error) {
+    console.error("Chyba při inicializaci Leaflet mapy:", error);
+    showMapError("Nepodařilo se inicializovat mapu. Zkuste obnovit stránku.");
+    return;
+  }
 
-  const baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "© OpenStreetMap přispěvatelé",
-  });
-  baseLayer.addTo(map);
+  let baseLayer;
+  try {
+    baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "© OpenStreetMap přispěvatelé",
+    });
+    baseLayer.addTo(map);
+  } catch (error) {
+    console.error("Chyba při načítání mapových dlaždic:", error);
+    showMapError("Nepodařilo se načíst mapové dlaždice. Zkontrolujte připojení k internetu.");
+  }
 
   const defaultView = [50.1322, 14.222];
-  map.setView(defaultView, 16);
-
-  map.whenReady(() => refreshMapSize(0));
+  try {
+    map.setView(defaultView, 16);
+    map.whenReady(() => refreshMapSize(0));
+  } catch (error) {
+    console.error("Chyba při nastavení výchozího zobrazení mapy:", error);
+  }
 
   function refreshMapSize(delay = 120) {
     setTimeout(() => map.invalidateSize(), delay);
@@ -211,6 +250,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const greenspaceVisibility = { trava: true, zahony: true };
   let currentCategory = "kose";
+  const DEFAULT_CATEGORY = "kose";
+
+  const backButton = document.getElementById("backButton");
+  const brandLogo = document.getElementById("brandLogo");
 
   const BIN_THRESHOLDS = {
     full: 85,
@@ -788,6 +831,30 @@ window.addEventListener("DOMContentLoaded", async () => {
       refreshMapSize(180);
       refreshMapSize(420);
     }
+
+    // Show/hide back button on mobile when not on default category
+    updateBackButtonVisibility();
+  }
+
+  function updateBackButtonVisibility() {
+    if (!backButton) return;
+    const isMobile = window.innerWidth <= 960;
+    const isDefaultCategory = currentCategory === DEFAULT_CATEGORY;
+    const shouldShow = isMobile && !isDefaultCategory;
+    
+    if (shouldShow) {
+      backButton.classList.remove("hidden");
+    } else {
+      backButton.classList.add("hidden");
+    }
+  }
+
+  function goToDashboard() {
+    setActiveCategory(DEFAULT_CATEGORY);
+    // Scroll to top on mobile
+    if (window.innerWidth <= 960) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
   function setupSidebarToggle() {
@@ -951,12 +1018,32 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  setActiveCategory("kose");
+  // Setup back button and brand logo click handlers
+  if (backButton) {
+    backButton.addEventListener("click", goToDashboard);
+  }
+  if (brandLogo) {
+    brandLogo.addEventListener("click", () => {
+      if (window.innerWidth <= 960) {
+        goToDashboard();
+      }
+    });
+  }
+
+  // Update back button visibility on resize
+  window.addEventListener("resize", () => {
+    refreshMapSize(80);
+    updateBackButtonVisibility();
+  });
+
+  setActiveCategory(DEFAULT_CATEGORY);
   setupSidebarToggle();
   initNav();
   refreshMapSize(0);
-  window.addEventListener("resize", () => refreshMapSize(80));
-  window.addEventListener("orientationchange", () => refreshMapSize(120));
+  window.addEventListener("orientationchange", () => {
+    refreshMapSize(120);
+    updateBackButtonVisibility();
+  });
   const refreshButton = document.getElementById("refreshStreamBtn");
   if (refreshButton) {
     refreshButton.addEventListener("click", () => refreshStreamData(true));

@@ -60,9 +60,67 @@ body {
   z-index: 1000;
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
 .brand {
   font-weight: 800;
   letter-spacing: 0.6px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.brand:hover {
+  opacity: 0.8;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+}
+
+.back-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+.back-button:active {
+  transform: translateY(0);
+}
+
+.back-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.back-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.back-label {
+  font-size: 14px;
+}
+
+.back-button.hidden {
+  display: none;
 }
 
 .topbar-actions {
@@ -579,11 +637,17 @@ body {
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
-:root[data-theme="light"] .theme-toggle {
+:root[data-theme="light"] .theme-toggle,
+:root[data-theme="light"] .back-button {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.9));
   border-color: rgba(15, 23, 42, 0.08);
   color: var(--text-main);
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme="light"] .back-button:hover {
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
 }
 
 :root[data-theme="light"] .sidebar {
@@ -658,5 +722,171 @@ body {
 
 .hidden {
   display: none !important;
+}
+
+/* Mobile optimizations */
+@media (max-width: 960px) {
+  /* Better touch targets - minimum 44x44px */
+  .nav-item,
+  .stat-card,
+  .back-button,
+  .theme-toggle,
+  .menu-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better spacing for touch */
+  .nav-list {
+    gap: 12px;
+  }
+
+  .nav-item {
+    padding: 14px 16px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  /* Prevent text selection on buttons during touch */
+  .nav-item,
+  .stat-card,
+  .back-button,
+  .theme-toggle,
+  .menu-button {
+    -webkit-tap-highlight-color: rgba(45, 212, 191, 0.2);
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+
+  /* Better scrolling */
+  .content,
+  .sidebar,
+  .stream-view,
+  .waste-view {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Prevent zoom on double tap */
+  .nav-item:active,
+  .stat-card:active,
+  .back-button:active {
+    transform: scale(0.98);
+  }
+
+  /* Better sidebar on mobile */
+  .sidebar {
+    width: min(85vw, 320px);
+    max-width: 320px;
+  }
+
+  /* Better map viewport */
+  #map {
+    min-height: 60vh;
+    height: calc(100vh - 64px);
+  }
+
+  /* Dashboard cards - better mobile layout */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Better popup sizing on mobile */
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 40px);
+  }
+
+  .leaflet-popup-content {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Better button spacing in popups */
+  .popup-button {
+    min-height: 44px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Better topbar on mobile */
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .topbar-left {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .brand {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+  }
+
+  .back-button {
+    padding: 8px 12px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .back-label {
+    display: none;
+  }
+
+  .back-icon {
+    font-size: 20px;
+  }
+
+  /* Better stat cards on mobile */
+  .stat-value {
+    font-size: 28px;
+  }
+
+  /* Better chart on mobile */
+  #levelChart {
+    height: 240px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .brand {
+    max-width: 140px;
+    font-size: 14px;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  .theme-toggle {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .theme-toggle-label {
+    display: none;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+
+  #levelChart {
+    height: 200px;
+  }
 }
 

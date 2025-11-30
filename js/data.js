@@ -410,21 +410,43 @@ function unwrapCsvPayload(rawText = "") {
 }
 
 function parseStreamCsv(csvText = "") {
-  return unwrapCsvPayload(csvText)
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [ts, value] = line.split(";").map((p) => p.trim());
-      const numeric = Number(value?.replace(",", "."));
-      const parsedDate = Date.parse(ts.replace(" ", "T"));
-      return {
-        ts,
-        date: Number.isFinite(parsedDate) ? new Date(parsedDate) : null,
-        numeric: Number.isFinite(numeric) ? numeric : null,
-      };
-    })
-    .filter((entry) => entry.numeric != null);
+  if (!csvText || typeof csvText !== 'string') {
+    console.warn('parseStreamCsv: Neplatný vstup (očekává se string)');
+    return [];
+  }
+  
+  try {
+    const unwrapped = unwrapCsvPayload(csvText);
+    if (!unwrapped) {
+      console.warn('parseStreamCsv: Prázdný obsah po unwrap');
+      return [];
+    }
+    
+    return unwrapped
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        try {
+          const [ts, value] = line.split(";").map((p) => p.trim());
+          const numeric = value ? Number(value.replace(",", ".")) : NaN;
+          const parsedDate = ts ? Date.parse(ts.replace(" ", "T")) : NaN;
+          
+          return {
+            ts: ts || '',
+            date: Number.isFinite(parsedDate) ? new Date(parsedDate) : null,
+            numeric: Number.isFinite(numeric) ? numeric : null,
+          };
+        } catch (err) {
+          console.warn('Chyba při parsování řádku CSV hladiny:', err);
+          return null;
+        }
+      })
+      .filter((entry) => entry && entry.numeric != null);
+  } catch (error) {
+    console.error('Chyba při parsování CSV hladiny:', error);
+    return [];
+  }
 }
 
 function trimStreamWindow() {
@@ -485,15 +507,41 @@ function setStreamHistory(entries) {
 }
 
 async function fetchStreamCsv() {
-  const response = await fetch(streamCsvUrl, { cache: "no-store", mode: "cors" });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout pro externí zdroj
+  
+  try {
+    const response = await fetch(streamCsvUrl, { 
+      cache: "no-store", 
+      mode: "cors",
+      signal: controller.signal 
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
 
-  const csv = await response.text();
-  const parsed = parseStreamCsv(csv);
-  if (!parsed.length) throw new Error("Prázdný soubor water_level.csv");
+    const csv = await response.text();
+    const parsed = parseStreamCsv(csv);
+    
+    if (!parsed.length) {
+      throw new Error("Prázdný soubor water_level.csv nebo neplatný formát");
+    }
 
-  streamState.status = "Data přejímána z hladiny-vox.pwsplus.eu (#24470)";
-  return parsed;
+    streamState.status = "Data přejímána z hladiny-vox.pwsplus.eu (#24470)";
+    return parsed;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      throw new Error("Timeout při načítání dat hladiny (přes 15s)");
+    } else if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error("Síťová chyba při načítání dat hladiny");
+    } else {
+      throw error;
+    }
+  }
 }
 
 async function loadStreamHistory() {
@@ -514,40 +562,90 @@ async function loadStreamHistory() {
 
 async function loadDataset(name, fallback = []) {
   const url = `${dataBaseUrl}/${name}.json`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  
   try {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const response = await fetch(url, { 
+      cache: "no-store",
+      signal: controller.signal 
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const payload = await response.json();
-    return Array.isArray(payload) ? payload : fallback;
+    
+    if (!Array.isArray(payload)) {
+      console.warn(`Dataset ${name} není pole, používáme fallback data`);
+      return fallback;
+    }
+    
+    return payload;
   } catch (error) {
-    console.warn(`Nepodařilo se načíst dataset ${name} (${url})`, error);
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      console.warn(`Timeout při načítání datasetu ${name} (${url})`);
+    } else if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.warn(`Síťová chyba při načítání datasetu ${name} (${url}):`, error.message);
+    } else {
+      console.warn(`Nepodařilo se načíst dataset ${name} (${url}):`, error.message);
+    }
+    
     return fallback;
   }
 }
 
 function parseKoseTelemetry(csvText) {
-  const lines = csvText
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  if (!lines.length) return [];
-  const header = lines.shift().split(",").map((h) => h.trim().toLowerCase());
-  const idx = {
-    id: header.indexOf("id"),
-    fillLevel: header.indexOf("filllevel"),
-    lastUpdated: header.indexOf("lastupdated"),
-    batteryLevel: header.indexOf("batterylevel"),
-  };
+  if (!csvText || typeof csvText !== 'string') {
+    console.warn('parseKoseTelemetry: Neplatný vstup (očekává se string)');
+    return [];
+  }
+  
+  try {
+    const lines = csvText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    
+    if (!lines.length) {
+      console.warn('parseKoseTelemetry: Prázdný CSV soubor');
+      return [];
+    }
+    
+    const header = lines.shift().split(",").map((h) => h.trim().toLowerCase());
+    const idx = {
+      id: header.indexOf("id"),
+      fillLevel: header.indexOf("filllevel"),
+      lastUpdated: header.indexOf("lastupdated"),
+      batteryLevel: header.indexOf("batterylevel"),
+    };
 
-  return lines
-    .map((row) => row.split(",").map((cell) => cell.trim()))
-    .map((cells) => ({
-      id: idx.id >= 0 ? cells[idx.id] : undefined,
-      fillLevel: idx.fillLevel >= 0 ? Number(cells[idx.fillLevel]) : undefined,
-      lastUpdated: idx.lastUpdated >= 0 ? cells[idx.lastUpdated] : undefined,
-      batteryLevel: idx.batteryLevel >= 0 ? Number(cells[idx.batteryLevel]) : undefined,
-    }))
-    .filter((entry) => entry.id);
+    const entries = lines
+      .map((row) => {
+        try {
+          const cells = row.split(",").map((cell) => cell.trim());
+          return {
+            id: idx.id >= 0 ? cells[idx.id] : undefined,
+            fillLevel: idx.fillLevel >= 0 ? Number(cells[idx.fillLevel]) : undefined,
+            lastUpdated: idx.lastUpdated >= 0 ? cells[idx.lastUpdated] : undefined,
+            batteryLevel: idx.batteryLevel >= 0 ? Number(cells[idx.batteryLevel]) : undefined,
+          };
+        } catch (err) {
+          console.warn('Chyba při parsování řádku telemetrie:', err);
+          return null;
+        }
+      })
+      .filter((entry) => entry && entry.id);
+    
+    return entries;
+  } catch (error) {
+    console.error('Chyba při parsování telemetrie košů:', error);
+    return [];
+  }
 }
 
 function pickLatestTelemetry(entries) {
@@ -581,32 +679,81 @@ function mergeKose(definitions, telemetryEntries) {
 
 async function loadKoseTelemetry() {
   const url = `${dataBaseUrl}/kose_telemetry.csv`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  
   try {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const response = await fetch(url, { 
+      cache: "no-store",
+      signal: controller.signal 
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const csv = await response.text();
     const parsed = parseKoseTelemetry(csv);
-    return parsed.length ? parsed : fallbackKoseTelemetry;
+    
+    if (!parsed.length) {
+      console.warn('Telemetrie košů je prázdná, používáme fallback data');
+      return fallbackKoseTelemetry;
+    }
+    
+    return parsed;
   } catch (error) {
-    console.warn(`Nepodařilo se načíst telemetrii košů (${url})`, error);
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      console.warn(`Timeout při načítání telemetrie košů (${url})`);
+    } else if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.warn(`Síťová chyba při načítání telemetrie košů (${url}):`, error.message);
+    } else {
+      console.warn(`Nepodařilo se načíst telemetrii košů (${url}):`, error.message);
+    }
+    
     return fallbackKoseTelemetry;
   }
 }
 
 async function loadAllData() {
-  const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory] = await Promise.all([
-    loadDataset("kose", fallbackKoseDefinitions),
-    loadKoseTelemetry(),
-    loadDataset("lampy", fallbackLampy),
-    loadDataset("kontejnery", fallbackKontejnery),
-    loadDataset("zelene", fallbackZelene),
-    loadStreamHistory(),
-  ]);
+  try {
+    const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory] = await Promise.allSettled([
+      loadDataset("kose", fallbackKoseDefinitions),
+      loadKoseTelemetry(),
+      loadDataset("lampy", fallbackLampy),
+      loadDataset("kontejnery", fallbackKontejnery),
+      loadDataset("zelene", fallbackZelene),
+      loadStreamHistory(),
+    ]);
 
-  dataKose = mergeKose(koseDefinitions, koseTelemetry);
-  dataLampy = ensureLampIds(lampy);
-  dataKontejnery = kontejnery;
-  dataZelene = zelene;
+    // Extract values from settled promises, use fallback on rejection
+    const getValue = (result, fallback) => result.status === 'fulfilled' ? result.value : fallback;
+    
+    dataKose = mergeKose(
+      getValue(koseDefinitions, fallbackKoseDefinitions),
+      getValue(koseTelemetry, fallbackKoseTelemetry)
+    );
+    dataLampy = ensureLampIds(getValue(lampy, fallbackLampy));
+    dataKontejnery = getValue(kontejnery, fallbackKontejnery);
+    dataZelene = getValue(zelene, fallbackZelene);
+    
+    // Log any failures
+    [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory].forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const names = ['kose', 'kose_telemetry', 'lampy', 'kontejnery', 'zelene', 'streamHistory'];
+        console.warn(`Chyba při načítání ${names[index]}:`, result.reason);
+      }
+    });
+  } catch (error) {
+    console.error('Kritická chyba při načítání dat:', error);
+    // Use all fallbacks as last resort
+    dataKose = mergeKose(fallbackKoseDefinitions, fallbackKoseTelemetry);
+    dataLampy = ensureLampIds(fallbackLampy);
+    dataKontejnery = fallbackKontejnery;
+    dataZelene = fallbackZelene;
+  }
 }
 
 function showMapError(message) {

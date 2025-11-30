@@ -1267,9 +1267,12 @@ Odkaz do aplikace: ${appUrl}`;
   }
   
   // Start with "údržba zeleně" (zelen) as default category, unless deep link is present
-  if (!window.location.hash || !window.location.hash.match(/^#\w+\//)) {
-    setActiveCategory("zelen");
-  }
+  // Wait a bit to ensure data is loaded and markers are populated
+  setTimeout(() => {
+    if (!window.location.hash || !window.location.hash.match(/^#\w+\//)) {
+      setActiveCategory("zelen");
+    }
+  }, 200);
   setupSidebarToggle();
   initNav();
   

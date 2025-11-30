@@ -1001,14 +1001,21 @@ Odkaz do aplikace: ${appUrl}`;
     
     const feedUrl = 'https://pkr.kr-stredocesky.cz/pkr/zasahy-jpo/feed.xml';
     
-    // Try multiple CORS proxy services
+    // Try multiple approaches: direct fetch, CORS proxies, and RSS-to-JSON services
     const proxyServices = [
       `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`,
       `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`,
       `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feedUrl)}`
     ];
     
+    // RSS to JSON services
+    const rssToJsonServices = [
+      `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`,
+      `https://rss-to-json-serverless-api.vercel.app/api?feedURL=${encodeURIComponent(feedUrl)}`
+    ];
+    
     let xmlText = null;
+    let jsonData = null;
     let error = null;
     
     // Try direct fetch first
@@ -1028,33 +1035,56 @@ Odkaz do aplikace: ${appUrl}`;
     } catch (fetchError) {
       error = fetchError;
       
-      // Try each proxy service in sequence
-      for (const proxyUrl of proxyServices) {
+      // Try RSS to JSON services first (often more reliable)
+      for (const jsonUrl of rssToJsonServices) {
         try {
-          const proxyResponse = await fetch(proxyUrl, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/rss+xml, application/xml, text/xml'
-            }
+          const jsonResponse = await fetch(jsonUrl, {
+            method: 'GET'
           });
           
-          if (!proxyResponse.ok) {
-            continue; // Try next proxy
+          if (!jsonResponse.ok) {
+            continue;
           }
           
-          xmlText = await proxyResponse.text();
-          if (xmlText && xmlText.length > 100) { // Basic validation
-            error = null; // Success with proxy
+          const json = await jsonResponse.json();
+          if (json && json.items && json.items.length > 0) {
+            jsonData = json;
+            error = null;
             break;
           }
-        } catch (proxyError) {
-          // Try next proxy
+        } catch (jsonError) {
           continue;
+        }
+      }
+      
+      // If JSON services failed, try CORS proxies
+      if (!jsonData) {
+        for (const proxyUrl of proxyServices) {
+          try {
+            const proxyResponse = await fetch(proxyUrl, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/rss+xml, application/xml, text/xml'
+              }
+            });
+            
+            if (!proxyResponse.ok) {
+              continue;
+            }
+            
+            xmlText = await proxyResponse.text();
+            if (xmlText && xmlText.length > 100) {
+              error = null;
+              break;
+            }
+          } catch (proxyError) {
+            continue;
+          }
         }
       }
     }
     
-    if (!xmlText) {
+    if (!xmlText && !jsonData) {
       const errorMsg = error?.message || 'Neznámá chyba';
       const isCorsError = errorMsg.includes('CORS') || errorMsg.includes('Access-Control') || errorMsg.includes('access control');
       
@@ -1071,47 +1101,83 @@ Odkaz do aplikace: ${appUrl}`;
     }
     
     try {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      let zasahy = [];
       
-      // Check for parsing errors
-      const parseError = xmlDoc.querySelector('parsererror');
-      if (parseError) {
-        throw new Error('Chyba při parsování XML');
-      }
-      
-      const items = xmlDoc.querySelectorAll('item');
-      const zasahy = Array.from(items).slice(0, 50).map(item => {
-        const title = item.querySelector('title')?.textContent || 'Bez názvu';
-        const link = item.querySelector('link')?.textContent || '';
-        const description = item.querySelector('description')?.textContent || '';
-        const pubDate = item.querySelector('pubDate')?.textContent || '';
+      // Process JSON data if available
+      if (jsonData && jsonData.items) {
+        zasahy = jsonData.items.slice(0, 50).map(item => {
+          const title = item.title || 'Bez názvu';
+          const link = item.link || '';
+          const description = item.description || '';
+          const pubDate = item.pubDate || '';
+          
+          // Parse description from JSON (may already be HTML)
+          const descText = description.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+          const descParts = descText.split('<br>').map(p => p.trim()).filter(Boolean);
+          const stav = descParts.find(p => p.startsWith('stav:'))?.replace('stav:', '').trim() || 'neupřesněno';
+          const ukonceni = descParts.find(p => p.startsWith('ukončení:'))?.replace('ukončení:', '').trim() || null;
+          const misto = descParts.filter(p => !p.startsWith('stav:') && !p.startsWith('ukončení:') && !p.startsWith('okres')).join(', ') || '';
+          const okres = descParts.find(p => p.startsWith('okres'))?.replace('okres', '').trim() || '';
+          
+          let dateObj = null;
+          if (pubDate) {
+            dateObj = new Date(pubDate);
+          }
+          
+          return {
+            title,
+            link,
+            stav,
+            ukonceni,
+            misto,
+            okres,
+            date: dateObj,
+            description
+          };
+        });
+      } else if (xmlText) {
+        // Process XML data
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
         
-        // Parse description - handle HTML entities
-        const descText = description.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-        const descParts = descText.split('<br>').map(p => p.trim()).filter(Boolean);
-        const stav = descParts.find(p => p.startsWith('stav:'))?.replace('stav:', '').trim() || 'neupřesněno';
-        const ukonceni = descParts.find(p => p.startsWith('ukončení:'))?.replace('ukončení:', '').trim() || null;
-        const misto = descParts.filter(p => !p.startsWith('stav:') && !p.startsWith('ukončení:') && !p.startsWith('okres')).join(', ') || '';
-        const okres = descParts.find(p => p.startsWith('okres'))?.replace('okres', '').trim() || '';
-        
-        // Parse date
-        let dateObj = null;
-        if (pubDate) {
-          dateObj = new Date(pubDate);
+        const parseError = xmlDoc.querySelector('parsererror');
+        if (parseError) {
+          throw new Error('Chyba při parsování XML');
         }
         
-        return {
-          title,
-          link,
-          stav,
-          ukonceni,
-          misto,
-          okres,
-          date: dateObj,
-          description
-        };
-      });
+        const items = xmlDoc.querySelectorAll('item');
+        zasahy = Array.from(items).slice(0, 50).map(item => {
+          const title = item.querySelector('title')?.textContent || 'Bez názvu';
+          const link = item.querySelector('link')?.textContent || '';
+          const description = item.querySelector('description')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          
+          // Parse description - handle HTML entities
+          const descText = description.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+          const descParts = descText.split('<br>').map(p => p.trim()).filter(Boolean);
+          const stav = descParts.find(p => p.startsWith('stav:'))?.replace('stav:', '').trim() || 'neupřesněno';
+          const ukonceni = descParts.find(p => p.startsWith('ukončení:'))?.replace('ukončení:', '').trim() || null;
+          const misto = descParts.filter(p => !p.startsWith('stav:') && !p.startsWith('ukončení:') && !p.startsWith('okres')).join(', ') || '';
+          const okres = descParts.find(p => p.startsWith('okres'))?.replace('okres', '').trim() || '';
+          
+          // Parse date
+          let dateObj = null;
+          if (pubDate) {
+            dateObj = new Date(pubDate);
+          }
+          
+          return {
+            title,
+            link,
+            stav,
+            ukonceni,
+            misto,
+            okres,
+            date: dateObj,
+            description
+          };
+        });
+      }
       
       renderHasici(zasahy);
     } catch (parseError) {

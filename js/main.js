@@ -594,10 +594,20 @@ Odkaz do aplikace: ${appUrl}`;
     const baseStyle = style || greenspaceStyles.trava;
     const polygon = L.polygon(area.coords, { ...baseStyle, color: color || baseStyle.color });
 
+    // Calculate center of polygon for GPS coordinates
+    const centerLat = area.coords.reduce((sum, coord) => sum + coord[0], 0) / area.coords.length;
+    const centerLng = area.coords.reduce((sum, coord) => sum + coord[1], 0) / area.coords.length;
+    const gpsCoords = `${centerLat.toFixed(6)}, ${centerLng.toFixed(6)}`;
+    
+    // Create deep link to app with greenspace area (using center coordinates)
+    const appUrl = `${window.location.origin}${window.location.pathname}#zelen/${centerLat.toFixed(6)},${centerLng.toFixed(6)}`;
+    
     const subject = encodeURIComponent(`Údržba zeleně – ${area.name}`);
-    const body = encodeURIComponent(
-      `Prosím o prověření plochy: ${area.name}. Potřeba posekat / ošetřit. Děkujeme.`
-    );
+    const bodyText = `Prosím o prověření plochy: ${area.name}. Potřeba posekat / ošetřit. Děkujeme.
+
+GPS souřadnice (střed plochy): ${gpsCoords}
+Odkaz do aplikace: ${appUrl}`;
+    const body = encodeURIComponent(bodyText);
 
     const popupContent = `
       <strong>${area.name}</strong>
@@ -1223,7 +1233,7 @@ Odkaz do aplikace: ${appUrl}`;
     map.invalidateSize();
   }
   
-  // Handle deep linking from URL hash (e.g., #lampy/1 or #lampy/50.133935,14.222031)
+  // Handle deep linking from URL hash (e.g., #lampy/1 or #lampy/50.133935,14.222031 or #zelen/50.133935,14.222031)
   function handleDeepLink() {
     const hash = window.location.hash.slice(1); // Remove #
     if (!hash) return;
@@ -1232,6 +1242,55 @@ Odkaz do aplikace: ${appUrl}`;
     if (!match) return;
     
     const [, category, identifier] = match;
+    
+    // Handle greenspace (zelen) category differently - find polygon by coordinates
+    if (category === "zelen" && identifier.includes(',')) {
+      const [lat, lng] = identifier.split(',').map(Number);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setTimeout(() => {
+          setActiveCategory("zelen");
+          
+          // Find polygon closest to the coordinates
+          setTimeout(() => {
+            if (map) {
+              const targetPoint = L.latLng(lat, lng);
+              let closestPolygon = null;
+              let minDistance = Infinity;
+              
+              // Check both greenspace layers
+              [layers.zelenTrava, layers.zelenZahony].forEach((layer) => {
+                layer.eachLayer((polygon) => {
+                  if (polygon instanceof L.Polygon) {
+                    const bounds = polygon.getBounds();
+                    const center = bounds.getCenter();
+                    const distance = targetPoint.distanceTo(center);
+                    
+                    if (distance < minDistance) {
+                      minDistance = distance;
+                      closestPolygon = polygon;
+                    }
+                  }
+                });
+              });
+              
+              if (closestPolygon) {
+                const bounds = closestPolygon.getBounds();
+                map.fitBounds(bounds, { padding: [50, 50] });
+                setTimeout(() => {
+                  closestPolygon.openPopup();
+                }, 300);
+              } else {
+                // If no polygon found, just zoom to coordinates
+                map.setView([lat, lng], 18);
+              }
+            }
+          }, 300);
+        }, 500);
+      }
+      return;
+    }
+    
+    // Handle other categories (lampy, kose, kontejnery)
     if (!mapCategories.includes(category) || !markerMap[category]) return;
     
     // Wait for data to load and markers to be populated

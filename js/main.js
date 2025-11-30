@@ -527,10 +527,17 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (item.category === "lampy" && item.id != null) {
       popupTitle = `Lampa #${item.id}`;
     } else if (item.category === "kriminalita") {
-      const typeNames = item.types && item.types.length > 0 
-        ? item.types.map(code => kriminalitaTypes[code]?.popis?.cs || kriminalitaTypes[code]?.nazev?.cs || `Typ ${code}`).join(', ')
-        : 'Trestný čin';
-      popupTitle = typeNames;
+      try {
+        const typeNames = item.types && item.types.length > 0 
+          ? item.types.map(code => {
+              const type = (typeof kriminalitaTypes !== 'undefined' && kriminalitaTypes && kriminalitaTypes[code]) ? kriminalitaTypes[code] : null;
+              return type?.popis?.cs || type?.nazev?.cs || `Typ ${code}`;
+            }).join(', ')
+          : 'Trestný čin';
+        popupTitle = typeNames;
+      } catch (e) {
+        popupTitle = 'Trestný čin';
+      }
     }
     const useIcon = item.category === "kose" || item.category === "lampy" || item.category === "kriminalita";
     const binStatus = item.category === "kose" ? evaluateBinStatus(item) : null;
@@ -614,20 +621,32 @@ Odkaz do aplikace: ${appUrl}`;
       
       const getTypeNames = (typeCodes) => {
         if (!typeCodes || !Array.isArray(typeCodes) || typeCodes.length === 0) return ['Neznámý typ'];
-        return typeCodes.map(code => {
-          const type = kriminalitaTypes[code];
-          return type?.popis?.cs || type?.nazev?.cs || `Typ ${code}`;
-        });
+        try {
+          return typeCodes.map(code => {
+            const type = (typeof kriminalitaTypes !== 'undefined' && kriminalitaTypes && kriminalitaTypes[code]) ? kriminalitaTypes[code] : null;
+            return type?.popis?.cs || type?.nazev?.cs || `Typ ${code}`;
+          });
+        } catch (e) {
+          return typeCodes.map(code => `Typ ${code}`);
+        }
       };
       
       const getStateName = (stateCode) => {
-        const state = kriminalitaStates[stateCode];
-        return state?.nazev?.cs || `Stav ${stateCode}`;
+        try {
+          const state = (typeof kriminalitaStates !== 'undefined' && kriminalitaStates && kriminalitaStates[stateCode]) ? kriminalitaStates[stateCode] : null;
+          return state?.nazev?.cs || `Stav ${stateCode}`;
+        } catch (e) {
+          return `Stav ${stateCode}`;
+        }
       };
       
       const getRelevanceName = (relevanceCode) => {
-        const relevance = kriminalitaRelevance[relevanceCode];
-        return relevance?.nazev?.cs || `Relevance ${relevanceCode}`;
+        try {
+          const relevance = (typeof kriminalitaRelevance !== 'undefined' && kriminalitaRelevance && kriminalitaRelevance[relevanceCode]) ? kriminalitaRelevance[relevanceCode] : null;
+          return relevance?.nazev?.cs || `Relevance ${relevanceCode}`;
+        } catch (e) {
+          return `Relevance ${relevanceCode}`;
+        }
       };
       
       const dateStr = formatDate(item.date);

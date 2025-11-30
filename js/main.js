@@ -140,7 +140,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   function refreshMapSize(delay = 120) {
-    setTimeout(() => map.invalidateSize(), delay);
+    if (!map) return;
+    setTimeout(() => {
+      if (map) {
+        map.invalidateSize();
+      }
+    }, delay);
   }
 
   const iconColors = {
@@ -735,8 +740,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     // First ensure map view is visible before adding layers
     if (isMapCategory && mapView) {
       mapView.classList.remove("hidden");
+      // Immediately invalidate size so map can calculate dimensions
+      setTimeout(() => map.invalidateSize(), 0);
     }
     
+    // Add/remove layers based on category
     Object.entries(layers).forEach(([key, layer]) => {
       const isTravaLayer = key === "zelenTrava";
       const isZahonyLayer = key === "zelenZahony";
@@ -757,6 +765,13 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
       }
     });
+    
+    // Ensure map is properly sized after layer changes
+    if (isMapCategory) {
+      requestAnimationFrame(() => {
+        map.invalidateSize();
+      });
+    }
 
     const activeButton = document.querySelector('.nav-item.active');
     if (activeButton) activeButton.classList.remove('active');
@@ -826,15 +841,18 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
     if (mapView) {
       if (isMapCategory) {
-        // Show map view first
+        // Show map view first - critical for map to render
         mapView.classList.remove("hidden");
-        // Force map refresh when showing map view - critical for proper rendering
+        // Force immediate map refresh - map must be visible for invalidateSize to work
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 0);
         requestAnimationFrame(() => {
           map.invalidateSize();
-          refreshMapSize(0);
           refreshMapSize(50);
           refreshMapSize(150);
           refreshMapSize(300);
+          refreshMapSize(500);
         });
       } else {
         mapView.classList.add("hidden");
@@ -996,12 +1014,14 @@ window.addEventListener("DOMContentLoaded", async () => {
               // Map view should already be shown by setActiveCategory, but ensure it's visible
               if (mapView) {
                 mapView.classList.remove("hidden");
-                // Force map refresh after showing - multiple refreshes for reliability
+                // Force immediate and delayed map refresh - critical for mobile
+                setTimeout(() => map.invalidateSize(), 0);
                 requestAnimationFrame(() => {
-                  refreshMapSize(0);
-                  refreshMapSize(100);
-                  refreshMapSize(250);
-                  refreshMapSize(400);
+                  map.invalidateSize();
+                  refreshMapSize(50);
+                  refreshMapSize(150);
+                  refreshMapSize(300);
+                  refreshMapSize(500);
                 });
               }
             }

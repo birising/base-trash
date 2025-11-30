@@ -66,100 +66,61 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (window.L) return true;
     try {
       await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error("Timeout při načítání Leaflet"));
-        }, 15000);
-        
         const fallback = document.createElement("script");
-        fallback.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-        fallback.integrity = "sha256-o8UgsQeW9XfrHRfPaB8NG0Ax7AnN1Le23ltnzD9i+9I=";
-        fallback.crossOrigin = "";
-        fallback.onload = () => {
-          clearTimeout(timeout);
-          resolve();
-        };
-        fallback.onerror = (error) => {
-          clearTimeout(timeout);
-          reject(error);
-        };
+        fallback.src = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js";
+        fallback.onload = resolve;
+        fallback.onerror = reject;
         document.head.appendChild(fallback);
       });
       return !!window.L;
     } catch (error) {
-      console.error("Nepodařilo se načíst záložní Leaflet:", error);
+      console.warn("Nepodařilo se načíst záložní Leaflet", error);
       return false;
     }
   };
 
   const leafletReady = await ensureLeaflet();
   if (!leafletReady) {
-    showMapError("Mapový modul se nepodařilo načíst. Zkuste obnovit stránku nebo zkontrolujte připojení k internetu.");
+    showMapError("Mapový modul se nepodařilo načíst. Zkuste obnovit stránku.");
     return;
   }
 
-  try {
-    await loadAllData();
-  } catch (error) {
-    console.error("Kritická chyba při načítání dat:", error);
-    showMapError("Nepodařilo se načíst všechna data. Aplikace může fungovat s omezenou funkcionalitou.");
-  }
+  await loadAllData();
 
   let mapContainer = document.getElementById("map");
   if (!mapContainer) {
     // Fallback, pokud se fragmenty nenačetly – vytvoříme minimální kontejner pro mapu.
-    try {
-      const mapView = document.getElementById("mapView") || document.querySelector(".content");
-      mapContainer = document.createElement("div");
-      mapContainer.id = "map";
-      mapContainer.setAttribute("aria-label", "Mapa údržby obce Běloky");
-      if (mapView) {
-        mapView.classList.add("view", "map-view");
-        mapView.appendChild(mapContainer);
-      } else {
-        const fallbackWrap = document.createElement("div");
-        fallbackWrap.id = "mapView";
-        fallbackWrap.className = "view map-view";
-        fallbackWrap.appendChild(mapContainer);
-        document.body.appendChild(fallbackWrap);
-      }
-    } catch (error) {
-      console.error("Chyba při vytváření fallback map kontejneru:", error);
-      showMapError("Nepodařilo se inicializovat mapu. Zkuste obnovit stránku.");
-      return;
+    const mapView = document.getElementById("mapView") || document.querySelector(".content");
+    mapContainer = document.createElement("div");
+    mapContainer.id = "map";
+    mapContainer.setAttribute("aria-label", "Mapa údržby obce Běloky");
+    if (mapView) {
+      mapView.classList.add("view", "map-view");
+      mapView.appendChild(mapContainer);
+    } else {
+      const fallbackWrap = document.createElement("div");
+      fallbackWrap.id = "mapView";
+      fallbackWrap.className = "view map-view";
+      fallbackWrap.appendChild(mapContainer);
+      document.body.appendChild(fallbackWrap);
     }
   }
 
-  let map;
-  try {
-    map = L.map("map", {
-      zoomControl: false,
-      attributionControl: false,
-    });
-  } catch (error) {
-    console.error("Chyba při inicializaci Leaflet mapy:", error);
-    showMapError("Nepodařilo se inicializovat mapu. Zkuste obnovit stránku.");
-    return;
-  }
+  const map = L.map("map", {
+    zoomControl: false,
+    attributionControl: false,
+  });
 
-  let baseLayer;
-  try {
-    baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "© OpenStreetMap přispěvatelé",
-    });
-    baseLayer.addTo(map);
-  } catch (error) {
-    console.error("Chyba při načítání mapových dlaždic:", error);
-    showMapError("Nepodařilo se načíst mapové dlaždice. Zkontrolujte připojení k internetu.");
-  }
+  const baseLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "© OpenStreetMap přispěvatelé",
+  });
+  baseLayer.addTo(map);
 
   const defaultView = [50.1322, 14.222];
-  try {
-    map.setView(defaultView, 16);
-    map.whenReady(() => refreshMapSize(0));
-  } catch (error) {
-    console.error("Chyba při nastavení výchozího zobrazení mapy:", error);
-  }
+  map.setView(defaultView, 16);
+
+  map.whenReady(() => refreshMapSize(0));
 
   function refreshMapSize(delay = 120) {
     setTimeout(() => map.invalidateSize(), delay);

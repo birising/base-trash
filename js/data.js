@@ -958,12 +958,14 @@ async function loadKriminalitaCodebooks() {
   }
 }
 
-async function loadAllData() {
+async function loadAllData(progressCallback) {
   try {
     // Initialize kriminalita as empty array to indicate it's being loaded
     dataKriminalita = [];
     
-    const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita] = await Promise.allSettled([
+    if (progressCallback) progressCallback(55);
+    
+    const promises = [
       loadDataset("kose", fallbackKoseDefinitions),
       loadKoseTelemetry(),
       loadDataset("lampy", fallbackLampy),
@@ -971,7 +973,20 @@ async function loadAllData() {
       loadDataset("zelene", fallbackZelene),
       loadStreamHistory(),
       loadKriminalitaData(),
-    ]);
+    ];
+    
+    // Track progress as each promise resolves
+    const progressSteps = [60, 65, 70, 75, 80, 85, 90];
+    const trackedPromises = promises.map((promise, index) => {
+      return promise.then(result => {
+        if (progressCallback && progressSteps[index]) {
+          progressCallback(progressSteps[index]);
+        }
+        return result;
+      });
+    });
+    
+    const [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita] = await Promise.allSettled(trackedPromises);
 
     // Extract values from settled promises, use fallback on rejection
     const getValue = (result, fallback) => result.status === 'fulfilled' ? result.value : fallback;
@@ -985,6 +1000,8 @@ async function loadAllData() {
     dataZelene = getValue(zelene, fallbackZelene);
     dataKriminalita = getValue(_kriminalita, []);
     
+    if (progressCallback) progressCallback(92);
+    
     // Load codebooks for kriminalita (always try, even if data failed - might be useful later)
     // Do this BEFORE any rendering happens
     try {
@@ -997,6 +1014,8 @@ async function loadAllData() {
     } catch (codebookError) {
       console.warn('Chyba při načítání číselníků kriminality:', codebookError);
     }
+    
+    if (progressCallback) progressCallback(95);
     
     // Log any failures with more detail for kriminalita
     [koseDefinitions, koseTelemetry, lampy, kontejnery, zelene, _streamHistory, _kriminalita].forEach((result, index) => {

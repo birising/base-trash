@@ -1,6 +1,19 @@
 window.addEventListener("DOMContentLoaded", async () => {
+  const appLoader = document.getElementById("appLoader");
+  const appShell = document.getElementById("appShell");
+  const loaderProgress = document.getElementById("loaderProgress");
+  
+  const updateLoaderProgress = (percent) => {
+    if (loaderProgress) {
+      loaderProgress.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+    }
+  };
+  
+  updateLoaderProgress(10);
+  
   if (typeof loadIncludes === "function") {
     await loadIncludes();
+    updateLoaderProgress(30);
   }
 
   const themePreferenceKey = "appTheme";
@@ -79,13 +92,21 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
+  updateLoaderProgress(40);
+  
   const leafletReady = await ensureLeaflet();
   if (!leafletReady) {
     showMapError("Mapový modul se nepodařilo načíst. Zkuste obnovit stránku.");
+    if (appLoader) appLoader.style.display = 'none';
+    if (appShell) appShell.style.display = '';
     return;
   }
 
-  await loadAllData();
+  updateLoaderProgress(50);
+  
+  await loadAllData(updateLoaderProgress);
+  
+  updateLoaderProgress(95);
 
   let mapContainer = document.getElementById("map");
   if (!mapContainer) {
@@ -842,6 +863,8 @@ Odkaz do aplikace: ${appUrl}`;
 
   updateWasteDashboard();
   updateCounters();
+  
+  updateLoaderProgress(98);
 
   // Don't add all layers at once - they will be added when category is selected
   // Object.values(layers).forEach((layer) => layer.addTo(map));
@@ -1863,4 +1886,18 @@ Odkaz do aplikace: ${appUrl}`;
     syncGreenspaceLayerInputs();
   }
   fetchStreamLevel();
+  
+  // Hide loader and show app
+  updateLoaderProgress(100);
+  setTimeout(() => {
+    if (appLoader) {
+      appLoader.style.opacity = '0';
+      setTimeout(() => {
+        if (appLoader) appLoader.style.display = 'none';
+        if (appShell) appShell.style.display = '';
+      }, 300);
+    } else {
+      if (appShell) appShell.style.display = '';
+    }
+  }, 300);
 });

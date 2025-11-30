@@ -12,7 +12,16 @@
   <link rel="stylesheet" href="css/views.css" />
 </head>
 <body>
-  <div class="app-shell">
+  <div id="appLoader" class="app-loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <div class="loader-text">Načítám aplikaci…</div>
+      <div class="loader-progress">
+        <div class="loader-progress-bar" id="loaderProgress"></div>
+      </div>
+    </div>
+  </div>
+  <div class="app-shell" id="appShell" style="display: none;">
     <div data-include="html/header.html"></div>
     <div class="layout">
       <div data-include="html/sidebar.html"></div>

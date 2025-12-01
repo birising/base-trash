@@ -139,6 +139,9 @@ body {
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .theme-toggle-track {
@@ -1090,21 +1093,31 @@ body {
   }
 
   .theme-toggle {
-    width: 56px;
-    height: 28px;
+    width: 64px;
+    height: 32px;
+    min-width: 64px;
+    min-height: 32px;
+    /* Ensure touch target is large enough */
+    padding: 4px;
+    margin: -4px;
+  }
+  
+  .theme-toggle-track {
+    width: 100%;
+    height: 100%;
   }
   
   .theme-toggle-slider {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
   
   .theme-toggle-active .theme-toggle-slider {
-    transform: translateX(28px);
+    transform: translateX(32px);
   }
   
   .theme-toggle:active .theme-toggle-slider {
-    transform: translateX(28px) scale(0.95);
+    transform: translateX(32px) scale(0.95);
   }
   
   .theme-toggle:not(.theme-toggle-active):active .theme-toggle-slider {
@@ -1112,11 +1125,16 @@ body {
   }
   
   .theme-toggle-icon {
-    font-size: 12px;
+    font-size: 13px;
   }
   
   .theme-toggle-label {
     display: none;
+  }
+  
+  /* Better touch feedback */
+  .theme-toggle:active .theme-toggle-track {
+    opacity: 0.8;
   }
 
 

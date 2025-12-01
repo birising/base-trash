@@ -45,11 +45,17 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     applyTheme(resolveTheme(), { persist: false });
 
-    themeToggleButton.addEventListener("click", () => {
+    // Handle both click and touch events for better mobile support
+    const handleToggle = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const current = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
       const next = current === "light" ? "dark" : "light";
       applyTheme(next);
-    });
+    };
+    
+    themeToggleButton.addEventListener("click", handleToggle);
+    themeToggleButton.addEventListener("touchend", handleToggle);
 
     themeMediaQuery.addEventListener("change", (event) => {
       if (localStorage.getItem(themePreferenceKey)) return;
@@ -1531,6 +1537,15 @@ Odkaz do aplikace: ${appUrl}`;
       sidebar.classList.remove("sidebar-hidden");
       menuToggle.setAttribute("aria-expanded", "true");
       refreshMapSize();
+      
+      // Scroll sidebar to top on mobile when opening
+      if (window.innerWidth <= 960) {
+        setTimeout(() => {
+          if (sidebar) {
+            sidebar.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 100);
+      }
     }
 
     function closeSidebar() {

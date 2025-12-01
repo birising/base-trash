@@ -343,7 +343,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     const ref = new Date(reference);
     ref.setHours(0, 0, 0, 0);
 
-    while (next <= ref) {
+    // If today is a pickup day, return today
+    if (next.getTime() === ref.getTime()) {
+      return ref;
+    }
+
+    // Otherwise, find the next pickup date after today
+    while (next < ref) {
       next.setDate(next.getDate() + intervalDays);
     }
 
@@ -816,15 +822,22 @@ Odkaz do aplikace: ${appUrl}`;
     if (!nextPickupDateEl || !nextPickupCountdownEl || !nextPickupLabelEl || !upcomingPickupsEl) return;
 
     const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
-    const nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, new Date());
-    const countdown = formatCountdown(nextPickupDate);
-
-    // Check if next pickup is today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const nextPickupDay = new Date(nextPickupDate);
-    nextPickupDay.setHours(0, 0, 0, 0);
-    const isToday = nextPickupDay.getTime() === today.getTime();
+    
+    // Check if today is a pickup day by calculating from last pickup
+    const checkDate = new Date(lastPickupDate);
+    checkDate.setHours(0, 0, 0, 0);
+    checkDate.setDate(checkDate.getDate() + wasteSchedule.intervalDays);
+    
+    // Keep adding interval days until we reach today or pass it
+    while (checkDate < today) {
+      checkDate.setDate(checkDate.getDate() + wasteSchedule.intervalDays);
+    }
+    
+    const isToday = checkDate.getTime() === today.getTime();
+    const nextPickupDate = isToday ? today : getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, new Date());
+    const countdown = formatCountdown(nextPickupDate);
 
     nextPickupDateEl.textContent = formatDate(nextPickupDate);
     nextPickupLabelEl.textContent = formatDate(nextPickupDate);

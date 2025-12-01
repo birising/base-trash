@@ -819,23 +819,44 @@ Odkaz do aplikace: ${appUrl}`;
     const nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, new Date());
     const countdown = formatCountdown(nextPickupDate);
 
+    // Check if next pickup is today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const nextPickupDay = new Date(nextPickupDate);
+    nextPickupDay.setHours(0, 0, 0, 0);
+    const isToday = nextPickupDay.getTime() === today.getTime();
+
     nextPickupDateEl.textContent = formatDate(nextPickupDate);
     nextPickupLabelEl.textContent = formatDate(nextPickupDate);
     nextPickupCountdownEl.textContent = countdown;
     if (lastPickupLabelEl) lastPickupLabelEl.textContent = formatDate(lastPickupDate);
-    if (nextPickupSummaryEl) nextPickupSummaryEl.textContent = `Další svoz: ${nextPickupDate.toLocaleDateString("cs-CZ")}`;
+    if (nextPickupSummaryEl) {
+      if (isToday) {
+        nextPickupSummaryEl.textContent = `Dnes: ${nextPickupDate.toLocaleDateString("cs-CZ")}`;
+      } else {
+        nextPickupSummaryEl.textContent = `Další svoz: ${nextPickupDate.toLocaleDateString("cs-CZ")}`;
+      }
+    }
 
     const upcoming = buildUpcomingPickups(nextPickupDate, 4, wasteSchedule.intervalDays);
     upcomingPickupsEl.innerHTML = upcoming
       .map(
-        (date, idx) => `
+        (date, idx) => {
+          const dateDay = new Date(date);
+          dateDay.setHours(0, 0, 0, 0);
+          const isDateToday = dateDay.getTime() === today.getTime();
+          const label = idx === 0 
+            ? (isDateToday ? "Dnes" : "Příští svoz")
+            : `${idx + 1}. termín`;
+          return `
         <div class="waste-row">
           <div>
             <div class="date">${formatDate(date)}</div>
-            <div class="label">${idx === 0 ? "Příští svoz" : `${idx + 1}. termín`}</div>
+            <div class="label">${label}</div>
           </div>
           <span class="stat-chip subtle">14 dní</span>
-        </div>`
+        </div>`;
+        }
       )
       .join("");
   }

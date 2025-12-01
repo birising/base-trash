@@ -1494,6 +1494,7 @@ Odkaz do aplikace: ${appUrl}`;
             ${zasah.ukonceni ? `<div class="hasici-end">Ukončení: ${zasah.ukonceni}</div>` : ''}
           </div>
           ${zasah.link ? `<a href="${zasah.link}" target="_blank" rel="noopener" class="hasici-link">Více informací →</a>` : ''}
+          <a href="https://pkr.kr-stredocesky.cz/pkr/zasahy-jpo/" target="_blank" rel="noopener" class="hasici-link">Zdroj dat →</a>
         </div>
       `;
     }).join('');

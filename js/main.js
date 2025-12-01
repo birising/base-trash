@@ -1119,14 +1119,14 @@ Odkaz do aplikace: ${appUrl}`;
     
     const feedUrl = 'https://pkr.kr-stredocesky.cz/pkr/zasahy-jpo/feed.xml';
     
-    // Try multiple approaches: direct fetch, CORS proxies, and RSS-to-JSON services
+    // Use proxy services directly - skip direct fetch to avoid CORS errors
     const proxyServices = [
       `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`,
       `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`,
       `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feedUrl)}`
     ];
     
-    // RSS to JSON services
+    // RSS to JSON services (often more reliable)
     const rssToJsonServices = [
       `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`,
       `https://rss-to-json-serverless-api.vercel.app/api?feedURL=${encodeURIComponent(feedUrl)}`
@@ -1136,68 +1136,63 @@ Odkaz do aplikace: ${appUrl}`;
     let jsonData = null;
     let error = null;
     
-    // Try direct fetch first
-    try {
-      const response = await fetch(feedUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/rss+xml, application/xml, text/xml'
+    // Try RSS to JSON services first (often more reliable and faster)
+    for (const jsonUrl of rssToJsonServices) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        
+        const jsonResponse = await fetch(jsonUrl, {
+          method: 'GET',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!jsonResponse.ok) {
+          continue;
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        
+        const json = await jsonResponse.json();
+        if (json && json.items && json.items.length > 0) {
+          jsonData = json;
+          error = null;
+          break;
+        }
+      } catch (jsonError) {
+        // Continue to next service
+        continue;
       }
-      
-      xmlText = await response.text();
-    } catch (fetchError) {
-      error = fetchError;
-      
-      // Try RSS to JSON services first (often more reliable)
-      for (const jsonUrl of rssToJsonServices) {
+    }
+    
+    // If JSON services failed, try CORS proxies
+    if (!jsonData) {
+      for (const proxyUrl of proxyServices) {
         try {
-          const jsonResponse = await fetch(jsonUrl, {
-            method: 'GET'
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+          
+          const proxyResponse = await fetch(proxyUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/rss+xml, application/xml, text/xml'
+            },
+            signal: controller.signal
           });
           
-          if (!jsonResponse.ok) {
+          clearTimeout(timeoutId);
+          
+          if (!proxyResponse.ok) {
             continue;
           }
           
-          const json = await jsonResponse.json();
-          if (json && json.items && json.items.length > 0) {
-            jsonData = json;
+          xmlText = await proxyResponse.text();
+          if (xmlText && xmlText.length > 100) {
             error = null;
             break;
           }
-        } catch (jsonError) {
+        } catch (proxyError) {
           continue;
-        }
-      }
-      
-      // If JSON services failed, try CORS proxies
-      if (!jsonData) {
-        for (const proxyUrl of proxyServices) {
-          try {
-            const proxyResponse = await fetch(proxyUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/rss+xml, application/xml, text/xml'
-              }
-            });
-            
-            if (!proxyResponse.ok) {
-              continue;
-            }
-            
-            xmlText = await proxyResponse.text();
-            if (xmlText && xmlText.length > 100) {
-              error = null;
-              break;
-            }
-          } catch (proxyError) {
-            continue;
-          }
         }
       }
     }

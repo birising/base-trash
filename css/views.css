@@ -856,6 +856,13 @@
   opacity: 0.8;
 }
 
+.hasici-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
 .hasici-link {
   display: inline-flex;
   align-items: center;

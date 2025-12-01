@@ -822,21 +822,15 @@ Odkaz do aplikace: ${appUrl}`;
     if (!nextPickupDateEl || !nextPickupCountdownEl || !nextPickupLabelEl || !upcomingPickupsEl) return;
 
     const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
+    const nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, new Date());
+    
+    // Check if next pickup is today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const nextPickupDay = new Date(nextPickupDate);
+    nextPickupDay.setHours(0, 0, 0, 0);
+    const isToday = nextPickupDay.getTime() === today.getTime();
     
-    // Check if today is a pickup day by calculating from last pickup
-    const checkDate = new Date(lastPickupDate);
-    checkDate.setHours(0, 0, 0, 0);
-    checkDate.setDate(checkDate.getDate() + wasteSchedule.intervalDays);
-    
-    // Keep adding interval days until we reach today or pass it
-    while (checkDate < today) {
-      checkDate.setDate(checkDate.getDate() + wasteSchedule.intervalDays);
-    }
-    
-    const isToday = checkDate.getTime() === today.getTime();
-    const nextPickupDate = isToday ? today : getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, new Date());
     const countdown = formatCountdown(nextPickupDate);
 
     nextPickupDateEl.textContent = formatDate(nextPickupDate);
@@ -1417,6 +1411,7 @@ Odkaz do aplikace: ${appUrl}`;
               <h3 class="kriminalita-title">${typeNames.join(', ')}</h3>
               <div class="kriminalita-details">
                 <div class="kriminalita-relevance">📍 ${relevanceName}</div>
+                <div class="kriminalita-location">Místo spáchání: Běloky</div>
                 ${item.mp ? '<div class="kriminalita-mp">Místní působnost: Ano</div>' : ''}
               </div>
               <a href="https://kriminalita.policie.gov.cz" target="_blank" rel="noopener" class="kriminalita-link">Zdroj dat →</a>

@@ -1479,6 +1479,11 @@ Odkaz do aplikace: ${appUrl}`;
       const statusIcon = getStatusIcon(zasah.stav);
       const timeAgo = formatDate(zasah.date);
       
+      // Check if location is already in title to avoid duplication
+      const titleLower = (zasah.title || '').toLowerCase();
+      const mistoLower = (zasah.misto || '').toLowerCase();
+      const showMisto = zasah.misto && !titleLower.includes(mistoLower);
+      
       return `
         <div class="hasici-item">
           <div class="hasici-item-header">
@@ -1490,7 +1495,7 @@ Odkaz do aplikace: ${appUrl}`;
           </div>
           <h3 class="hasici-title">${zasah.title}</h3>
           <div class="hasici-details">
-            ${zasah.misto ? `<div class="hasici-location">📍 ${zasah.misto}${zasah.okres ? `, ${zasah.okres}` : ''}</div>` : ''}
+            ${showMisto ? `<div class="hasici-location">📍 ${zasah.misto}${zasah.okres ? `, ${zasah.okres}` : ''}</div>` : ''}
             ${zasah.ukonceni ? `<div class="hasici-end">Ukončení: ${zasah.ukonceni}</div>` : ''}
           </div>
           <div class="hasici-actions">

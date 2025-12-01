@@ -7,9 +7,13 @@
     <div class="brand" id="brandLogo">Údržba obce Běloky</div>
   </div>
   <div class="topbar-actions">
-    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Přepnout barevný režim">
-      <span class="theme-toggle-icon" aria-hidden="true">☀️</span>
-      <span class="theme-toggle-label">Světlý</span>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Přepnout barevný režim" role="switch" aria-checked="false">
+      <span class="theme-toggle-track">
+        <span class="theme-toggle-slider">
+          <span class="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">☀️</span>
+          <span class="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">🌙</span>
+        </span>
+      </span>
     </button>
     <button id="menuToggle" class="menu-button" aria-label="Otevřít menu" aria-expanded="false">
       <span></span><span></span><span></span>

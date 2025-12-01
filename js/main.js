@@ -6,16 +6,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   const themePreferenceKey = "appTheme";
   const themeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
   let themeToggleButton;
-  let themeToggleLabel;
-  let themeToggleIcon;
 
   const updateThemeToggle = (theme) => {
     if (!themeToggleButton) return;
     const isDark = theme === "dark";
     themeToggleButton.setAttribute("aria-pressed", String(isDark));
+    themeToggleButton.setAttribute("aria-checked", String(isDark));
     themeToggleButton.dataset.theme = theme;
-    if (themeToggleLabel) themeToggleLabel.textContent = isDark ? "Tmavý" : "Světlý";
-    if (themeToggleIcon) themeToggleIcon.textContent = isDark ? "🌙" : "☀️";
+    themeToggleButton.classList.toggle("theme-toggle-active", isDark);
   };
 
   const applyTheme = (theme, { persist = true } = {}) => {
@@ -43,8 +41,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    themeToggleLabel = themeToggleButton.querySelector(".theme-toggle-label");
-    themeToggleIcon = themeToggleButton.querySelector(".theme-toggle-icon");
+    // No longer need label/icon references for new toggle design
 
     applyTheme(resolveTheme(), { persist: false });
 

@@ -618,6 +618,10 @@ Odkaz do aplikace: ${appUrl}`;
               <input type="email" name="email" required class="popup-form-input">
             </label>
             <label class="popup-form-label">
+              Popis závady:
+              <textarea name="message" rows="3" class="popup-form-textarea" placeholder="Popište prosím závadu lampy..."></textarea>
+            </label>
+            <label class="popup-form-label">
               Fotografie (volitelné):
               <input type="file" name="upload" accept="image/*" class="popup-form-input">
             </label>

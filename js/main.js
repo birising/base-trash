@@ -608,7 +608,21 @@ Odkaz do aplikace: ${appUrl}`;
           <div><span>Stav:</span><strong>Potřebuje ověření?</strong></div>
         </div>
         <div class="popup-actions">
-          <a class="popup-button" href="mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}">Nahlásit závadu</a>
+          <form class="lamp-report-form" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="lamp_id" value="${item.id || 'N/A'}">
+            <input type="hidden" name="lamp_name" value="${popupTitle}">
+            <input type="hidden" name="gps_coords" value="${gpsCoords}">
+            <input type="hidden" name="app_url" value="${appUrl}">
+            <label class="popup-form-label">
+              Váš email:
+              <input type="email" name="email" required class="popup-form-input">
+            </label>
+            <label class="popup-form-label">
+              Fotografie (volitelné):
+              <input type="file" name="upload" accept="image/*" class="popup-form-input">
+            </label>
+            <button type="submit" class="popup-button">Nahlásit závadu</button>
+          </form>
         </div>`;
     } else if (item.category === "hladina") {
       const levelText = streamState.level ? `${streamState.level}` : "Načítám…";
@@ -673,6 +687,59 @@ Odkaz do aplikace: ${appUrl}`;
     }
 
     marker.bindPopup(popupContent);
+    
+    // Add form submission handler for lamp reports
+    if (item.category === "lampy") {
+      marker.on('popupopen', () => {
+        const popup = marker.getPopup();
+        const form = popup.getElement()?.querySelector('.lamp-report-form');
+        if (form) {
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton?.textContent;
+            
+            if (submitButton) {
+              submitButton.disabled = true;
+              submitButton.textContent = 'Odesílám...';
+            }
+            
+            try {
+              const response = await fetch('https://formspree.io/f/xkgdbplk', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                  'Accept': 'application/json'
+                }
+              });
+              
+              if (response.ok) {
+                const popupElement = popup.getElement();
+                if (popupElement) {
+                  popupElement.innerHTML = `
+                    <div style="padding: 20px; text-align: center;">
+                      <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                      <h3 style="margin: 0 0 10px 0; color: #0b1220;">Hlášení odesláno!</h3>
+                      <p style="margin: 0; color: #334155; font-size: 14px;">Děkujeme za nahlášení závady. Ozveme se vám co nejdříve.</p>
+                    </div>
+                  `;
+                }
+              } else {
+                throw new Error('Odeslání selhalo');
+              }
+            } catch (error) {
+              if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText || 'Nahlásit závadu';
+              }
+              alert('Chyba při odesílání formuláře. Zkuste to prosím znovu.');
+            }
+          });
+        }
+      });
+    }
+    
     return marker;
   }
 

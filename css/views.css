@@ -642,6 +642,38 @@
   margin-top: 10px;
 }
 
+.lamp-report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.popup-form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.popup-form-input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-main);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.popup-form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+}
+
 .popup-button {
   display: inline-flex;
   align-items: center;
@@ -653,11 +685,17 @@
   font-weight: 800;
   border: none;
   text-decoration: none;
+  cursor: pointer;
   box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35);
+  transition: filter 0.2s ease;
 }
 
 .popup-button:hover {
   filter: brightness(1.05);
+}
+
+.popup-button:active {
+  filter: brightness(0.95);
 }
 
 .stat-value.live {

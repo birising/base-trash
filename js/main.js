@@ -2646,9 +2646,13 @@ Odkaz do aplikace: ${appUrl}`;
         const response = await fetch(reportZavadaForm.action, {
           method: 'POST',
           body: formData,
+          headers: {
+            'Accept': 'application/json'
+          }
         });
         
         if (response.ok) {
+          const result = await response.json();
           closeReportZavadaModalWithMap();
           showToastNotification(
             'Závada nahlášena!',
@@ -2656,7 +2660,8 @@ Odkaz do aplikace: ${appUrl}`;
             'success'
           );
         } else {
-          throw new Error('Odeslání selhalo');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Odeslání selhalo');
         }
       } catch (error) {
         console.error('Chyba při odesílání formuláře:', error);

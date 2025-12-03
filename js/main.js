@@ -2074,9 +2074,9 @@ Odkaz do aplikace: ${appUrl}`;
         <div class="zavady-photo-gallery-content">
           <div class="zavady-photo-gallery-header">
             <h3>Fotografie závady</h3>
-            <button class="zavady-photo-gallery-close" aria-label="Zavřít">&times;</button>
           </div>
           <div class="zavady-photo-gallery-main">
+            <button class="zavady-photo-gallery-close" aria-label="Zavřít">&times;</button>
             <img class="zavady-photo-gallery-image" src="" alt="Fotografie závady">
             <button class="zavady-photo-gallery-prev" aria-label="Předchozí">‹</button>
             <button class="zavady-photo-gallery-next" aria-label="Další">›</button>

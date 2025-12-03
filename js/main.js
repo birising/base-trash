@@ -789,19 +789,37 @@ Odkaz do aplikace: ${appUrl}`;
             
             try {
               // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
-              const response = await fetch('https://formspree.io/f/xkgdbplk', {
-                method: 'POST',
-                body: formData
-              });
+              let response;
+              try {
+                response = await fetch('https://formspree.io/f/xkgdbplk', {
+                  method: 'POST',
+                  body: formData
+                });
+              } catch (networkError) {
+                console.error('Network error:', networkError);
+                throw new Error('Chyba připojení. Zkontrolujte připojení k internetu.');
+              }
               
               // Formspree returns 200 OK for successful submissions
-              if (response.ok) {
+              // If status is 400 or 500, it's a real error
+              // Other statuses (302 redirect, etc.) are usually success
+              const isError = response.status === 400 || response.status >= 500;
+              
+              if (response.ok || (!isError && response.status < 500)) {
                 // Try to parse JSON if available
                 try {
                   const result = await response.json();
                   console.log('Formspree response:', result);
+                  // Check if JSON response indicates an error
+                  if (result.error) {
+                    throw new Error(result.error);
+                  }
                 } catch (e) {
-                  // If response is not JSON (e.g., HTML redirect page), that's also OK
+                  // If response is not JSON (e.g., HTML redirect page), that's OK
+                  if (e.message && !e.message.includes('JSON')) {
+                    throw e; // Re-throw if it's a real error
+                  }
+                  console.log('Formspree response is not JSON (likely redirect), but submission was successful');
                 }
                 // Close popup
                 marker.closePopup();
@@ -942,19 +960,37 @@ Odkaz do aplikace: ${appUrl}`;
           
           try {
             // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
-            const response = await fetch('https://formspree.io/f/xkgdbplk', {
-              method: 'POST',
-              body: formData
-            });
+            let response;
+            try {
+              response = await fetch('https://formspree.io/f/xkgdbplk', {
+                method: 'POST',
+                body: formData
+              });
+            } catch (networkError) {
+              console.error('Network error:', networkError);
+              throw new Error('Chyba připojení. Zkontrolujte připojení k internetu.');
+            }
             
             // Formspree returns 200 OK for successful submissions
-            if (response.ok) {
+            // If status is 400 or 500, it's a real error
+            // Other statuses (302 redirect, etc.) are usually success
+            const isError = response.status === 400 || response.status >= 500;
+            
+            if (response.ok || (!isError && response.status < 500)) {
               // Try to parse JSON if available
               try {
                 const result = await response.json();
                 console.log('Formspree response:', result);
+                // Check if JSON response indicates an error
+                if (result.error) {
+                  throw new Error(result.error);
+                }
               } catch (e) {
-                // If response is not JSON (e.g., HTML redirect page), that's also OK
+                // If response is not JSON (e.g., HTML redirect page), that's OK
+                if (e.message && !e.message.includes('JSON')) {
+                  throw e; // Re-throw if it's a real error
+                }
+                console.log('Formspree response is not JSON (likely redirect), but submission was successful');
               }
               // Close popup
               polygon.closePopup();
@@ -3143,20 +3179,37 @@ Odkaz do aplikace: ${appUrl}`;
         }
         
         // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
-        // Only set Accept header to get JSON response (if available)
-        const response = await fetch(reportZavadaForm.action, {
-          method: 'POST',
-          body: formData
-        });
+        let response;
+        try {
+          response = await fetch(reportZavadaForm.action, {
+            method: 'POST',
+            body: formData
+          });
+        } catch (networkError) {
+          // Network error - likely CORS or connection issue
+          console.error('Network error:', networkError);
+          throw new Error('Chyba připojení. Zkontrolujte připojení k internetu a zkuste to znovu.');
+        }
         
-        // Formspree returns 200 OK for successful submissions, even with files
-        if (response.ok) {
+        // Formspree returns 200 OK for successful submissions
+        // If status is 400 or 500, it's a real error
+        // Other statuses (302 redirect, etc.) are usually success
+        const isError = response.status === 400 || response.status >= 500;
+        
+        if (response.ok || (!isError && response.status < 500)) {
           // Try to parse JSON response if available
           try {
             const result = await response.json();
             console.log('Formspree response:', result);
+            // Check if JSON response indicates an error
+            if (result.error) {
+              throw new Error(result.error);
+            }
           } catch (e) {
-            // If response is not JSON (e.g., HTML redirect page), that's also OK for Formspree
+            // If response is not JSON (e.g., HTML redirect page), that's OK for Formspree
+            if (e.message && !e.message.includes('JSON')) {
+              throw e; // Re-throw if it's a real error, not JSON parse error
+            }
             console.log('Formspree response is not JSON (likely redirect page), but submission was successful');
           }
           closeReportZavadaModalWithMap();

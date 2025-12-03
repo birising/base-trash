@@ -2787,13 +2787,26 @@ Odkaz do aplikace: ${appUrl}`;
       try {
         const formData = new FormData(reportZavadaForm);
         
-        // Log file info for debugging
+        // Ensure file is properly added to FormData
         const fileInput = reportZavadaForm.querySelector('input[type="file"]');
         if (fileInput && fileInput.files && fileInput.files.length > 0) {
-          console.log('Odesílám soubor:', fileInput.files[0].name, 'velikost:', fileInput.files[0].size, 'bytes');
+          const file = fileInput.files[0];
+          console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
+          
+          // Check file size (Formspree limit is 25MB per file)
+          if (file.size > 25 * 1024 * 1024) {
+            throw new Error('Soubor je příliš velký. Maximální velikost je 25 MB.');
+          }
+          
+          // Ensure file is in FormData (should already be there, but double-check)
+          if (!formData.has('upload') || formData.get('upload').size === 0) {
+            formData.delete('upload');
+            formData.append('upload', file);
+          }
         }
         
         // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
+        // Only set Accept header to get JSON response
         const response = await fetch(reportZavadaForm.action, {
           method: 'POST',
           body: formData,

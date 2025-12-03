@@ -1606,6 +1606,10 @@ Odkaz do aplikace: ${appUrl}`;
     }
   }
 
+  // Sorting state for zavady table
+  let zavadySortColumn = 'reported_date';
+  let zavadySortDirection = 'desc'; // 'asc' or 'desc'
+
   function renderZavady(zavady) {
     if (!zavadyList) return;
     
@@ -1689,12 +1693,64 @@ Odkaz do aplikace: ${appUrl}`;
       return resolved ? 'Vyřešeno' : 'V řešení';
     };
     
-    // Sort by date - newest first
-    const sortedZavady = [...zavady].sort((a, b) => {
-      const dateA = a.reported_date ? new Date(a.reported_date).getTime() : 0;
-      const dateB = b.reported_date ? new Date(b.reported_date).getTime() : 0;
-      return dateB - dateA; // newest first
-    });
+    // Sort function
+    const sortZavady = (a, b) => {
+      let valueA, valueB;
+      
+      switch (zavadySortColumn) {
+        case 'reported_date':
+          valueA = a.reported_date ? new Date(a.reported_date).getTime() : 0;
+          valueB = b.reported_date ? new Date(b.reported_date).getTime() : 0;
+          break;
+        case 'category':
+          valueA = getCategoryLabel(a.category || 'unknown').toLowerCase();
+          valueB = getCategoryLabel(b.category || 'unknown').toLowerCase();
+          break;
+        case 'description':
+          valueA = (a.description || a.message || 'Bez popisu').toLowerCase();
+          valueB = (b.description || b.message || 'Bez popisu').toLowerCase();
+          break;
+        case 'status':
+          valueA = a.resolved ? 1 : 0;
+          valueB = b.resolved ? 1 : 0;
+          break;
+        case 'resolved_date':
+          valueA = a.resolved_date ? new Date(a.resolved_date).getTime() : 0;
+          valueB = b.resolved_date ? new Date(b.resolved_date).getTime() : 0;
+          break;
+        case 'days':
+          valueA = calculateDays(a.reported_date, a.resolved_date);
+          valueB = calculateDays(b.reported_date, b.resolved_date);
+          if (valueA === '–') valueA = -1;
+          if (valueB === '–') valueB = -1;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof valueA === 'string' && typeof valueB === 'string') {
+        return zavadySortDirection === 'asc' 
+          ? valueA.localeCompare(valueB, 'cs')
+          : valueB.localeCompare(valueA, 'cs');
+      } else {
+        return zavadySortDirection === 'asc' 
+          ? valueA - valueB
+          : valueB - valueA;
+      }
+    };
+    
+    // Sort zavady
+    const sortedZavady = [...zavady].sort(sortZavady);
+    
+    // Get sort icon for header
+    const getSortIcon = (column) => {
+      if (zavadySortColumn !== column) {
+        return '<span class="sort-icon">⇅</span>';
+      }
+      return zavadySortDirection === 'asc' 
+        ? '<span class="sort-icon sort-active">↑</span>'
+        : '<span class="sort-icon sort-active">↓</span>';
+    };
     
     try {
       zavadyList.innerHTML = `
@@ -1702,12 +1758,30 @@ Odkaz do aplikace: ${appUrl}`;
           <table class="zavady-table">
             <thead>
               <tr>
-                <th>Datum nahlášení</th>
-                <th>Kategorie</th>
-                <th>Popis</th>
-                <th>Stav</th>
-                <th>Datum vyřešení</th>
-                <th>Dní v řešení</th>
+                <th class="sortable" data-sort="reported_date">
+                  <span>Datum nahlášení</span>
+                  ${getSortIcon('reported_date')}
+                </th>
+                <th class="sortable" data-sort="category">
+                  <span>Kategorie</span>
+                  ${getSortIcon('category')}
+                </th>
+                <th class="sortable" data-sort="description">
+                  <span>Popis</span>
+                  ${getSortIcon('description')}
+                </th>
+                <th class="sortable" data-sort="status">
+                  <span>Stav</span>
+                  ${getSortIcon('status')}
+                </th>
+                <th class="sortable" data-sort="resolved_date">
+                  <span>Datum vyřešení</span>
+                  ${getSortIcon('resolved_date')}
+                </th>
+                <th class="sortable" data-sort="days">
+                  <span>Dní v řešení</span>
+                  ${getSortIcon('days')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1737,6 +1811,24 @@ Odkaz do aplikace: ${appUrl}`;
           </table>
         </div>
       `;
+      
+      // Add click handlers for sortable headers
+      const sortableHeaders = zavadyList.querySelectorAll('.sortable');
+      sortableHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+          const column = header.dataset.sort;
+          if (zavadySortColumn === column) {
+            // Toggle direction if same column
+            zavadySortDirection = zavadySortDirection === 'asc' ? 'desc' : 'asc';
+          } else {
+            // New column, default to desc
+            zavadySortColumn = column;
+            zavadySortDirection = 'desc';
+          }
+          // Re-render with new sort
+          renderZavady(zavady);
+        });
+      });
     } catch (renderError) {
       console.error('Kritická chyba při renderování závad:', renderError);
       zavadyList.innerHTML = `

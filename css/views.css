@@ -1179,6 +1179,43 @@
   letter-spacing: 0.5px;
   color: var(--text-main);
   border-bottom: 2px solid var(--border);
+  user-select: none;
+}
+
+.zavady-table th.sortable {
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.zavady-table th.sortable:hover {
+  background: rgba(45, 212, 191, 0.12);
+  color: var(--accent);
+}
+
+.zavady-table th.sortable span:first-child {
+  flex: 1;
+}
+
+.sort-icon {
+  font-size: 14px;
+  opacity: 0.4;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  color: var(--text-muted);
+}
+
+.zavady-table th.sortable:hover .sort-icon {
+  opacity: 0.7;
+}
+
+.sort-icon.sort-active {
+  opacity: 1;
+  color: var(--accent);
+  font-weight: 900;
 }
 
 .zavady-table td {
@@ -1267,6 +1304,14 @@
   .zavady-table th,
   .zavady-table td {
     padding: 10px 8px;
+  }
+  
+  .zavady-table th.sortable {
+    gap: 4px;
+  }
+  
+  .sort-icon {
+    font-size: 12px;
   }
 }
 

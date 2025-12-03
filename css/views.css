@@ -1891,10 +1891,10 @@
 
 .zavady-photo-gallery-prev:hover,
 .zavady-photo-gallery-next:hover {
-  background: rgba(249, 115, 22, 0.9);
+  background: rgba(5, 150, 105, 0.9);
   border-color: rgba(255, 255, 255, 0.6);
   transform: translateY(-50%) scale(1.15);
-  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
 }
 
 .zavady-photo-gallery-thumbnails {
@@ -1925,15 +1925,15 @@
 .zavady-photo-thumbnail:hover {
   opacity: 1;
   transform: scale(1.08) translateY(-2px);
-  border-color: rgba(249, 115, 22, 0.6);
-  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+  border-color: rgba(5, 150, 105, 0.6);
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.3);
 }
 
 .zavady-photo-thumbnail.active {
   opacity: 1;
-  border-color: #f97316;
+  border-color: #059669;
   border-width: 3px;
-  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.6);
   transform: scale(1.1) translateY(-3px);
 }
 

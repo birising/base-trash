@@ -212,7 +212,7 @@
         <input type="hidden" name="form_type" value="zavada_report">
         <label class="report-zavada-form-label">
           Kategorie:
-          <select name="category" required class="report-zavada-form-select">
+          <select name="category" id="reportZavadaCategory" required class="report-zavada-form-select">
             <option value="">Vyberte kategorii</option>
             <option value="kose">Koš</option>
             <option value="lampy">Lampa</option>
@@ -220,6 +220,18 @@
             <option value="ostatni">Ostatní</option>
           </select>
         </label>
+        <div id="reportZavadaMapContainer" class="report-zavada-map-container hidden">
+          <div class="report-zavada-map-label">Vyberte objekt na mapě:</div>
+          <div id="reportZavadaMap" class="report-zavada-map"></div>
+          <div id="reportZavadaSelected" class="report-zavada-selected hidden">
+            <span class="report-zavada-selected-icon">✓</span>
+            <span class="report-zavada-selected-text"></span>
+          </div>
+          <input type="hidden" name="selected_id" id="reportZavadaSelectedId">
+          <input type="hidden" name="selected_lat" id="reportZavadaSelectedLat">
+          <input type="hidden" name="selected_lng" id="reportZavadaSelectedLng">
+          <input type="hidden" name="selected_name" id="reportZavadaSelectedName">
+        </div>
         <label class="report-zavada-form-label">
           Váš email:
           <input type="email" name="email" required class="report-zavada-form-input" placeholder="vas@email.cz">

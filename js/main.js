@@ -2390,6 +2390,216 @@ Odkaz do aplikace: ${appUrl}`;
     reportZavadaModalBackdrop.addEventListener('click', closeReportZavadaModal);
   }
   
+  // Map for selecting object in modal
+  let reportZavadaMapInstance = null;
+  let reportZavadaMapLayer = null;
+  let reportZavadaSelectedMarker = null;
+  const reportZavadaMapContainer = document.getElementById('reportZavadaMapContainer');
+  const reportZavadaMapDiv = document.getElementById('reportZavadaMap');
+  const reportZavadaCategorySelect = document.getElementById('reportZavadaCategory');
+  const reportZavadaSelectedDiv = document.getElementById('reportZavadaSelected');
+  const reportZavadaSelectedText = reportZavadaSelectedDiv?.querySelector('.report-zavada-selected-text');
+  const reportZavadaSelectedId = document.getElementById('reportZavadaSelectedId');
+  const reportZavadaSelectedLat = document.getElementById('reportZavadaSelectedLat');
+  const reportZavadaSelectedLng = document.getElementById('reportZavadaSelectedLng');
+  const reportZavadaSelectedName = document.getElementById('reportZavadaSelectedName');
+  
+  function initReportZavadaMap() {
+    if (!reportZavadaMapDiv || reportZavadaMapInstance) return;
+    
+    reportZavadaMapInstance = L.map(reportZavadaMapDiv, {
+      zoomControl: true,
+      attributionControl: false,
+    });
+    
+    // Use same tile layer as main map
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+    }).addTo(reportZavadaMapInstance);
+    
+    reportZavadaMapInstance.setView([50.1322, 14.222], 15);
+    
+    // Create layer group for markers/polygons
+    reportZavadaMapLayer = L.layerGroup().addTo(reportZavadaMapInstance);
+  }
+  
+  function clearReportZavadaMap() {
+    if (reportZavadaMapLayer) {
+      reportZavadaMapLayer.clearLayers();
+    }
+    if (reportZavadaSelectedMarker) {
+      reportZavadaMapInstance?.removeLayer(reportZavadaSelectedMarker);
+      reportZavadaSelectedMarker = null;
+    }
+    if (reportZavadaSelectedDiv) {
+      reportZavadaSelectedDiv.classList.add('hidden');
+    }
+    if (reportZavadaSelectedId) reportZavadaSelectedId.value = '';
+    if (reportZavadaSelectedLat) reportZavadaSelectedLat.value = '';
+    if (reportZavadaSelectedLng) reportZavadaSelectedLng.value = '';
+    if (reportZavadaSelectedName) reportZavadaSelectedName.value = '';
+  }
+  
+  function showObjectsOnMap(category) {
+    if (!reportZavadaMapInstance || !reportZavadaMapLayer) {
+      initReportZavadaMap();
+    }
+    
+    clearReportZavadaMap();
+    
+    let source = [];
+    let isPolygon = false;
+    
+    if (category === 'lampy') {
+      source = dataLampy || [];
+    } else if (category === 'kose') {
+      source = dataKose || [];
+    } else if (category === 'zelen') {
+      source = dataZelene || [];
+      isPolygon = true;
+    }
+    
+    if (source.length === 0) return;
+    
+    // Calculate bounds for all objects
+    const bounds = [];
+    
+    source.forEach((item) => {
+      if (isPolygon && item.coords && Array.isArray(item.coords) && item.coords.length > 0) {
+        // Create polygon for zelen
+        const polygon = L.polygon(item.coords, {
+          color: '#22c55e',
+          fillColor: '#22c55e',
+          fillOpacity: 0.3,
+          weight: 2,
+        });
+        
+        polygon.on('click', () => {
+          // Calculate center of polygon for marker placement
+          const bounds = polygon.getBounds();
+          const center = bounds.getCenter();
+          selectObject(item, null, [center.lat, center.lng], item.name || 'Údržba zeleně');
+        });
+        
+        polygon.addTo(reportZavadaMapLayer);
+        bounds.push(polygon.getBounds());
+      } else if (item.lat && item.lng) {
+        // Create marker for lampy/kose
+        const marker = L.marker([item.lat, item.lng], {
+          icon: L.divIcon({
+            className: 'report-zavada-marker',
+            html: `<div style="background: ${category === 'lampy' ? '#f97316' : '#10b981'}; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${item.id || '?'}</div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          }),
+        });
+        
+        marker.on('click', () => {
+          selectObject(item, item.id, [item.lat, item.lng], item.name || (category === 'lampy' ? `Lampa ${item.id || ''}` : `Koš ${item.id || ''}`));
+        });
+        
+        marker.addTo(reportZavadaMapLayer);
+        bounds.push([item.lat, item.lng]);
+      }
+    });
+    
+    // Fit map to show all objects
+    if (bounds.length > 0) {
+      if (isPolygon) {
+        const group = new L.featureGroup(reportZavadaMapLayer.getLayers());
+        reportZavadaMapInstance.fitBounds(group.getBounds().pad(0.1));
+      } else {
+        reportZavadaMapInstance.fitBounds(bounds, { padding: [20, 20] });
+      }
+    }
+    
+    // Invalidate size after a short delay to ensure map renders correctly
+    setTimeout(() => {
+      if (reportZavadaMapInstance) {
+        reportZavadaMapInstance.invalidateSize();
+      }
+    }, 100);
+  }
+  
+  function selectObject(item, id, coords, name) {
+    // Clear previous selection marker
+    if (reportZavadaSelectedMarker) {
+      reportZavadaMapInstance?.removeLayer(reportZavadaSelectedMarker);
+    }
+    
+    // Add selection marker
+    const lat = Array.isArray(coords) ? coords[0] : coords;
+    const lng = Array.isArray(coords) ? coords[1] : coords;
+    
+    reportZavadaSelectedMarker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: 'report-zavada-selected-marker',
+        html: `<div style="background: #f97316; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 12px rgba(249,115,22,0.6);">✓</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      }),
+    }).addTo(reportZavadaMapInstance);
+    
+    // Update hidden inputs
+    if (reportZavadaSelectedId) reportZavadaSelectedId.value = id || '';
+    if (reportZavadaSelectedLat) reportZavadaSelectedLat.value = lat;
+    if (reportZavadaSelectedLng) reportZavadaSelectedLng.value = lng;
+    if (reportZavadaSelectedName) reportZavadaSelectedName.value = name || '';
+    
+    // Show selected info
+    if (reportZavadaSelectedText) {
+      reportZavadaSelectedText.textContent = name || 'Vybraný objekt';
+    }
+    if (reportZavadaSelectedDiv) {
+      reportZavadaSelectedDiv.classList.remove('hidden');
+    }
+  }
+  
+  // Handle category change
+  if (reportZavadaCategorySelect) {
+    reportZavadaCategorySelect.addEventListener('change', (e) => {
+      const category = e.target.value;
+      if (category === 'kose' || category === 'lampy' || category === 'zelen') {
+        if (reportZavadaMapContainer) {
+          reportZavadaMapContainer.classList.remove('hidden');
+        }
+        setTimeout(() => {
+          showObjectsOnMap(category);
+        }, 100);
+      } else {
+        if (reportZavadaMapContainer) {
+          reportZavadaMapContainer.classList.add('hidden');
+        }
+        clearReportZavadaMap();
+      }
+    });
+  }
+  
+  // Clear map when modal closes - wrap the function
+  const originalCloseModal = closeReportZavadaModal;
+  function closeReportZavadaModalWithMap() {
+    clearReportZavadaMap();
+    originalCloseModal();
+  }
+  
+  // Update all close handlers to use the new function
+  if (reportZavadaModalClose) {
+    reportZavadaModalClose.removeEventListener('click', closeReportZavadaModal);
+    reportZavadaModalClose.addEventListener('click', closeReportZavadaModalWithMap);
+  }
+  
+  if (reportZavadaModalCancel) {
+    reportZavadaModalCancel.removeEventListener('click', closeReportZavadaModal);
+    reportZavadaModalCancel.addEventListener('click', closeReportZavadaModalWithMap);
+  }
+  
+  if (reportZavadaModalBackdrop) {
+    reportZavadaModalBackdrop.removeEventListener('click', closeReportZavadaModal);
+    reportZavadaModalBackdrop.addEventListener('click', closeReportZavadaModalWithMap);
+  }
+  
   // Handle form submission
   if (reportZavadaForm) {
     reportZavadaForm.addEventListener('submit', async (e) => {
@@ -2411,7 +2621,7 @@ Odkaz do aplikace: ${appUrl}`;
         });
         
         if (response.ok) {
-          closeReportZavadaModal();
+          closeReportZavadaModalWithMap();
           showToastNotification(
             'Závada nahlášena!',
             'Děkujeme za nahlášení. Po zpracování se závada zobrazí v tabulce.',

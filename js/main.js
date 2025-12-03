@@ -2806,10 +2806,32 @@ Odkaz do aplikace: ${appUrl}`;
             throw new Error('Soubor je příliš velký. Maximální velikost je 25 MB.');
           }
           
-          // Ensure file is in FormData (should already be there, but double-check)
-          if (!formData.has('upload') || formData.get('upload').size === 0) {
-            formData.delete('upload');
+          // Ensure file is in FormData - FormData from form should already include it, but verify
+          const existingFile = formData.get('upload');
+          if (!existingFile || existingFile.size === 0) {
+            // Remove empty entry if exists
+            if (formData.has('upload')) {
+              formData.delete('upload');
+            }
             formData.append('upload', file);
+          }
+        } else {
+          // If no file selected, ensure upload field is not in FormData (or is empty)
+          if (formData.has('upload')) {
+            const uploadValue = formData.get('upload');
+            if (!uploadValue || uploadValue.size === 0) {
+              formData.delete('upload');
+            }
+          }
+        }
+        
+        // Debug: log all FormData entries
+        console.log('FormData entries:');
+        for (const [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+          } else {
+            console.log(`  ${key}: ${value}`);
           }
         }
         

@@ -2440,6 +2440,10 @@ Odkaz do aplikace: ${appUrl}`;
     if (reportZavadaSelectedLat) reportZavadaSelectedLat.value = '';
     if (reportZavadaSelectedLng) reportZavadaSelectedLng.value = '';
     if (reportZavadaSelectedName) reportZavadaSelectedName.value = '';
+    // Remove map click handler
+    if (reportZavadaMapInstance) {
+      reportZavadaMapInstance.off('click');
+    }
   }
   
   function showObjectsOnMap(category) {
@@ -2476,7 +2480,11 @@ Odkaz do aplikace: ${appUrl}`;
           weight: 2,
         });
         
-        polygon.on('click', () => {
+        polygon.on('click', (e) => {
+          // Stop event propagation to prevent map click
+          if (e.originalEvent) {
+            e.originalEvent.stopPropagation();
+          }
           // Calculate center of polygon for marker placement
           const bounds = polygon.getBounds();
           const center = bounds.getCenter();
@@ -2513,6 +2521,26 @@ Odkaz do aplikace: ${appUrl}`;
       } else {
         reportZavadaMapInstance.fitBounds(bounds, { padding: [20, 20] });
       }
+    } else if (isPolygon) {
+      // If no polygons, set default view for zelen
+      reportZavadaMapInstance.setView([50.1322, 14.222], 15);
+    }
+    
+    // For zelen category, allow clicking anywhere on the map
+    if (isPolygon && category === 'zelen') {
+      reportZavadaMapInstance.on('click', (e) => {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        selectObject(
+          { lat, lng, name: 'Údržba zeleně' },
+          null,
+          [lat, lng],
+          `Údržba zeleně (${lat.toFixed(6)}, ${lng.toFixed(6)})`
+        );
+      });
+    } else {
+      // Remove click handler for other categories
+      reportZavadaMapInstance.off('click');
     }
     
     // Invalidate size after a short delay to ensure map renders correctly

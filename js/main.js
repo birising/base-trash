@@ -767,15 +767,18 @@ Odkaz do aplikace: ${appUrl}`;
               // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
               const response = await fetch('https://formspree.io/f/xkgdbplk', {
                 method: 'POST',
-                body: formData,
-                headers: {
-                  'Accept': 'application/json'
-                },
-                redirect: 'manual'
+                body: formData
               });
               
-              // Check if response is ok or if it's a redirect (which is also success for Formspree)
-              if (response.ok || response.status === 0 || response.type === 'opaqueredirect') {
+              // Formspree returns 200 OK for successful submissions
+              if (response.ok) {
+                // Try to parse JSON if available
+                try {
+                  const result = await response.json();
+                  console.log('Formspree response:', result);
+                } catch (e) {
+                  // If response is not JSON (e.g., HTML redirect page), that's also OK
+                }
                 // Close popup
                 marker.closePopup();
                 
@@ -788,8 +791,9 @@ Odkaz do aplikace: ${appUrl}`;
                 try {
                   const errorData = await response.json();
                   errorMsg = errorData.error || errorMsg;
+                  console.error('Formspree error:', errorData);
                 } catch (e) {
-                  // Ignore JSON parse errors
+                  errorMsg = `HTTP ${response.status}: ${response.statusText}`;
                 }
                 throw new Error(errorMsg);
               }
@@ -892,15 +896,18 @@ Odkaz do aplikace: ${appUrl}`;
             // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
             const response = await fetch('https://formspree.io/f/xkgdbplk', {
               method: 'POST',
-              body: formData,
-              headers: {
-                'Accept': 'application/json'
-              },
-              redirect: 'manual'
+              body: formData
             });
             
-            // Check if response is ok or if it's a redirect (which is also success for Formspree)
-            if (response.ok || response.status === 0 || response.type === 'opaqueredirect') {
+            // Formspree returns 200 OK for successful submissions
+            if (response.ok) {
+              // Try to parse JSON if available
+              try {
+                const result = await response.json();
+                console.log('Formspree response:', result);
+              } catch (e) {
+                // If response is not JSON (e.g., HTML redirect page), that's also OK
+              }
               // Close popup
               polygon.closePopup();
               
@@ -912,8 +919,9 @@ Odkaz do aplikace: ${appUrl}`;
               try {
                 const errorData = await response.json();
                 errorMsg = errorData.error || errorMsg;
+                console.error('Formspree error:', errorData);
               } catch (e) {
-                // Ignore JSON parse errors
+                errorMsg = `HTTP ${response.status}: ${response.statusText}`;
               }
               throw new Error(errorMsg);
             }
@@ -2806,23 +2814,21 @@ Odkaz do aplikace: ${appUrl}`;
         }
         
         // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
-        // Only set Accept header to get JSON response
+        // Only set Accept header to get JSON response (if available)
         const response = await fetch(reportZavadaForm.action, {
           method: 'POST',
-          body: formData,
-          headers: {
-            'Accept': 'application/json'
-          },
-          redirect: 'manual'
+          body: formData
         });
         
-        // Check if response is ok or if it's a redirect (which is also success for Formspree)
-        if (response.ok || response.status === 0 || response.type === 'opaqueredirect') {
-          // Try to parse JSON if available
+        // Formspree returns 200 OK for successful submissions, even with files
+        if (response.ok) {
+          // Try to parse JSON response if available
           try {
             const result = await response.json();
+            console.log('Formspree response:', result);
           } catch (e) {
-            // Ignore JSON parse errors - redirect is also success
+            // If response is not JSON (e.g., HTML redirect page), that's also OK for Formspree
+            console.log('Formspree response is not JSON (likely redirect page), but submission was successful');
           }
           closeReportZavadaModalWithMap();
           showToastNotification(
@@ -2836,8 +2842,10 @@ Odkaz do aplikace: ${appUrl}`;
           try {
             const errorData = await response.json();
             errorMsg = errorData.error || errorMsg;
+            console.error('Formspree error:', errorData);
           } catch (e) {
-            // Ignore JSON parse errors
+            // If can't parse JSON, use status text
+            errorMsg = `HTTP ${response.status}: ${response.statusText}`;
           }
           throw new Error(errorMsg);
         }

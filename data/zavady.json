@@ -1,0 +1,119 @@
+[
+  {
+    "id": 1,
+    "reported_date": "2025-01-15T10:30:00Z",
+    "category": "lampy",
+    "lamp_id": 13,
+    "lat": 50.133935,
+    "lng": 14.222031,
+    "description": "Lampa nefunguje, neosvětluje ulici",
+    "resolved": false,
+    "resolved_date": null,
+    "email": "obcan@example.cz"
+  },
+  {
+    "id": 2,
+    "reported_date": "2025-01-12T14:20:00Z",
+    "category": "zelen",
+    "lat": 50.132774,
+    "lng": 14.22038,
+    "description": "Potřeba posekat trávu u potoka, je příliš vysoká",
+    "resolved": true,
+    "resolved_date": "2025-01-18T09:00:00Z",
+    "email": "obcan2@example.cz"
+  },
+  {
+    "id": 3,
+    "reported_date": "2025-01-10T08:15:00Z",
+    "category": "kose",
+    "kos_id": "K-01",
+    "lat": 50.130144,
+    "lng": 14.219936,
+    "description": "Koš je přeplněný a odpadky se vysypávají",
+    "resolved": true,
+    "resolved_date": "2025-01-11T16:30:00Z",
+    "email": "obcan3@example.cz"
+  },
+  {
+    "id": 4,
+    "reported_date": "2025-01-08T16:45:00Z",
+    "category": "lampy",
+    "lamp_id": 5,
+    "lat": 50.130589,
+    "lng": 14.221878,
+    "description": "Lampa bliká a potřebuje opravu",
+    "resolved": false,
+    "resolved_date": null,
+    "email": "obcan4@example.cz"
+  },
+  {
+    "id": 5,
+    "reported_date": "2025-01-05T11:00:00Z",
+    "category": "zelen",
+    "lat": 50.124089,
+    "lng": 14.212089,
+    "description": "Remízek u polní cesty potřebuje prořezat náletové keře",
+    "resolved": true,
+    "resolved_date": "2025-01-14T12:00:00Z",
+    "email": "obcan5@example.cz"
+  },
+  {
+    "id": 6,
+    "reported_date": "2025-01-03T13:30:00Z",
+    "category": "kose",
+    "kos_id": "K-03",
+    "lat": 50.129602,
+    "lng": 14.221984,
+    "description": "Koš je poškozený, má prasklou nádobu",
+    "resolved": false,
+    "resolved_date": null,
+    "email": "obcan6@example.cz"
+  },
+  {
+    "id": 7,
+    "reported_date": "2024-12-28T09:20:00Z",
+    "category": "lampy",
+    "lamp_id": 22,
+    "lat": 50.132773,
+    "lng": 14.221132,
+    "description": "Lampa je rozbitá, sklo je rozbité",
+    "resolved": true,
+    "resolved_date": "2025-01-02T10:15:00Z",
+    "email": "obcan7@example.cz"
+  },
+  {
+    "id": 8,
+    "reported_date": "2024-12-25T15:00:00Z",
+    "category": "zelen",
+    "lat": 50.13232,
+    "lng": 14.22274,
+    "description": "Květinové záhony u návsi potřebují údržbu",
+    "resolved": true,
+    "resolved_date": "2024-12-30T11:00:00Z",
+    "email": "obcan8@example.cz"
+  },
+  {
+    "id": 9,
+    "reported_date": "2024-12-20T10:45:00Z",
+    "category": "kose",
+    "kos_id": "K-05",
+    "lat": 50.132801,
+    "lng": 14.220461,
+    "description": "Koš je plný a potřebuje vyprázdnit",
+    "resolved": true,
+    "resolved_date": "2024-12-21T08:00:00Z",
+    "email": "obcan9@example.cz"
+  },
+  {
+    "id": 10,
+    "reported_date": "2024-12-18T12:30:00Z",
+    "category": "lampy",
+    "lamp_id": 8,
+    "lat": 50.13117,
+    "lng": 14.220722,
+    "description": "Lampa svítí i přes den, je zřejmě závada na čidle",
+    "resolved": true,
+    "resolved_date": "2024-12-19T14:20:00Z",
+    "email": "obcan10@example.cz"
+  }
+]

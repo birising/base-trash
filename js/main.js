@@ -3036,10 +3036,10 @@ Odkaz do aplikace: ${appUrl}`;
           icon: L.divIcon({
             className: 'report-zavada-marker',
             html: isKose 
-              ? `<div style="color: ${category === 'lampy' ? '#f97316' : '#10b981'}; font-weight: 700; font-size: 14px; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">${item.id || '?'}</div>`
+              ? `<div style="background: #10b981; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; border: 3px solid white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);">${item.id || '?'}</div>`
               : `<div style="background: ${category === 'lampy' ? '#f97316' : '#10b981'}; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${item.id || '?'}</div>`,
-            iconSize: isKose ? [20, 20] : [24, 24],
-            iconAnchor: isKose ? [10, 10] : [12, 12],
+            iconSize: isKose ? [32, 32] : [24, 24],
+            iconAnchor: isKose ? [16, 16] : [12, 12],
           }),
         });
         

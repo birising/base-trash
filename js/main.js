@@ -835,6 +835,51 @@ Odkaz do aplikace: ${appUrl}`;
     `;
 
     polygon.bindPopup(popupContent);
+    
+    // Add form submit handler for zelen
+    polygon.on('popupopen', () => {
+      const popup = polygon.getPopup();
+      const form = popup.getElement()?.querySelector('.lamp-report-form');
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const formData = new FormData(form);
+          const submitButton = form.querySelector('button[type="submit"]');
+          const originalText = submitButton?.textContent;
+          
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Odesílám...';
+          }
+          
+          try {
+            const response = await fetch('https://formspree.io/f/xkgdbplk', {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'Accept': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              // Close popup
+              polygon.closePopup();
+              
+              // Show toast notification
+              showToastNotification('Požadavek odeslán!', 'Děkujeme za nahlášení. Po zpracování se závada zobrazí v tabulce.', 'success');
+            } else {
+              throw new Error('Odeslání selhalo');
+            }
+          } catch (error) {
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = originalText || 'Požádat o údržbu';
+            }
+            showToastNotification('Chyba při odesílání', 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
+          }
+        });
+      }
+    });
 
     polygon.on("mouseover", () => {
       polygon.bringToFront();

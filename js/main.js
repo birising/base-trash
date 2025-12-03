@@ -761,6 +761,20 @@ Odkaz do aplikace: ${appUrl}`;
         newShowBtn.addEventListener('click', () => {
           newShowBtn.classList.add('hidden');
           newForm.classList.remove('hidden');
+          // Update popup position and size to ensure form is fully visible
+          setTimeout(() => {
+            if (popup && popup.isOpen()) {
+              popup.update();
+              // Try to pan map to keep popup visible
+              const popupLatLng = marker.getLatLng();
+              if (map) {
+                map.setView(popupLatLng, map.getZoom(), {
+                  animate: true,
+                  duration: 0.3
+                });
+              }
+            }
+          }, 50);
         });
         
         // Add form submit handler
@@ -961,6 +975,21 @@ Odkaz do aplikace: ${appUrl}`;
         newShowBtn.addEventListener('click', () => {
           newShowBtn.classList.add('hidden');
           newForm.classList.remove('hidden');
+          // Update popup position and size to ensure form is fully visible
+          setTimeout(() => {
+            if (popup && popup.isOpen()) {
+              popup.update();
+              // Try to pan map to keep popup visible
+              const bounds = polygon.getBounds();
+              const center = bounds.getCenter();
+              if (map) {
+                map.setView(center, map.getZoom(), {
+                  animate: true,
+                  duration: 0.3
+                });
+              }
+            }
+          }, 50);
         });
         
         // Add form submit handler

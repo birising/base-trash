@@ -473,6 +473,19 @@
 
 .leaflet-popup-content {
   color: #0b1220;
+  min-width: 320px;
+  max-width: 400px;
+  width: auto;
+}
+
+.leaflet-popup-content-wrapper {
+  max-width: 420px !important;
+}
+
+/* Ensure form in popup is fully visible */
+.leaflet-popup-content .lamp-report-form {
+  min-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Light, modern map styling */

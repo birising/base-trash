@@ -1189,6 +1189,331 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.zavady-view .view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.report-zavada-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #f97316, #f59e0b);
+  color: #0b1220;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.report-zavada-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.45);
+  filter: brightness(1.05);
+}
+
+.report-zavada-btn:active {
+  transform: translateY(0);
+}
+
+.report-zavada-icon {
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 18, 32, 0.1);
+  border-radius: 50%;
+}
+
+.report-zavada-label {
+  letter-spacing: 0.3px;
+}
+
+/* Report zavada modal */
+.report-zavada-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.report-zavada-modal.hidden {
+  display: none;
+}
+
+.report-zavada-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.report-zavada-modal-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(145deg, rgba(24, 38, 61, 0.98), rgba(12, 23, 41, 0.95));
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+}
+
+.report-zavada-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.report-zavada-modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: 0.3px;
+}
+
+.report-zavada-modal-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.report-zavada-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-strong);
+  transform: scale(1.05);
+}
+
+.report-zavada-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.report-zavada-form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.2px;
+}
+
+.report-zavada-form-input,
+.report-zavada-form-select,
+.report-zavada-form-textarea {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.report-zavada-form-input:hover,
+.report-zavada-form-select:hover,
+.report-zavada-form-textarea:hover {
+  border-color: rgba(249, 115, 22, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.report-zavada-form-input:focus,
+.report-zavada-form-select:focus,
+.report-zavada-form-textarea:focus {
+  outline: none;
+  border-color: #f97316;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
+}
+
+.report-zavada-form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.report-zavada-form-select {
+  cursor: pointer;
+}
+
+.report-zavada-form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.report-zavada-form-cancel,
+.report-zavada-form-submit {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.report-zavada-form-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+}
+
+.report-zavada-form-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-strong);
+}
+
+.report-zavada-form-submit {
+  background: linear-gradient(135deg, #f97316, #f59e0b);
+  color: #0b1220;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35);
+}
+
+.report-zavada-form-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.45);
+  filter: brightness(1.05);
+}
+
+.report-zavada-form-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Light theme for report zavada */
+:root[data-theme="light"] .report-zavada-modal-content {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border-color: rgba(15, 23, 42, 0.15);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+}
+
+:root[data-theme="light"] .report-zavada-modal-header {
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+:root[data-theme="light"] .report-zavada-modal-header h2 {
+  color: #0b1220;
+}
+
+:root[data-theme="light"] .report-zavada-modal-close {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #0b1220;
+}
+
+:root[data-theme="light"] .report-zavada-modal-close:hover {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+:root[data-theme="light"] .report-zavada-form-label {
+  color: #0b1220;
+}
+
+:root[data-theme="light"] .report-zavada-form-input,
+:root[data-theme="light"] .report-zavada-form-select,
+:root[data-theme="light"] .report-zavada-form-textarea {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #0b1220;
+}
+
+:root[data-theme="light"] .report-zavada-form-input:hover,
+:root[data-theme="light"] .report-zavada-form-select:hover,
+:root[data-theme="light"] .report-zavada-form-textarea:hover {
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+:root[data-theme="light"] .report-zavada-form-input:focus,
+:root[data-theme="light"] .report-zavada-form-select:focus,
+:root[data-theme="light"] .report-zavada-form-textarea:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.25);
+}
+
+:root[data-theme="light"] .report-zavada-form-cancel {
+  background: rgba(15, 23, 42, 0.05);
+  color: #0b1220;
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+:root[data-theme="light"] .report-zavada-form-cancel:hover {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+/* Mobile styles for report zavada */
+@media (max-width: 960px) {
+  .zavady-view .view-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .report-zavada-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .report-zavada-label {
+    display: none;
+  }
+  
+  .report-zavada-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 28px;
+  }
+  
+  .report-zavada-modal {
+    padding: 12px;
+  }
+  
+  .report-zavada-modal-content {
+    padding: 20px;
+    max-height: 95vh;
+  }
+  
+  .report-zavada-form-actions {
+    flex-direction: column;
+  }
+}
+
 .zavady-table-container {
   overflow-x: auto;
   margin-top: 20px;

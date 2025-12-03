@@ -2348,4 +2348,90 @@ Odkaz do aplikace: ${appUrl}`;
   
   // Make function globally available
   window.showToastNotification = showToastNotification;
+  
+  // Report zavada modal functionality
+  const reportZavadaBtn = document.getElementById('reportZavadaBtn');
+  const reportZavadaModal = document.getElementById('reportZavadaModal');
+  const reportZavadaForm = document.getElementById('reportZavadaForm');
+  const reportZavadaModalClose = reportZavadaModal?.querySelector('.report-zavada-modal-close');
+  const reportZavadaModalCancel = reportZavadaModal?.querySelector('.report-zavada-form-cancel');
+  const reportZavadaModalBackdrop = reportZavadaModal?.querySelector('.report-zavada-modal-backdrop');
+  
+  function openReportZavadaModal() {
+    if (reportZavadaModal) {
+      reportZavadaModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  
+  function closeReportZavadaModal() {
+    if (reportZavadaModal) {
+      reportZavadaModal.classList.add('hidden');
+      document.body.style.overflow = '';
+      if (reportZavadaForm) {
+        reportZavadaForm.reset();
+      }
+    }
+  }
+  
+  if (reportZavadaBtn) {
+    reportZavadaBtn.addEventListener('click', openReportZavadaModal);
+  }
+  
+  if (reportZavadaModalClose) {
+    reportZavadaModalClose.addEventListener('click', closeReportZavadaModal);
+  }
+  
+  if (reportZavadaModalCancel) {
+    reportZavadaModalCancel.addEventListener('click', closeReportZavadaModal);
+  }
+  
+  if (reportZavadaModalBackdrop) {
+    reportZavadaModalBackdrop.addEventListener('click', closeReportZavadaModal);
+  }
+  
+  // Handle form submission
+  if (reportZavadaForm) {
+    reportZavadaForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitButton = reportZavadaForm.querySelector('.report-zavada-form-submit');
+      const originalText = submitButton?.textContent;
+      
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Odesílám...';
+      }
+      
+      try {
+        const formData = new FormData(reportZavadaForm);
+        const response = await fetch(reportZavadaForm.action, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (response.ok) {
+          closeReportZavadaModal();
+          showToastNotification(
+            'Závada nahlášena!',
+            'Děkujeme za nahlášení. Po zpracování se závada zobrazí v tabulce.',
+            'success'
+          );
+        } else {
+          throw new Error('Odeslání selhalo');
+        }
+      } catch (error) {
+        console.error('Chyba při odesílání formuláře:', error);
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = originalText || 'Odeslat';
+        }
+        showToastNotification(
+          'Chyba při odesílání',
+          'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.',
+          'error'
+        );
+      }
+    });
+  }
 });

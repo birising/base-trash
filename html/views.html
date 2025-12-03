@@ -190,11 +190,55 @@
         <div class="headline">Přehled nahlášených problémů</div>
         <p class="subtitle">Data z AWS S3</p>
       </div>
+      <button id="reportZavadaBtn" class="report-zavada-btn" aria-label="Nahlásit závadu">
+        <span class="report-zavada-icon">+</span>
+        <span class="report-zavada-label">Nahlásit závadu</span>
+      </button>
     </div>
     <div id="zavadyList" class="zavady-list">
       <div class="loading-state">Načítám data…</div>
     </div>
   </section>
+  
+  <!-- Modal for reporting zavada -->
+  <div id="reportZavadaModal" class="report-zavada-modal hidden">
+    <div class="report-zavada-modal-backdrop"></div>
+    <div class="report-zavada-modal-content">
+      <div class="report-zavada-modal-header">
+        <h2>Nahlásit závadu</h2>
+        <button class="report-zavada-modal-close" aria-label="Zavřít">&times;</button>
+      </div>
+      <form id="reportZavadaForm" class="report-zavada-form" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="form_type" value="zavada_report">
+        <label class="report-zavada-form-label">
+          Kategorie:
+          <select name="category" required class="report-zavada-form-select">
+            <option value="">Vyberte kategorii</option>
+            <option value="kose">Koš</option>
+            <option value="lampy">Lampa</option>
+            <option value="zelen">Údržba zeleně</option>
+            <option value="ostatni">Ostatní</option>
+          </select>
+        </label>
+        <label class="report-zavada-form-label">
+          Váš email:
+          <input type="email" name="email" required class="report-zavada-form-input" placeholder="vas@email.cz">
+        </label>
+        <label class="report-zavada-form-label">
+          Popis závady:
+          <textarea name="message" rows="4" required class="report-zavada-form-textarea" placeholder="Popište prosím závadu..."></textarea>
+        </label>
+        <label class="report-zavada-form-label">
+          Fotografie (volitelné):
+          <input type="file" name="upload" accept="image/*" class="report-zavada-form-input">
+        </label>
+        <div class="report-zavada-form-actions">
+          <button type="button" class="report-zavada-form-cancel">Zrušit</button>
+          <button type="submit" class="report-zavada-form-submit">Odeslat</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <section id="wasteView" class="view waste-view hidden" aria-label="Odpad a sběrný dvůr">
     <div class="waste-grid">
       <div class="waste-card hero">

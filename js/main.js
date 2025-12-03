@@ -757,10 +757,12 @@ Odkaz do aplikace: ${appUrl}`;
                 body: formData,
                 headers: {
                   'Accept': 'application/json'
-                }
+                },
+                redirect: 'manual'
               });
               
-              if (response.ok) {
+              // Check if response is ok or if it's a redirect (which is also success for Formspree)
+              if (response.ok || response.status === 0 || response.type === 'opaqueredirect') {
                 // Close popup
                 marker.closePopup();
                 
@@ -768,14 +770,23 @@ Odkaz do aplikace: ${appUrl}`;
                 const categoryName = item.category === "lampy" ? "lampy" : "koše";
                 showToastNotification('Hlášení odesláno!', `Děkujeme za nahlášení závady ${categoryName}. Ozveme se vám co nejdříve.`, 'success');
               } else {
-                throw new Error('Odeslání selhalo');
+                // Try to get error message from response
+                let errorMsg = 'Odeslání selhalo';
+                try {
+                  const errorData = await response.json();
+                  errorMsg = errorData.error || errorMsg;
+                } catch (e) {
+                  // Ignore JSON parse errors
+                }
+                throw new Error(errorMsg);
               }
             } catch (error) {
+              console.error('Chyba při odesílání formuláře:', error);
               if (submitButton) {
                 submitButton.disabled = false;
                 submitButton.textContent = originalText || 'Nahlásit závadu';
               }
-              showToastNotification('Chyba při odesílání', 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
+              showToastNotification('Chyba při odesílání', error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
             }
           });
         }
@@ -858,24 +869,35 @@ Odkaz do aplikace: ${appUrl}`;
               body: formData,
               headers: {
                 'Accept': 'application/json'
-              }
+              },
+              redirect: 'manual'
             });
             
-            if (response.ok) {
+            // Check if response is ok or if it's a redirect (which is also success for Formspree)
+            if (response.ok || response.status === 0 || response.type === 'opaqueredirect') {
               // Close popup
               polygon.closePopup();
               
               // Show toast notification
               showToastNotification('Požadavek odeslán!', 'Děkujeme za nahlášení. Po zpracování se závada zobrazí v tabulce.', 'success');
             } else {
-              throw new Error('Odeslání selhalo');
+              // Try to get error message from response
+              let errorMsg = 'Odeslání selhalo';
+              try {
+                const errorData = await response.json();
+                errorMsg = errorData.error || errorMsg;
+              } catch (e) {
+                // Ignore JSON parse errors
+              }
+              throw new Error(errorMsg);
             }
           } catch (error) {
+            console.error('Chyba při odesílání formuláře:', error);
             if (submitButton) {
               submitButton.disabled = false;
               submitButton.textContent = originalText || 'Požádat o údržbu';
             }
-            showToastNotification('Chyba při odesílání', 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
+            showToastNotification('Chyba při odesílání', error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
           }
         });
       }
@@ -2743,11 +2765,18 @@ Odkaz do aplikace: ${appUrl}`;
           body: formData,
           headers: {
             'Accept': 'application/json'
-          }
+          },
+          redirect: 'manual'
         });
         
-        if (response.ok) {
-          const result = await response.json();
+        // Check if response is ok or if it's a redirect (which is also success for Formspree)
+        if (response.ok || response.status === 0 || response.type === 'opaqueredirect') {
+          // Try to parse JSON if available
+          try {
+            const result = await response.json();
+          } catch (e) {
+            // Ignore JSON parse errors - redirect is also success
+          }
           closeReportZavadaModalWithMap();
           showToastNotification(
             'Závada nahlášena!',
@@ -2755,8 +2784,15 @@ Odkaz do aplikace: ${appUrl}`;
             'success'
           );
         } else {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Odeslání selhalo');
+          // Try to get error message from response
+          let errorMsg = 'Odeslání selhalo';
+          try {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorMsg;
+          } catch (e) {
+            // Ignore JSON parse errors
+          }
+          throw new Error(errorMsg);
         }
       } catch (error) {
         console.error('Chyba při odesílání formuláře:', error);
@@ -2766,7 +2802,7 @@ Odkaz do aplikace: ${appUrl}`;
         }
         showToastNotification(
           'Chyba při odesílání',
-          'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.',
+          error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.',
           'error'
         );
       }

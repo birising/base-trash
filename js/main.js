@@ -885,7 +885,8 @@ Odkaz do aplikace: ${appUrl}`;
 
   function createPolygon(area, color, style) {
     const baseStyle = style || greenspaceStyles.trava;
-    const polygon = L.polygon(area.coords, { ...baseStyle, color: color || baseStyle.color });
+    // Always use color from baseStyle to ensure correct colors (green for trava)
+    const polygon = L.polygon(area.coords, baseStyle);
 
     // Calculate center of polygon for GPS coordinates
     const centerLat = area.coords.reduce((sum, coord) => sum + coord[0], 0) / area.coords.length;
@@ -1087,7 +1088,10 @@ Odkaz do aplikace: ${appUrl}`;
     });
 
     polygon.on("mouseout", () => {
-      polygon.setStyle(baseStyle);
+      polygon.setStyle({
+        ...baseStyle,
+        fillColor: baseStyle.fillColor,
+      });
     });
     return polygon;
   }

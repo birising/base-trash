@@ -248,6 +248,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   const hasiciList = document.getElementById("hasiciList");
   const kriminalitaView = document.getElementById("kriminalitaView");
   const kriminalitaList = document.getElementById("kriminalitaList");
+  const zavadyView = document.getElementById("zavadyView");
+  const zavadyList = document.getElementById("zavadyList");
 
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
 
@@ -954,6 +956,7 @@ Odkaz do aplikace: ${appUrl}`;
     const isWasteView = category === "odpad";
     const isHasiciView = category === "hasici";
     const isKriminalitaView = category === "kriminalita";
+    const isZavadyView = category === "zavady";
     const isMapCategory = mapCategories.includes(category) && category !== "kriminalita";
     const isGreenspace = category === "zelen";
 
@@ -1051,8 +1054,10 @@ Odkaz do aplikace: ${appUrl}`;
       const labelText =
         category === "kose"
           ? "Koše"
-          : category === "kriminalita"
+          :         category === "kriminalita"
             ? "Kriminalita"
+          : category === "zavady"
+            ? "Hlášené závady"
           : category === "lampy"
             ? "Lampy"
             : category === "kontejnery"
@@ -1133,6 +1138,14 @@ Odkaz do aplikace: ${appUrl}`;
         renderKriminalita();
       } else {
         kriminalitaView.classList.add("hidden");
+      }
+    }
+    if (zavadyView) {
+      if (isZavadyView) {
+        zavadyView.classList.remove("hidden");
+        loadZavadyDataView();
+      } else {
+        zavadyView.classList.add("hidden");
       }
     }
 
@@ -1574,6 +1587,167 @@ Odkaz do aplikace: ${appUrl}`;
     }).join('');
   }
 
+  async function loadZavadyDataView() {
+    if (!zavadyList) return;
+    
+    zavadyList.innerHTML = '<div class="loading-state">Načítám hlášené závady…</div>';
+    
+    try {
+      const zavady = await loadZavadyData();
+      renderZavady(zavady);
+    } catch (error) {
+      console.error('Chyba při načítání dat závad:', error);
+      zavadyList.innerHTML = `
+        <div class="error-state">
+          <p>Nepodařilo se načíst hlášené závady.</p>
+          <p class="error-detail">${error.message || 'Neznámá chyba'}</p>
+        </div>
+      `;
+    }
+  }
+
+  function renderZavady(zavady) {
+    if (!zavadyList) return;
+    
+    // Check if data is still loading
+    if (typeof dataZavady === 'undefined' || dataZavady === null) {
+      zavadyList.innerHTML = '<div class="loading-state">Načítám data závad…</div>';
+      return;
+    }
+    
+    // Check if data loaded but is empty
+    if (!Array.isArray(zavady) || zavady.length === 0) {
+      zavadyList.innerHTML = `
+        <div class="error-state">
+          <p>Žádné hlášené závady k zobrazení.</p>
+          <p class="error-detail">Data se nepodařilo načíst nebo jsou prázdná.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '–';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return dateStr;
+      }
+    };
+    
+    const calculateDays = (reportedDate, resolvedDate) => {
+      if (!reportedDate) return '–';
+      try {
+        const reported = new Date(reportedDate);
+        if (isNaN(reported.getTime())) return '–';
+        
+        const endDate = resolvedDate ? new Date(resolvedDate) : new Date();
+        if (isNaN(endDate.getTime())) {
+          const now = new Date();
+          const diffTime = now - reported;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+        }
+        
+        const diffTime = endDate - reported;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+      } catch (e) {
+        return '–';
+      }
+    };
+    
+    const getCategoryLabel = (category) => {
+      const labels = {
+        'zelen': 'Údržba zeleně',
+        'kose': 'Koš',
+        'lampy': 'Lampa'
+      };
+      return labels[category] || category;
+    };
+    
+    const getCategoryLink = (category, item) => {
+      if (category === 'lampy' && item.lamp_id) {
+        return `#lampy/${item.lamp_id}`;
+      } else if (category === 'lampy' && item.lat && item.lng) {
+        return `#lampy/${item.lat},${item.lng}`;
+      } else if (category === 'zelen' && item.lat && item.lng) {
+        return `#zelen/${item.lat},${item.lng}`;
+      } else if (category === 'kose' && item.kos_id) {
+        return `#kose/${item.kos_id}`;
+      }
+      return `#${category}`;
+    };
+    
+    const getStatusColor = (resolved) => {
+      return resolved ? '#22c55e' : '#f59e0b';
+    };
+    
+    const getStatusText = (resolved) => {
+      return resolved ? 'Vyřešeno' : 'V řešení';
+    };
+    
+    // Sort by date - newest first
+    const sortedZavady = [...zavady].sort((a, b) => {
+      const dateA = a.reported_date ? new Date(a.reported_date).getTime() : 0;
+      const dateB = b.reported_date ? new Date(b.reported_date).getTime() : 0;
+      return dateB - dateA; // newest first
+    });
+    
+    try {
+      zavadyList.innerHTML = `
+        <div class="zavady-table-container">
+          <table class="zavady-table">
+            <thead>
+              <tr>
+                <th>Datum nahlášení</th>
+                <th>Kategorie</th>
+                <th>Popis</th>
+                <th>Stav</th>
+                <th>Datum vyřešení</th>
+                <th>Dní v řešení</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sortedZavady.map(item => {
+                const reportedDate = formatDate(item.reported_date);
+                const resolvedDate = item.resolved_date ? formatDate(item.resolved_date) : '–';
+                const days = calculateDays(item.reported_date, item.resolved_date);
+                const category = item.category || 'unknown';
+                const categoryLabel = getCategoryLabel(category);
+                const categoryLink = getCategoryLink(category, item);
+                const statusColor = getStatusColor(item.resolved);
+                const statusText = getStatusText(item.resolved);
+                const description = item.description || item.message || 'Bez popisu';
+                
+                return `
+                  <tr>
+                    <td>${reportedDate}</td>
+                    <td><a href="${categoryLink}" class="zavady-category-link">${categoryLabel}</a></td>
+                    <td>${description}</td>
+                    <td><span class="zavady-status" style="color: ${statusColor}">${statusText}</span></td>
+                    <td>${resolvedDate}</td>
+                    <td>${days !== '–' ? `${days} dní` : '–'}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } catch (renderError) {
+      console.error('Kritická chyba při renderování závad:', renderError);
+      zavadyList.innerHTML = `
+        <div class="error-state">
+          <p>Chyba při zobrazení dat závad.</p>
+          <p class="error-detail">${renderError.message || 'Neznámá chyba'}</p>
+        </div>
+      `;
+    }
+  }
+
   function goToDashboard() {
     showDashboard();
   }
@@ -1657,6 +1831,7 @@ Odkaz do aplikace: ${appUrl}`;
     if (wasteView) wasteView.classList.add("hidden");
     if (hasiciView) hasiciView.classList.add("hidden");
     if (kriminalitaView) kriminalitaView.classList.add("hidden");
+    if (zavadyView) zavadyView.classList.add("hidden");
     if (mapOverlay) mapOverlay.classList.add("hidden");
     
     // Remove active state from all cards and nav items

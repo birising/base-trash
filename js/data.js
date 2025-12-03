@@ -353,6 +353,7 @@ let kriminalitaTypes = {};
 let kriminalitaRelevance = {};
 let kriminalitaStates = {};
 let dataZelene = [];
+let dataZavady = [];
 
 function ensureLampIds(lamps) {
   return lamps.map((lamp, index) => ({ ...lamp, id: lamp.id ?? index + 1 }));
@@ -1045,6 +1046,81 @@ async function loadKriminalitaDataAsync() {
       renderKriminalita();
     }
     
+    return [];
+  }
+}
+
+async function loadZavadyData() {
+  try {
+    const zavadyUrl = "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady.json";
+    const zavadyFallbackUrl = `${dataBaseUrl}/zavady.json`;
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    
+    try {
+      const response = await fetch(zavadyUrl, {
+        cache: "no-store",
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const payload = await response.json();
+      
+      if (!Array.isArray(payload)) {
+        console.warn('Zavady data nejsou pole, používáme prázdné pole');
+        dataZavady = [];
+        return [];
+      }
+      
+      dataZavady = payload;
+      return payload;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        console.warn('Timeout při načítání dat závad');
+      } else if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.warn('Síťová chyba při načítání dat závad');
+      } else {
+        console.warn('Chyba při načítání dat závad:', error.message);
+      }
+      
+      // Try fallback
+      try {
+        const fallbackController = new AbortController();
+        const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
+        
+        const fallbackResponse = await fetch(zavadyFallbackUrl, {
+          cache: "no-store",
+          signal: fallbackController.signal
+        });
+        clearTimeout(fallbackTimeout);
+        
+        if (fallbackResponse.ok) {
+          const payload = await fallbackResponse.json();
+          if (Array.isArray(payload)) {
+            dataZavady = payload;
+            return payload;
+          }
+        }
+      } catch (fallbackError) {
+        console.warn('Fallback také selhal:', fallbackError);
+      }
+      
+      dataZavady = [];
+      return [];
+    }
+  } catch (error) {
+    console.error('Kritická chyba při načítání dat závad:', error);
+    dataZavady = [];
     return [];
   }
 }

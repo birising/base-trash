@@ -1147,6 +1147,129 @@
   color: #047857;
 }
 
+/* Zavady (Reported Issues) */
+.zavady-view {
+  padding: 20px;
+}
+
+.zavady-table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.zavady-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: linear-gradient(145deg, rgba(24, 38, 61, 0.92), rgba(12, 23, 41, 0.88));
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--glow);
+}
+
+.zavady-table thead {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.15), rgba(34, 197, 94, 0.1));
+}
+
+.zavady-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-main);
+  border-bottom: 2px solid var(--border);
+}
+
+.zavady-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.zavady-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.zavady-table tbody tr:hover {
+  background: rgba(45, 212, 191, 0.08);
+}
+
+.zavady-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.zavady-category-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.zavady-category-link:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
+.zavady-status {
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Light theme for zavady */
+:root[data-theme="light"] .zavady-table {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme="light"] .zavady-table thead {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.1), rgba(5, 150, 105, 0.08));
+}
+
+:root[data-theme="light"] .zavady-table th {
+  color: #0b1220;
+  border-bottom-color: rgba(15, 23, 42, 0.15);
+}
+
+:root[data-theme="light"] .zavady-table td {
+  color: #0b1220;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme="light"] .zavady-table tbody tr:hover {
+  background: rgba(2, 132, 199, 0.06);
+}
+
+:root[data-theme="light"] .zavady-category-link {
+  color: #059669;
+}
+
+:root[data-theme="light"] .zavady-category-link:hover {
+  color: #047857;
+}
+
+/* Mobile styles for zavady table */
+@media (max-width: 960px) {
+  .zavady-table-container {
+    margin: 12px -12px 0;
+    padding: 0 12px;
+  }
+  
+  .zavady-table {
+    font-size: 12px;
+  }
+  
+  .zavady-table th,
+  .zavady-table td {
+    padding: 10px 8px;
+  }
+}
+
 /* Light theme for lamp report form */
 :root[data-theme="light"] .lamp-report-form {
   background: linear-gradient(145deg, #ffffff, #f8fafc);

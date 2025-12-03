@@ -175,11 +175,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const greenspaceStyles = {
     trava: {
-      color: "#0284c7",
+      color: "#059669",
       weight: 3,
-      fillColor: "#38bdf8",
+      fillColor: "#10b981",
       fillOpacity: 0.45,
-      dashArray: "10 6",
       lineJoin: "round",
     },
     zahony: {
@@ -601,7 +600,8 @@ window.addEventListener("DOMContentLoaded", async () => {
           <div class="status-chip-row">${statusBadges}</div>
         </div>
         <div class="popup-actions">
-          <form class="lamp-report-form" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
+          <button class="popup-button show-report-form-btn" data-category="kose" data-item-id="${item.id || 'N/A'}" data-item-name="${popupTitle}" data-gps="${gpsCoords}" data-app-url="${appUrl}">Nahlásit závadu</button>
+          <form class="lamp-report-form hidden" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="form_type" value="kose_report">
             <input type="hidden" name="kos_id" value="${item.id || 'N/A'}">
             <input type="hidden" name="kos_name" value="${popupTitle}">
@@ -619,7 +619,7 @@ window.addEventListener("DOMContentLoaded", async () => {
               Fotografie (volitelné):
               <input type="file" name="upload" accept="image/*" class="popup-form-input">
             </label>
-            <button type="submit" class="popup-button">Nahlásit závadu</button>
+            <button type="submit" class="popup-button">Odeslat</button>
           </form>
         </div>`;
     } else if (item.category === "lampy") {
@@ -649,7 +649,8 @@ Odkaz do aplikace: ${appUrl}`;
           <div><span>Stav:</span><strong>Potřebuje ověření?</strong></div>
         </div>
         <div class="popup-actions">
-          <form class="lamp-report-form" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
+          <button class="popup-button show-report-form-btn" data-category="lampy" data-item-id="${item.id || 'N/A'}" data-item-name="${popupTitle}" data-gps="${gpsCoords}" data-app-url="${appUrl}">Nahlásit závadu</button>
+          <form class="lamp-report-form hidden" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="lamp_id" value="${item.id || 'N/A'}">
             <input type="hidden" name="lamp_name" value="${popupTitle}">
             <input type="hidden" name="gps_coords" value="${gpsCoords}">
@@ -666,7 +667,7 @@ Odkaz do aplikace: ${appUrl}`;
               Fotografie (volitelné):
               <input type="file" name="upload" accept="image/*" class="popup-form-input">
             </label>
-            <button type="submit" class="popup-button">Nahlásit závadu</button>
+            <button type="submit" class="popup-button">Odeslat</button>
           </form>
         </div>`;
     } else if (item.category === "hladina") {
@@ -738,14 +739,37 @@ Odkaz do aplikace: ${appUrl}`;
     if (item.category === "lampy" || item.category === "kose") {
       marker.on('popupopen', () => {
         const popup = marker.getPopup();
-        const form = popup.getElement()?.querySelector('.lamp-report-form');
-        if (form) {
-          form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            
-            // Check if file is included
-            const fileInput = form.querySelector('input[type="file"]');
+        const popupElement = popup.getElement();
+        if (!popupElement) return;
+        
+        // Handle "Nahlásit závadu" button click
+        const showFormBtn = popupElement.querySelector('.show-report-form-btn');
+        const form = popupElement.querySelector('.lamp-report-form');
+        
+        if (showFormBtn && form) {
+          // Reset form visibility when popup opens
+          showFormBtn.classList.remove('hidden');
+          form.classList.add('hidden');
+          form.reset();
+          
+        // Remove existing listeners to prevent duplicates
+        const newShowBtn = showFormBtn.cloneNode(true);
+        const newForm = form.cloneNode(true);
+        showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
+        form.parentNode?.replaceChild(newForm, form);
+        
+        newShowBtn.addEventListener('click', () => {
+          newShowBtn.classList.add('hidden');
+          newForm.classList.remove('hidden');
+        });
+        
+        // Add form submit handler
+        newForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const formData = new FormData(newForm);
+          
+          // Check if file is included
+          const fileInput = newForm.querySelector('input[type="file"]');
             if (fileInput && fileInput.files && fileInput.files.length > 0) {
               const file = fileInput.files[0];
               console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
@@ -755,7 +779,7 @@ Odkaz do aplikace: ${appUrl}`;
               }
             }
             
-            const submitButton = form.querySelector('button[type="submit"]');
+            const submitButton = newForm.querySelector('button[type="submit"]');
             const originalText = submitButton?.textContent;
             
             if (submitButton) {
@@ -801,7 +825,7 @@ Odkaz do aplikace: ${appUrl}`;
               console.error('Chyba při odesílání formuláře:', error);
               if (submitButton) {
                 submitButton.disabled = false;
-                submitButton.textContent = originalText || 'Nahlásit závadu';
+                submitButton.textContent = originalText || 'Odeslat';
               }
               showToastNotification('Chyba při odesílání', error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
             }
@@ -840,7 +864,8 @@ Odkaz do aplikace: ${appUrl}`;
         <div><span>Popis:</span><strong>${area.description || "Zeleň"}</strong></div>
       </div>
       <div class="popup-actions">
-        <form class="lamp-report-form" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
+        <button class="popup-button show-report-form-btn" data-category="zelen" data-item-name="${area.name}" data-gps="${gpsCoords}" data-app-url="${appUrl}">Nahlásit závadu</button>
+        <form class="lamp-report-form hidden" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
           <input type="hidden" name="form_type" value="zelen_report">
           <input type="hidden" name="zelen_name" value="${area.name}">
           <input type="hidden" name="gps_coords" value="${gpsCoords}">
@@ -857,7 +882,7 @@ Odkaz do aplikace: ${appUrl}`;
             Fotografie (volitelné):
             <input type="file" name="upload" accept="image/*" class="popup-form-input">
           </label>
-          <button type="submit" class="popup-button">Požádat o údržbu</button>
+          <button type="submit" class="popup-button">Odeslat</button>
         </form>
       </div>
     `;
@@ -867,14 +892,37 @@ Odkaz do aplikace: ${appUrl}`;
     // Add form submit handler for zelen
     polygon.on('popupopen', () => {
       const popup = polygon.getPopup();
-      const form = popup.getElement()?.querySelector('.lamp-report-form');
-      if (form) {
-        form.addEventListener('submit', async (e) => {
+      const popupElement = popup.getElement();
+      if (!popupElement) return;
+      
+      // Handle "Nahlásit závadu" button click
+      const showFormBtn = popupElement.querySelector('.show-report-form-btn');
+      const form = popupElement.querySelector('.lamp-report-form');
+      
+      if (showFormBtn && form) {
+        // Reset form visibility when popup opens
+        showFormBtn.classList.remove('hidden');
+        form.classList.add('hidden');
+        form.reset();
+        
+        // Remove existing listeners to prevent duplicates
+        const newShowBtn = showFormBtn.cloneNode(true);
+        const newForm = form.cloneNode(true);
+        showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
+        form.parentNode?.replaceChild(newForm, form);
+        
+        newShowBtn.addEventListener('click', () => {
+          newShowBtn.classList.add('hidden');
+          newForm.classList.remove('hidden');
+        });
+        
+        // Add form submit handler
+        newForm.addEventListener('submit', async (e) => {
           e.preventDefault();
-          const formData = new FormData(form);
+          const formData = new FormData(newForm);
           
           // Check if file is included
-          const fileInput = form.querySelector('input[type="file"]');
+          const fileInput = newForm.querySelector('input[type="file"]');
           if (fileInput && fileInput.files && fileInput.files.length > 0) {
             const file = fileInput.files[0];
             console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
@@ -884,7 +932,7 @@ Odkaz do aplikace: ${appUrl}`;
             }
           }
           
-          const submitButton = form.querySelector('button[type="submit"]');
+          const submitButton = newForm.querySelector('button[type="submit"]');
           const originalText = submitButton?.textContent;
           
           if (submitButton) {
@@ -929,7 +977,7 @@ Odkaz do aplikace: ${appUrl}`;
             console.error('Chyba při odesílání formuláře:', error);
             if (submitButton) {
               submitButton.disabled = false;
-              submitButton.textContent = originalText || 'Požádat o údržbu';
+              submitButton.textContent = originalText || 'Odeslat';
             }
             showToastNotification('Chyba při odesílání', error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
           }

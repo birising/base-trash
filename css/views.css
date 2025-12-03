@@ -1707,15 +1707,15 @@
   height: 48px;
   object-fit: cover;
   border-radius: 8px;
-  border: 2px solid var(--border);
+  border: 2px solid rgba(5, 150, 105, 0.4);
   transition: all 0.2s ease;
   background: rgba(255, 255, 255, 0.05);
 }
 
 .zavady-photos-preview:hover .zavady-photo-thumb {
   transform: scale(1.1);
-  border-color: var(--accent);
-  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.3);
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
 }
 
 .zavady-photo-placeholder {
@@ -1726,7 +1726,7 @@
   justify-content: center;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  border: 2px solid var(--border);
+  border: 2px solid rgba(5, 150, 105, 0.4);
 }
 
 .zavady-photo-icon {
@@ -1738,14 +1738,14 @@
   position: absolute;
   top: -4px;
   right: -4px;
-  background: linear-gradient(135deg, #f97316, #f59e0b);
-  color: #0b1220;
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #ffffff;
   font-weight: 800;
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 10px;
   border: 2px solid rgba(11, 18, 32, 0.9);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
   min-width: 20px;
   text-align: center;
 }
@@ -1998,13 +1998,18 @@
 }
 
 :root[data-theme="light"] .zavady-photo-thumb {
-  border-color: rgba(15, 23, 42, 0.15);
+  border-color: rgba(5, 150, 105, 0.4);
   background: #ffffff;
+}
+
+:root[data-theme="light"] .zavady-photos-preview:hover .zavady-photo-thumb {
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
 :root[data-theme="light"] .zavady-photo-placeholder {
   background: #f1f5f9;
-  border-color: rgba(15, 23, 42, 0.15);
+  border-color: rgba(5, 150, 105, 0.4);
 }
 
 /* Mobile styles for photo gallery */

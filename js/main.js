@@ -89,6 +89,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   await loadAllData();
+  
+  // Load zavady data for dashboard counter
+  try {
+    await loadZavadyData();
+    updateCounters();
+  } catch (error) {
+    console.warn('Nepodařilo se načíst data závad pro dashboard:', error);
+  }
 
   let mapContainer = document.getElementById("map");
   if (!mapContainer) {
@@ -215,15 +223,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   };
 
   const counters = {
-    kose: document.getElementById("countKose"),
     lampy: document.getElementById("countLampy"),
     kontejnery: document.getElementById("countKontejnery"),
-    zelen: document.getElementById("countZelen"),
+    zavady: document.getElementById("countZavady"),
     hladina: document.getElementById("countHladina"),
     odpad: document.getElementById("countOdpad"),
   };
 
-  const zelenSummary = document.getElementById("zelenSummary");
+  const zavadySummary = document.getElementById("zavadySummary");
 
   const levelReading = document.getElementById("levelReading");
   const streamLevelEl = document.getElementById("streamLevel");
@@ -863,10 +870,8 @@ Odkaz do aplikace: ${appUrl}`;
   }
 
   function updateCounters() {
-    if (counters.kose) counters.kose.textContent = dataKose.length;
     if (counters.lampy) counters.lampy.textContent = dataLampy.length;
     if (counters.kontejnery) counters.kontejnery.textContent = dataKontejnery.length;
-    if (counters.zelen) counters.zelen.textContent = dataZelene.length;
     if (counters.kriminalita) counters.kriminalita.textContent = (dataKriminalita && dataKriminalita.length) ? dataKriminalita.length : 0;
     if (counters.hladina) {
       counters.hladina.textContent = streamState.level ? streamState.level : `${dataHladina.length} senzor`;
@@ -874,9 +879,23 @@ Odkaz do aplikace: ${appUrl}`;
     if (counters.odpad && nextPickupSummaryEl) {
       counters.odpad.textContent = nextPickupSummaryEl.textContent || "–";
     }
-    if (zelenSummary) {
-      const latest = dataZelene[0]?.lastMowed || "–";
-      zelenSummary.textContent = `Poslední sečení: ${latest}`;
+    // Count active (unresolved) zavady
+    if (counters.zavady) {
+      const activeZavady = (dataZavady && Array.isArray(dataZavady)) 
+        ? dataZavady.filter(z => !z.resolved).length 
+        : 0;
+      counters.zavady.textContent = activeZavady;
+    }
+    if (zavadySummary) {
+      const totalZavady = (dataZavady && Array.isArray(dataZavady)) ? dataZavady.length : 0;
+      const activeZavady = (dataZavady && Array.isArray(dataZavady)) 
+        ? dataZavady.filter(z => !z.resolved).length 
+        : 0;
+      if (totalZavady > 0) {
+        zavadySummary.textContent = `${activeZavady} z ${totalZavady} nevyřešených`;
+      } else {
+        zavadySummary.textContent = "Nevyřešené problémy";
+      }
     }
     if (levelReading) {
       const levelText = streamState.level ? `Aktuální: ${streamState.level}` : "Načítám data senzorů…";

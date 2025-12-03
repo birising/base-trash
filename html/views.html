@@ -7,7 +7,7 @@
     <div>
       <div class="eyebrow">Dashboard</div>
       <div class="headline small">Rychlé přehledy</div>
-      <p class="subtitle">Aktuální data z odvozu, hladiny, košů a údržby zeleně na jednom místě.</p>
+      <p class="subtitle">Aktuální data z odvozu, hladiny a hlášených závad na jednom místě.</p>
     </div>
   </div>
   <div class="summary-grid dashboard-grid">
@@ -27,21 +27,13 @@
       <div class="stat-value" id="countHladina">–</div>
       <div class="stat-sub" id="levelReading">Načítám…</div>
     </button>
-    <button class="stat-card" data-category="kose">
+    <button class="stat-card" data-category="zavady">
       <div class="stat-top">
-        <span class="stat-label">Koše</span>
-        <span class="stat-chip">Live</span>
+        <span class="stat-label">Hlášené závady</span>
+        <span class="stat-chip">Aktivní</span>
       </div>
-      <div class="stat-value" id="countKose">0</div>
-      <div class="stat-sub">Naplněnost &amp; telemetrie</div>
-    </button>
-    <button class="stat-card" data-category="zelen">
-      <div class="stat-top">
-        <span class="stat-label">Údržba zeleně</span>
-        <span class="stat-chip">Plán</span>
-      </div>
-      <div class="stat-value" id="countZelen">0</div>
-      <div class="stat-sub" id="zelenSummary">Poslední sečení: –</div>
+      <div class="stat-value" id="countZavady">0</div>
+      <div class="stat-sub" id="zavadySummary">Nevyřešené problémy</div>
     </button>
   </div>
 </section>

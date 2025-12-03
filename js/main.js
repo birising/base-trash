@@ -2130,9 +2130,17 @@ Odkaz do aplikace: ${appUrl}`;
     function updateGallery() {
       if (photos.length === 0) return;
       
-      galleryImage.src = photos[currentIndex];
-      galleryImage.alt = `Fotografie ${currentIndex + 1} z ${photos.length}`;
-      counter.textContent = `${currentIndex + 1} / ${photos.length}`;
+      // Fade out current image
+      galleryImage.style.opacity = '0';
+      
+      setTimeout(() => {
+        galleryImage.src = photos[currentIndex];
+        galleryImage.alt = `Fotografie ${currentIndex + 1} z ${photos.length}`;
+        counter.textContent = `${currentIndex + 1} / ${photos.length}`;
+        
+        // Fade in new image
+        galleryImage.style.opacity = '1';
+      }, 150);
       
       // Update thumbnails
       thumbnailsContainer.innerHTML = photos.map((photo, index) => `
@@ -2144,6 +2152,12 @@ Odkaz do aplikace: ${appUrl}`;
           loading="lazy"
         >
       `).join('');
+      
+      // Scroll active thumbnail into view
+      const activeThumb = thumbnailsContainer.querySelector('.zavady-photo-thumbnail.active');
+      if (activeThumb) {
+        activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
       
       // Update prev/next buttons
       if (prevBtn) prevBtn.style.display = photos.length > 1 ? 'flex' : 'none';

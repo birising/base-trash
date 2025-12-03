@@ -3106,6 +3106,22 @@ Odkaz do aplikace: ${appUrl}`;
       }),
     }).addTo(reportZavadaMapInstance);
     
+    // Pan and zoom to selected location for better visibility
+    if (reportZavadaMapInstance) {
+      reportZavadaMapInstance.panTo([lat, lng], {
+        animate: true,
+        duration: 0.5
+      });
+      // Zoom in if zoom level is too low
+      const currentZoom = reportZavadaMapInstance.getZoom();
+      if (currentZoom < 17) {
+        reportZavadaMapInstance.setView([lat, lng], 17, {
+          animate: true,
+          duration: 0.5
+        });
+      }
+    }
+    
     // Update hidden inputs
     if (reportZavadaSelectedId) reportZavadaSelectedId.value = id || '';
     if (reportZavadaSelectedLat) reportZavadaSelectedLat.value = lat;

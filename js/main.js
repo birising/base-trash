@@ -2124,6 +2124,9 @@ Odkaz do aplikace: ${appUrl}`;
     const hash = window.location.hash.slice(1); // Remove #
     if (!hash) return;
     
+    // Ignore simple category names (like #zavady, #hasici) - these are handled by setActiveCategory
+    if (hash && !hash.includes('/')) return;
+    
     const match = hash.match(/^(\w+)\/(.+)$/);
     if (!match) return;
     

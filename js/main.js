@@ -959,6 +959,11 @@ Odkaz do aplikace: ${appUrl}`;
     const isZavadyView = category === "zavady";
     const isMapCategory = mapCategories.includes(category) && category !== "kriminalita";
     const isGreenspace = category === "zelen";
+    
+    // If switching to zavady view, clear any deep link hash to ensure clean navigation
+    if (isZavadyView && window.location.hash && window.location.hash.match(/^#\w+\//)) {
+      window.location.hash = '#zavady';
+    }
 
     // Always keep the map layers in sync with the chosen category.
     // CRITICAL: Show map view FIRST before any map operations
@@ -1799,7 +1804,7 @@ Odkaz do aplikace: ${appUrl}`;
                 return `
                   <tr>
                     <td>${reportedDate}</td>
-                    <td><a href="${categoryLink}" class="zavady-category-link">${categoryLabel}</a></td>
+                    <td><a href="${categoryLink}" class="zavady-category-link" data-return-to="zavady">${categoryLabel}</a></td>
                     <td>${description}</td>
                     <td><span class="zavady-status" style="color: ${statusColor}">${statusText}</span></td>
                     <td>${resolvedDate}</td>
@@ -1827,6 +1832,17 @@ Odkaz do aplikace: ${appUrl}`;
           }
           // Re-render with new sort
           renderZavady(zavady);
+        });
+      });
+      
+      // Add click handlers for category links - store return info
+      const categoryLinks = zavadyList.querySelectorAll('.zavady-category-link[data-return-to]');
+      categoryLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          const returnTo = link.dataset.returnTo;
+          if (returnTo) {
+            sessionStorage.setItem('returnToView', returnTo);
+          }
         });
       });
     } catch (renderError) {

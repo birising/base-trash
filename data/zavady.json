@@ -11,7 +11,7 @@
     "resolved_date": null,
     "email": "obcan@example.cz",
     "photos": [
-      "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady/1/photo1.jpg"
+      "assets/1FDA3436-0846-4F13-9EB5-AF2EBD5622CA_1_102_o-3391a21a-410a-40ae-a985-c475f7f706ee.png"
     ]
   },
   {
@@ -25,8 +25,8 @@
     "resolved_date": "2025-01-18T09:00:00Z",
     "email": "obcan2@example.cz",
     "photos": [
-      "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady/2/photo1.jpg",
-      "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady/2/photo2.jpg"
+      "assets/74224C5E-6E9F-45E1-8817-EC9D7A26F947_1_102_o-36061743-1a26-4328-902a-b0486d3a2f7b.png",
+      "assets/5D5868AA-6D25-4515-A0D7-42D141D2526F_1_102_o-fb3f25c0-2a3c-41ba-8992-2bd8dc1beb3e.png"
     ]
   },
   {
@@ -41,7 +41,7 @@
     "resolved_date": "2025-01-11T16:30:00Z",
     "email": "obcan3@example.cz",
     "photos": [
-      "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady/3/photo1.jpg"
+      "assets/1FDA3436-0846-4F13-9EB5-AF2EBD5622CA_1_102_o-3391a21a-410a-40ae-a985-c475f7f706ee.png"
     ]
   },
   {
@@ -68,9 +68,9 @@
     "resolved_date": "2025-01-14T12:00:00Z",
     "email": "obcan5@example.cz",
     "photos": [
-      "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady/5/photo1.jpg",
-      "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady/5/photo2.jpg",
-      "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady/5/photo3.jpg"
+      "assets/74224C5E-6E9F-45E1-8817-EC9D7A26F947_1_102_o-36061743-1a26-4328-902a-b0486d3a2f7b.png",
+      "assets/5D5868AA-6D25-4515-A0D7-42D141D2526F_1_102_o-fb3f25c0-2a3c-41ba-8992-2bd8dc1beb3e.png",
+      "assets/1FDA3436-0846-4F13-9EB5-AF2EBD5622CA_1_102_o-3391a21a-410a-40ae-a985-c475f7f706ee.png"
     ]
   },
   {

@@ -1509,6 +1509,9 @@
   flex-direction: column;
   gap: 12px;
   margin: 16px 0;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .report-zavada-map-label {
@@ -1538,6 +1541,9 @@
   color: var(--text-main);
   font-weight: 600;
   font-size: 14px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .report-zavada-selected-icon {
@@ -1556,6 +1562,10 @@
 
 .report-zavada-selected-text {
   flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 /* Light theme for report zavada map */

@@ -2813,6 +2813,7 @@ Odkaz do aplikace: ${appUrl}`;
     
     let source = [];
     let isPolygon = false;
+    let allowFreeClick = false;
     
     if (category === 'lampy') {
       source = dataLampy || [];
@@ -2821,9 +2822,15 @@ Odkaz do aplikace: ${appUrl}`;
     } else if (category === 'zelen') {
       source = dataZelene || [];
       isPolygon = true;
+      allowFreeClick = true;
+    } else if (category === 'ostatni') {
+      // For "ostatni", allow clicking anywhere on the map
+      allowFreeClick = true;
+      // Set default view
+      reportZavadaMapInstance.setView([50.1322, 14.222], 15);
     }
     
-    if (source.length === 0) return;
+    if (source.length === 0 && !allowFreeClick) return;
     
     // Calculate bounds for all objects
     const bounds = [];
@@ -2853,12 +2860,15 @@ Odkaz do aplikace: ${appUrl}`;
         bounds.push(polygon.getBounds());
       } else if (item.lat && item.lng) {
         // Create marker for lampy/kose
+        const isKose = category === 'kose';
         const marker = L.marker([item.lat, item.lng], {
           icon: L.divIcon({
             className: 'report-zavada-marker',
-            html: `<div style="background: ${category === 'lampy' ? '#f97316' : '#10b981'}; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${item.id || '?'}</div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
+            html: isKose 
+              ? `<div style="color: ${category === 'lampy' ? '#f97316' : '#10b981'}; font-weight: 700; font-size: 14px; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">${item.id || '?'}</div>`
+              : `<div style="background: ${category === 'lampy' ? '#f97316' : '#10b981'}; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${item.id || '?'}</div>`,
+            iconSize: isKose ? [20, 20] : [24, 24],
+            iconAnchor: isKose ? [10, 10] : [12, 12],
           }),
         });
         
@@ -2879,21 +2889,22 @@ Odkaz do aplikace: ${appUrl}`;
       } else {
         reportZavadaMapInstance.fitBounds(bounds, { padding: [20, 20] });
       }
-    } else if (isPolygon) {
-      // If no polygons, set default view for zelen
+    } else if (isPolygon || category === 'ostatni') {
+      // If no polygons or for ostatni, set default view
       reportZavadaMapInstance.setView([50.1322, 14.222], 15);
     }
     
-    // For zelen category, allow clicking anywhere on the map
-    if (isPolygon && category === 'zelen') {
+    // For zelen and ostatni categories, allow clicking anywhere on the map
+    if (allowFreeClick) {
       reportZavadaMapInstance.on('click', (e) => {
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
+        const name = category === 'zelen' ? 'Údržba zeleně' : 'Ostatní';
         selectObject(
-          { lat, lng, name: 'Údržba zeleně' },
+          { lat, lng, name },
           null,
           [lat, lng],
-          `Údržba zeleně (${lat.toFixed(6)}, ${lng.toFixed(6)})`
+          `${name} (${lat.toFixed(6)}, ${lng.toFixed(6)})`
         );
       });
     } else {
@@ -2947,10 +2958,24 @@ Odkaz do aplikace: ${appUrl}`;
   if (reportZavadaCategorySelect) {
     reportZavadaCategorySelect.addEventListener('change', (e) => {
       const category = e.target.value;
-      if (category === 'kose' || category === 'lampy' || category === 'zelen') {
+      const mapLabel = document.querySelector('.report-zavada-map-label');
+      
+      if (category === 'kose' || category === 'lampy' || category === 'zelen' || category === 'ostatni') {
         if (reportZavadaMapContainer) {
           reportZavadaMapContainer.classList.remove('hidden');
         }
+        
+        // Update map label based on category
+        if (mapLabel) {
+          if (category === 'ostatni') {
+            mapLabel.textContent = 'Klikněte na mapě pro výběr místa:';
+          } else if (category === 'zelen') {
+            mapLabel.textContent = 'Vyberte objekt na mapě nebo klikněte kdekoliv:';
+          } else {
+            mapLabel.textContent = 'Vyberte objekt na mapě:';
+          }
+        }
+        
         setTimeout(() => {
           showObjectsOnMap(category);
         }, 100);

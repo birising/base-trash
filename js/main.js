@@ -1959,6 +1959,7 @@ Odkaz do aplikace: ${appUrl}`;
                   <span>Dní v řešení</span>
                   ${getSortIcon('days')}
                 </th>
+                <th>Fotografie</th>
               </tr>
             </thead>
             <tbody>
@@ -1972,6 +1973,24 @@ Odkaz do aplikace: ${appUrl}`;
                 const statusColor = getStatusColor(item.resolved);
                 const statusText = getStatusText(item.resolved);
                 const description = item.description || item.message || 'Bez popisu';
+                const photos = item.photos || [];
+                const hasPhotos = Array.isArray(photos) && photos.length > 0;
+                
+                // Generate photo preview HTML
+                let photoPreview = '–';
+                if (hasPhotos) {
+                  const firstPhoto = photos[0];
+                  const photoCount = photos.length;
+                  photoPreview = `
+                    <div class="zavady-photos-preview" data-zavada-id="${item.id}" data-photos='${JSON.stringify(photos)}'>
+                      <img src="${firstPhoto}" alt="Náhled fotografie" class="zavady-photo-thumb" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <div class="zavady-photo-placeholder" style="display: none;">
+                        <span class="zavady-photo-icon">📷</span>
+                      </div>
+                      ${photoCount > 1 ? `<span class="zavady-photo-count">+${photoCount - 1}</span>` : ''}
+                    </div>
+                  `;
+                }
                 
                 return `
                   <tr>
@@ -1981,6 +2000,7 @@ Odkaz do aplikace: ${appUrl}`;
                     <td><span class="zavady-status" style="color: ${statusColor}">${statusText}</span></td>
                     <td>${resolvedDate}</td>
                     <td>${days !== '–' ? `${days} dní` : '–'}</td>
+                    <td class="zavady-photos-cell">${photoPreview}</td>
                   </tr>
                 `;
               }).join('')}
@@ -2017,6 +2037,17 @@ Odkaz do aplikace: ${appUrl}`;
           }
         });
       });
+      
+      // Add click handlers for photo previews - open gallery
+      const photoPreviews = zavadyList.querySelectorAll('.zavady-photos-preview');
+      photoPreviews.forEach(preview => {
+        preview.addEventListener('click', () => {
+          const photos = JSON.parse(preview.dataset.photos || '[]');
+          if (photos.length > 0) {
+            openZavadyPhotoGallery(photos);
+          }
+        });
+      });
     } catch (renderError) {
       console.error('Kritická chyba při renderování závad:', renderError);
       zavadyList.innerHTML = `
@@ -2028,6 +2059,122 @@ Odkaz do aplikace: ${appUrl}`;
     }
   }
 
+  // Photo gallery modal for zavady
+  function openZavadyPhotoGallery(photos) {
+    if (!photos || !Array.isArray(photos) || photos.length === 0) return;
+    
+    // Create or get gallery modal
+    let galleryModal = document.getElementById('zavadyPhotoGallery');
+    if (!galleryModal) {
+      galleryModal = document.createElement('div');
+      galleryModal.id = 'zavadyPhotoGallery';
+      galleryModal.className = 'zavady-photo-gallery-modal hidden';
+      galleryModal.innerHTML = `
+        <div class="zavady-photo-gallery-backdrop"></div>
+        <div class="zavady-photo-gallery-content">
+          <div class="zavady-photo-gallery-header">
+            <h3>Fotografie závady</h3>
+            <button class="zavady-photo-gallery-close" aria-label="Zavřít">&times;</button>
+          </div>
+          <div class="zavady-photo-gallery-main">
+            <img class="zavady-photo-gallery-image" src="" alt="Fotografie závady">
+            <button class="zavady-photo-gallery-prev" aria-label="Předchozí">‹</button>
+            <button class="zavady-photo-gallery-next" aria-label="Další">›</button>
+          </div>
+          <div class="zavady-photo-gallery-thumbnails"></div>
+          <div class="zavady-photo-gallery-info">
+            <span class="zavady-photo-gallery-counter"></span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(galleryModal);
+      
+      // Add event listeners
+      const closeBtn = galleryModal.querySelector('.zavady-photo-gallery-close');
+      const backdrop = galleryModal.querySelector('.zavady-photo-gallery-backdrop');
+      const prevBtn = galleryModal.querySelector('.zavady-photo-gallery-prev');
+      const nextBtn = galleryModal.querySelector('.zavady-photo-gallery-next');
+      
+      const closeGallery = () => {
+        galleryModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      };
+      
+      closeBtn?.addEventListener('click', closeGallery);
+      backdrop?.addEventListener('click', closeGallery);
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', function handleGalleryKeys(e) {
+        if (!galleryModal.classList.contains('hidden')) {
+          if (e.key === 'Escape') {
+            closeGallery();
+            document.removeEventListener('keydown', handleGalleryKeys);
+          } else if (e.key === 'ArrowLeft') {
+            prevBtn?.click();
+          } else if (e.key === 'ArrowRight') {
+            nextBtn?.click();
+          }
+        }
+      });
+    }
+    
+    // Update gallery with photos
+    const galleryImage = galleryModal.querySelector('.zavady-photo-gallery-image');
+    const thumbnailsContainer = galleryModal.querySelector('.zavady-photo-gallery-thumbnails');
+    const counter = galleryModal.querySelector('.zavady-photo-gallery-counter');
+    const prevBtn = galleryModal.querySelector('.zavady-photo-gallery-prev');
+    const nextBtn = galleryModal.querySelector('.zavady-photo-gallery-next');
+    
+    let currentIndex = 0;
+    
+    function updateGallery() {
+      if (photos.length === 0) return;
+      
+      galleryImage.src = photos[currentIndex];
+      galleryImage.alt = `Fotografie ${currentIndex + 1} z ${photos.length}`;
+      counter.textContent = `${currentIndex + 1} / ${photos.length}`;
+      
+      // Update thumbnails
+      thumbnailsContainer.innerHTML = photos.map((photo, index) => `
+        <img 
+          src="${photo}" 
+          alt="Náhled ${index + 1}" 
+          class="zavady-photo-thumbnail ${index === currentIndex ? 'active' : ''}"
+          data-index="${index}"
+          loading="lazy"
+        >
+      `).join('');
+      
+      // Update prev/next buttons
+      if (prevBtn) prevBtn.style.display = photos.length > 1 ? 'flex' : 'none';
+      if (nextBtn) nextBtn.style.display = photos.length > 1 ? 'flex' : 'none';
+      
+      // Add thumbnail click handlers
+      thumbnailsContainer.querySelectorAll('.zavady-photo-thumbnail').forEach(thumb => {
+        thumb.addEventListener('click', () => {
+          currentIndex = parseInt(thumb.dataset.index);
+          updateGallery();
+        });
+      });
+    }
+    
+    prevBtn?.addEventListener('click', () => {
+      currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+      updateGallery();
+    });
+    
+    nextBtn?.addEventListener('click', () => {
+      currentIndex = (currentIndex + 1) % photos.length;
+      updateGallery();
+    });
+    
+    // Show gallery
+    currentIndex = 0;
+    updateGallery();
+    galleryModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  
   function goToDashboard() {
     showDashboard();
   }
@@ -2860,15 +3007,32 @@ Odkaz do aplikace: ${appUrl}`;
           );
         } else {
           // Try to get error message from response
-          let errorMsg = 'Odeslání selhalo';
+          let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+          let errorDetails = null;
+          
           try {
-            const errorData = await response.json();
-            errorMsg = errorData.error || errorMsg;
-            console.error('Formspree error:', errorData);
+            const errorText = await response.text();
+            console.error('Formspree error response:', errorText);
+            
+            // Try to parse as JSON
+            try {
+              errorDetails = JSON.parse(errorText);
+              errorMsg = errorDetails.error || errorDetails.message || errorMsg;
+            } catch (e) {
+              // If not JSON, use text response
+              if (errorText && errorText.length < 200) {
+                errorMsg = errorText;
+              }
+            }
           } catch (e) {
-            // If can't parse JSON, use status text
-            errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+            console.error('Error reading response:', e);
           }
+          
+          // Provide more specific error message for 400
+          if (response.status === 400) {
+            errorMsg = errorDetails?.error || errorDetails?.message || 'Neplatný požadavek. Zkontrolujte, zda jsou všechna pole vyplněna správně a soubor není příliš velký.';
+          }
+          
           throw new Error(errorMsg);
         }
       } catch (error) {

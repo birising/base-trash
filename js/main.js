@@ -719,16 +719,11 @@ Odkaz do aplikace: ${appUrl}`;
               });
               
               if (response.ok) {
-                const popupElement = popup.getElement();
-                if (popupElement) {
-                  popupElement.innerHTML = `
-                    <div style="padding: 20px; text-align: center;">
-                      <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
-                      <h3 style="margin: 0 0 10px 0; color: #0b1220;">Hlášení odesláno!</h3>
-                      <p style="margin: 0; color: #334155; font-size: 14px;">Děkujeme za nahlášení závady. Ozveme se vám co nejdříve.</p>
-                    </div>
-                  `;
-                }
+                // Close popup
+                marker.closePopup();
+                
+                // Show toast notification
+                showToastNotification('Hlášení odesláno!', 'Děkujeme za nahlášení závady. Ozveme se vám co nejdříve.', 'success');
               } else {
                 throw new Error('Odeslání selhalo');
               }
@@ -1986,4 +1981,64 @@ Odkaz do aplikace: ${appUrl}`;
       console.error('Nepodařilo se načíst data kriminality na pozadí:', error);
     });
   }
+  
+  // Toast notification function
+  function showToastNotification(title, message, type = 'success') {
+    // Remove existing toast if any
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) {
+      existingToast.remove();
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.innerHTML = `
+      <div class="toast-icon">${type === 'success' ? '✅' : '⚠️'}</div>
+      <div class="toast-content">
+        <div class="toast-title">${title}</div>
+        <div class="toast-message">${message}</div>
+      </div>
+      <button class="toast-close" aria-label="Zavřít">&times;</button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => {
+      toast.classList.add('toast-show');
+    }, 10);
+    
+    // Auto-close after 5 seconds
+    const autoClose = setTimeout(() => {
+      closeToast(toast);
+    }, 5000);
+    
+    // Close button handler
+    const closeBtn = toast.querySelector('.toast-close');
+    closeBtn.addEventListener('click', () => {
+      clearTimeout(autoClose);
+      closeToast(toast);
+    });
+    
+    // Click outside to close
+    toast.addEventListener('click', (e) => {
+      if (e.target === toast) {
+        clearTimeout(autoClose);
+        closeToast(toast);
+      }
+    });
+  }
+  
+  function closeToast(toast) {
+    toast.classList.remove('toast-show');
+    toast.classList.add('toast-hide');
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.remove();
+      }
+    }, 300);
+  }
+  
+  // Make function globally available
+  window.showToastNotification = showToastNotification;
 });

@@ -2127,20 +2127,66 @@ Odkaz do aplikace: ${appUrl}`;
     
     let currentIndex = 0;
     
+    // Preload all images to prevent reloading when switching
+    const imageCache = new Map();
+    const preloadImages = () => {
+      photos.forEach((photoUrl) => {
+        if (!imageCache.has(photoUrl)) {
+          const img = new Image();
+          img.src = photoUrl;
+          imageCache.set(photoUrl, img);
+        }
+      });
+    };
+    
+    // Preload images immediately
+    preloadImages();
+    
     function updateGallery() {
       if (photos.length === 0) return;
       
-      // Fade out current image
-      galleryImage.style.opacity = '0';
+      const newPhotoUrl = photos[currentIndex];
+      const cachedImage = imageCache.get(newPhotoUrl);
       
-      setTimeout(() => {
-        galleryImage.src = photos[currentIndex];
-        galleryImage.alt = `Fotografie ${currentIndex + 1} z ${photos.length}`;
-        counter.textContent = `${currentIndex + 1} / ${photos.length}`;
-        
-        // Fade in new image
+      // Update text immediately
+      galleryImage.alt = `Fotografie ${currentIndex + 1} z ${photos.length}`;
+      counter.textContent = `${currentIndex + 1} / ${photos.length}`;
+      
+      // Check if image is already loaded in cache
+      if (cachedImage && cachedImage.complete && cachedImage.naturalWidth > 0) {
+        // Image is already loaded, switch immediately without fade
+        if (galleryImage.src !== newPhotoUrl) {
+          galleryImage.src = newPhotoUrl;
+        }
         galleryImage.style.opacity = '1';
-      }, 150);
+      } else {
+        // Image not loaded yet, use fade transition
+        galleryImage.style.opacity = '0';
+        
+        // Set src after fade out
+        setTimeout(() => {
+          galleryImage.src = newPhotoUrl;
+          
+          // If image is already in browser cache, show immediately
+          if (galleryImage.complete && galleryImage.naturalWidth > 0) {
+            galleryImage.style.opacity = '1';
+          } else {
+            // Wait for image to load
+            const onLoad = () => {
+              galleryImage.style.opacity = '1';
+              galleryImage.removeEventListener('load', onLoad);
+              galleryImage.removeEventListener('error', onError);
+            };
+            const onError = () => {
+              galleryImage.style.opacity = '1';
+              galleryImage.removeEventListener('load', onLoad);
+              galleryImage.removeEventListener('error', onError);
+            };
+            galleryImage.addEventListener('load', onLoad);
+            galleryImage.addEventListener('error', onError);
+          }
+        }, 150);
+      }
       
       // Update thumbnails
       thumbnailsContainer.innerHTML = photos.map((photo, index) => `

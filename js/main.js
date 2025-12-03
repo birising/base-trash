@@ -752,6 +752,7 @@ Odkaz do aplikace: ${appUrl}`;
             }
             
             try {
+              // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
               const response = await fetch('https://formspree.io/f/xkgdbplk', {
                 method: 'POST',
                 body: formData,
@@ -864,6 +865,7 @@ Odkaz do aplikace: ${appUrl}`;
           }
           
           try {
+            // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
             const response = await fetch('https://formspree.io/f/xkgdbplk', {
               method: 'POST',
               body: formData,
@@ -2760,6 +2762,14 @@ Odkaz do aplikace: ${appUrl}`;
       
       try {
         const formData = new FormData(reportZavadaForm);
+        
+        // Log file info for debugging
+        const fileInput = reportZavadaForm.querySelector('input[type="file"]');
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+          console.log('Odesílám soubor:', fileInput.files[0].name, 'velikost:', fileInput.files[0].size, 'bytes');
+        }
+        
+        // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
         const response = await fetch(reportZavadaForm.action, {
           method: 'POST',
           body: formData,

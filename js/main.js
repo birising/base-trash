@@ -743,6 +743,18 @@ Odkaz do aplikace: ${appUrl}`;
           form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
+            
+            // Check if file is included
+            const fileInput = form.querySelector('input[type="file"]');
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+              const file = fileInput.files[0];
+              console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
+              // Ensure file is in FormData
+              if (!formData.has('upload')) {
+                formData.append('upload', file);
+              }
+            }
+            
             const submitButton = form.querySelector('button[type="submit"]');
             const originalText = submitButton?.textContent;
             
@@ -856,6 +868,18 @@ Odkaz do aplikace: ${appUrl}`;
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
           const formData = new FormData(form);
+          
+          // Check if file is included
+          const fileInput = form.querySelector('input[type="file"]');
+          if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
+            // Ensure file is in FormData
+            if (!formData.has('upload')) {
+              formData.append('upload', file);
+            }
+          }
+          
           const submitButton = form.querySelector('button[type="submit"]');
           const originalText = submitButton?.textContent;
           

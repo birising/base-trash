@@ -582,6 +582,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       const statusBadges = status.states
         .map((state) => `<span class="status-chip status-${state.tone}">${state.text}</span>`)
         .join("");
+      // GPS souřadnice
+      const gpsCoords = `${item.lat}, ${item.lng}`;
+      
+      // Odkaz do aplikace s konkrétním košem
+      const appUrl = item.id != null 
+        ? `${window.location.origin}${window.location.pathname}#kose/${item.id}`
+        : `${window.location.origin}${window.location.pathname}#kose/${item.lat},${item.lng}`;
+      
       popupContent += `
         <div class="popup-details">
           <div><span>Naplněnost:</span><strong>${fill}</strong></div>
@@ -591,6 +599,28 @@ window.addEventListener("DOMContentLoaded", async () => {
         </div>
         <div class="popup-status popup-${status.severity}">
           <div class="status-chip-row">${statusBadges}</div>
+        </div>
+        <div class="popup-actions">
+          <form class="lamp-report-form" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="form_type" value="kose_report">
+            <input type="hidden" name="kos_id" value="${item.id || 'N/A'}">
+            <input type="hidden" name="kos_name" value="${popupTitle}">
+            <input type="hidden" name="gps_coords" value="${gpsCoords}">
+            <input type="hidden" name="app_url" value="${appUrl}">
+            <label class="popup-form-label">
+              Váš email:
+              <input type="email" name="email" required class="popup-form-input">
+            </label>
+            <label class="popup-form-label">
+              Popis závady:
+              <textarea name="message" rows="3" class="popup-form-textarea" placeholder="Popište prosím závadu koše..."></textarea>
+            </label>
+            <label class="popup-form-label">
+              Fotografie (volitelné):
+              <input type="file" name="upload" accept="image/*" class="popup-form-input">
+            </label>
+            <button type="submit" class="popup-button">Nahlásit závadu</button>
+          </form>
         </div>`;
     } else if (item.category === "lampy") {
       const subject = encodeURIComponent(`Porucha lampy – ${popupTitle}`);
@@ -704,7 +734,8 @@ Odkaz do aplikace: ${appUrl}`;
     marker.bindPopup(popupContent);
     
     // Add form submission handler for lamp reports
-    if (item.category === "lampy") {
+    // Add form submit handler for lampy, kose
+    if (item.category === "lampy" || item.category === "kose") {
       marker.on('popupopen', () => {
         const popup = marker.getPopup();
         const form = popup.getElement()?.querySelector('.lamp-report-form');
@@ -734,7 +765,8 @@ Odkaz do aplikace: ${appUrl}`;
                 marker.closePopup();
                 
                 // Show toast notification
-                showToastNotification('Hlášení odesláno!', 'Děkujeme za nahlášení závady. Ozveme se vám co nejdříve.', 'success');
+                const categoryName = item.category === "lampy" ? "lampy" : "koše";
+                showToastNotification('Hlášení odesláno!', `Děkujeme za nahlášení závady ${categoryName}. Ozveme se vám co nejdříve.`, 'success');
               } else {
                 throw new Error('Odeslání selhalo');
               }
@@ -743,7 +775,7 @@ Odkaz do aplikace: ${appUrl}`;
                 submitButton.disabled = false;
                 submitButton.textContent = originalText || 'Nahlásit závadu';
               }
-              alert('Chyba při odesílání formuláře. Zkuste to prosím znovu.');
+              showToastNotification('Chyba při odesílání', 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
             }
           });
         }
@@ -780,7 +812,25 @@ Odkaz do aplikace: ${appUrl}`;
         <div><span>Popis:</span><strong>${area.description || "Zeleň"}</strong></div>
       </div>
       <div class="popup-actions">
-        <a class="popup-button" href="mailto:info@beloky.cz?subject=${subject}&body=${body}">Požádat o údržbu</a>
+        <form class="lamp-report-form" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
+          <input type="hidden" name="form_type" value="zelen_report">
+          <input type="hidden" name="zelen_name" value="${area.name}">
+          <input type="hidden" name="gps_coords" value="${gpsCoords}">
+          <input type="hidden" name="app_url" value="${appUrl}">
+          <label class="popup-form-label">
+            Váš email:
+            <input type="email" name="email" required class="popup-form-input">
+          </label>
+          <label class="popup-form-label">
+            Popis závady:
+            <textarea name="message" rows="3" class="popup-form-textarea" placeholder="Popište prosím závadu (např. potřeba posekat, ošetřit...)" required></textarea>
+          </label>
+          <label class="popup-form-label">
+            Fotografie (volitelné):
+            <input type="file" name="upload" accept="image/*" class="popup-form-input">
+          </label>
+          <button type="submit" class="popup-button">Požádat o údržbu</button>
+        </form>
       </div>
     `;
 

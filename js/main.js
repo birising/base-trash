@@ -1419,7 +1419,7 @@ Odkaz do aplikace: ${appUrl}`;
   async function loadHasiciData() {
     if (!hasiciList) return;
     
-    hasiciList.innerHTML = '<div class="loading-state">Načítám zásahy…</div>';
+    hasiciList.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>Načítám zásahy…</span></div>';
     
     const feedUrl = 'https://pkr.kr-stredocesky.cz/pkr/zasahy-jpo/feed.xml';
     
@@ -1622,7 +1622,7 @@ Odkaz do aplikace: ${appUrl}`;
     
     // Check if data is still loading (not yet initialized)
     if (typeof dataKriminalita === 'undefined' || dataKriminalita === null) {
-      kriminalitaList.innerHTML = '<div class="loading-state">Načítám data kriminality…</div>';
+      kriminalitaList.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>Načítám data kriminality…</span></div>';
       return;
     }
     
@@ -1815,7 +1815,7 @@ Odkaz do aplikace: ${appUrl}`;
   async function loadZavadyDataView() {
     if (!zavadyList) return;
     
-    zavadyList.innerHTML = '<div class="loading-state">Načítám hlášené závady…</div>';
+    zavadyList.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>Načítám hlášené závady…</span></div>';
     
     try {
       const zavady = await loadZavadyData();
@@ -1840,7 +1840,7 @@ Odkaz do aplikace: ${appUrl}`;
     
     // Check if data is still loading
     if (typeof dataZavady === 'undefined' || dataZavady === null) {
-      zavadyList.innerHTML = '<div class="loading-state">Načítám data závad…</div>';
+      zavadyList.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>Načítám data závad…</span></div>';
       return;
     }
     
@@ -2031,7 +2031,7 @@ Odkaz do aplikace: ${appUrl}`;
                   const photoCount = photos.length;
                   photoPreview = `
                     <div class="zavady-photos-preview" data-zavada-id="${item.id}" data-photos='${JSON.stringify(photos)}'>
-                      <img src="${firstPhoto}" alt="Náhled fotografie" class="zavady-photo-thumb" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <img src="${firstPhoto}" alt="Náhled fotografie" class="zavady-photo-thumb" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                       <div class="zavady-photo-placeholder" style="display: none;">
                         <span class="zavady-photo-icon">📷</span>
                       </div>
@@ -2074,6 +2074,32 @@ Odkaz do aplikace: ${appUrl}`;
           renderZavady(zavady);
         });
       });
+      
+      // Setup lazy loading with Intersection Observer for photo thumbnails
+      if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              if (img.dataset.src && !img.src) {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+              }
+              observer.unobserve(img);
+            }
+          });
+        }, {
+          rootMargin: '50px'
+        });
+        
+        // Observe all photo thumbnails
+        const photoThumbs = zavadyList.querySelectorAll('.zavady-photo-thumb');
+        photoThumbs.forEach(thumb => {
+          if (thumb.src && !thumb.complete) {
+            imageObserver.observe(thumb);
+          }
+        });
+      }
       
       // Add click handlers for category links - store return info
       const categoryLinks = zavadyList.querySelectorAll('.zavady-category-link[data-return-to]');
@@ -2125,7 +2151,7 @@ Odkaz do aplikace: ${appUrl}`;
           </div>
           <div class="zavady-photo-gallery-main">
             <button class="zavady-photo-gallery-close" aria-label="Zavřít">&times;</button>
-            <img class="zavady-photo-gallery-image" src="" alt="Fotografie závady">
+            <img class="zavady-photo-gallery-image" src="" alt="Fotografie závady" decoding="async">
             <button class="zavady-photo-gallery-prev" aria-label="Předchozí">‹</button>
             <button class="zavady-photo-gallery-next" aria-label="Další">›</button>
           </div>
@@ -2244,6 +2270,7 @@ Odkaz do aplikace: ${appUrl}`;
           class="zavady-photo-thumbnail ${index === currentIndex ? 'active' : ''}"
           data-index="${index}"
           loading="lazy"
+          decoding="async"
         >
       `).join('');
       

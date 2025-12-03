@@ -3107,19 +3107,29 @@ Odkaz do aplikace: ${appUrl}`;
     }).addTo(reportZavadaMapInstance);
     
     // Pan and zoom to selected location for better visibility
+    // Use offset to ensure marker is visible above the modal form
     if (reportZavadaMapInstance) {
-      reportZavadaMapInstance.panTo([lat, lng], {
+      // Calculate offset to position marker above the modal form
+      // The modal form is at the bottom of the map container, so we shift the view up
+      const mapContainer = reportZavadaMapInstance.getContainer();
+      const mapHeight = mapContainer.clientHeight;
+      // Shift marker up by ~30% of map height to be visible above the form
+      const offsetY = Math.floor(mapHeight * 0.3);
+      
+      // Convert pixel offset to lat/lng offset
+      const point = reportZavadaMapInstance.latLngToContainerPoint([lat, lng]);
+      const offsetPoint = L.point(point.x, point.y - offsetY);
+      const offsetLatLng = reportZavadaMapInstance.containerPointToLatLng(offsetPoint);
+      
+      // Zoom in if zoom level is too low
+      const currentZoom = reportZavadaMapInstance.getZoom();
+      const targetZoom = currentZoom < 17 ? 17 : currentZoom;
+      
+      // Pan to offset position with animation
+      reportZavadaMapInstance.setView(offsetLatLng, targetZoom, {
         animate: true,
         duration: 0.5
       });
-      // Zoom in if zoom level is too low
-      const currentZoom = reportZavadaMapInstance.getZoom();
-      if (currentZoom < 17) {
-        reportZavadaMapInstance.setView([lat, lng], 17, {
-          animate: true,
-          duration: 0.5
-        });
-      }
     }
     
     // Update hidden inputs

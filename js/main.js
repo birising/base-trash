@@ -3107,29 +3107,50 @@ Odkaz do aplikace: ${appUrl}`;
     }).addTo(reportZavadaMapInstance);
     
     // Pan and zoom to selected location for better visibility
-    // Use offset to ensure marker is visible above the modal form
+    // Position marker in the upper portion of the map so it's visible above the form fields below
     if (reportZavadaMapInstance) {
-      // Calculate offset to position marker above the modal form
-      // The modal form is at the bottom of the map container, so we shift the view up
+      // Get map container dimensions
       const mapContainer = reportZavadaMapInstance.getContainer();
       const mapHeight = mapContainer.clientHeight;
-      // Shift marker up by ~30% of map height to be visible above the form
-      const offsetY = Math.floor(mapHeight * 0.3);
       
-      // Convert pixel offset to lat/lng offset
-      const point = reportZavadaMapInstance.latLngToContainerPoint([lat, lng]);
-      const offsetPoint = L.point(point.x, point.y - offsetY);
-      const offsetLatLng = reportZavadaMapInstance.containerPointToLatLng(offsetPoint);
+      // We want the marker to appear in the upper 1/4 of the map (25% from top)
+      // This ensures it's visible above the form fields that appear below the map
+      const targetYPercent = 0.25;
+      const targetY = mapHeight * targetYPercent;
       
-      // Zoom in if zoom level is too low
+      // Get current marker position in container pixels
+      const markerPoint = reportZavadaMapInstance.latLngToContainerPoint([lat, lng]);
+      
+      // Calculate how much we need to shift the view up
+      const offsetY = targetY - markerPoint.y;
+      
+      // Zoom in if needed first
       const currentZoom = reportZavadaMapInstance.getZoom();
       const targetZoom = currentZoom < 17 ? 17 : currentZoom;
       
-      // Pan to offset position with animation
-      reportZavadaMapInstance.setView(offsetLatLng, targetZoom, {
-        animate: true,
-        duration: 0.5
-      });
+      if (currentZoom < 17) {
+        // Set zoom first
+        reportZavadaMapInstance.setZoom(targetZoom, {
+          animate: true,
+          duration: 0.3
+        });
+      }
+      
+      // After a brief delay to let zoom settle, pan to position marker correctly
+      setTimeout(() => {
+        // Recalculate after zoom change
+        const newMarkerPoint = reportZavadaMapInstance.latLngToContainerPoint([lat, lng]);
+        const newTargetY = mapHeight * targetYPercent;
+        const finalOffsetY = newTargetY - newMarkerPoint.y;
+        
+        // Pan to position marker in upper portion
+        if (Math.abs(finalOffsetY) > 3) {
+          reportZavadaMapInstance.panBy([0, finalOffsetY], {
+            animate: true,
+            duration: 0.4
+          });
+        }
+      }, currentZoom < 17 ? 350 : 50);
     }
     
     // Update hidden inputs

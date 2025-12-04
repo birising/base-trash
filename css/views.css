@@ -504,6 +504,16 @@
   gap: 14px;
 }
 
+/* Ensure form is hidden by default until button is clicked */
+.leaflet-popup-content .lamp-report-form.hidden {
+  display: none !important;
+}
+
+/* Ensure show button is visible by default */
+.leaflet-popup-content .show-report-form-btn.hidden {
+  display: none !important;
+}
+
 /* Ensure submit button is always at the bottom and visible */
 .leaflet-popup-content .lamp-report-form .popup-button[type="submit"] {
   margin-top: auto;

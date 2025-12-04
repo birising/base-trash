@@ -874,7 +874,14 @@ Odkaz do aplikace: ${appUrl}`;
               if (networkError.message && (networkError.message.includes('CORS') || networkError.message.includes('Failed to fetch') || networkError.message.includes('Load failed'))) {
                 console.log('CORS error detected, but form may have been submitted successfully');
                 // Treat as success - Formspree often redirects which causes CORS errors
-                response = { ok: true, status: 200 };
+                // Create a synthetic response object that mimics Response but without .json() method
+                response = { 
+                  ok: true, 
+                  status: 200,
+                  statusText: 'OK',
+                  json: undefined,
+                  text: undefined
+                };
               } else {
                 console.error('Network error:', networkError);
                 throw new Error('Chyba připojení. Zkontrolujte připojení k internetu.');
@@ -1154,7 +1161,14 @@ Odkaz do aplikace: ${appUrl}`;
             if (networkError.message && (networkError.message.includes('CORS') || networkError.message.includes('Failed to fetch') || networkError.message.includes('Load failed'))) {
               console.log('CORS error detected, but form may have been submitted successfully');
               // Treat as success - Formspree often redirects which causes CORS errors
-              response = { ok: true, status: 200 };
+              // Create a synthetic response object that mimics Response but without .json() method
+              response = { 
+                ok: true, 
+                status: 200,
+                statusText: 'OK',
+                json: undefined,
+                text: undefined
+              };
             } else {
               console.error('Network error:', networkError);
               throw new Error('Chyba připojení. Zkontrolujte připojení k internetu.');
@@ -3553,7 +3567,14 @@ Odkaz do aplikace: ${appUrl}`;
           if (networkError.message && (networkError.message.includes('CORS') || networkError.message.includes('Failed to fetch') || networkError.message.includes('Load failed'))) {
             console.log('CORS error detected, but form may have been submitted successfully');
             // Treat as success - Formspree often redirects which causes CORS errors
-            response = { ok: true, status: 200 };
+            // Create a synthetic response object that mimics Response but without .json() method
+            response = { 
+              ok: true, 
+              status: 200,
+              statusText: 'OK',
+              json: undefined,
+              text: undefined
+            };
           } else {
             // Network error - likely connection issue
             console.error('Network error:', networkError);

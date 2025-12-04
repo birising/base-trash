@@ -499,6 +499,15 @@
 .leaflet-popup-content .lamp-report-form {
   min-width: 100%;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Ensure submit button is always at the bottom and visible */
+.leaflet-popup-content .lamp-report-form .popup-button[type="submit"] {
+  margin-top: auto;
+  flex-shrink: 0;
 }
 
 .leaflet-popup-content-wrapper.popup-expanded .leaflet-popup-content {

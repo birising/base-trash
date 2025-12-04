@@ -778,6 +778,16 @@ Odkaz do aplikace: ${appUrl}`;
           const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {
             popupWrapper.classList.add('popup-expanded');
+            // Ensure popup wrapper is scrollable on mobile
+            popupWrapper.style.maxHeight = '85vh';
+            popupWrapper.style.overflowY = 'auto';
+            popupWrapper.style.webkitOverflowScrolling = 'touch';
+          }
+          // Ensure form is scrollable on mobile
+          if (newForm) {
+            newForm.style.maxHeight = 'calc(85vh - 120px)';
+            newForm.style.overflowY = 'auto';
+            newForm.style.webkitOverflowScrolling = 'touch';
           }
           // Ensure popup is fully visible after expansion
           // Only do this for the main large map, not the small map in report modal
@@ -1065,6 +1075,16 @@ Odkaz do aplikace: ${appUrl}`;
           const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {
             popupWrapper.classList.add('popup-expanded');
+            // Ensure popup wrapper is scrollable on mobile
+            popupWrapper.style.maxHeight = '85vh';
+            popupWrapper.style.overflowY = 'auto';
+            popupWrapper.style.webkitOverflowScrolling = 'touch';
+          }
+          // Ensure form is scrollable on mobile
+          if (newForm) {
+            newForm.style.maxHeight = 'calc(85vh - 120px)';
+            newForm.style.overflowY = 'auto';
+            newForm.style.webkitOverflowScrolling = 'touch';
           }
           // Ensure popup is fully visible after expansion
           // Only do this for the main large map, not the small map in report modal

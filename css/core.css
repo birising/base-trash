@@ -1068,12 +1068,25 @@ body {
     -webkit-overflow-scrolling: touch !important;
     display: flex !important;
     flex-direction: column !important;
+    position: relative !important;
   }
 
-  /* Ensure submit button is always visible */
-  .leaflet-popup-content .lamp-report-form .popup-button {
+  /* Ensure submit button is always visible at bottom */
+  .leaflet-popup-content .lamp-report-form .popup-button[type="submit"],
+  .leaflet-popup-content .lamp-report-form button[type="submit"] {
     flex-shrink: 0 !important;
     margin-top: auto !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: linear-gradient(135deg, #f97316, #f59e0b) !important;
+    z-index: 10 !important;
+  }
+  
+  /* Ensure wrapper itself is scrollable */
+  .leaflet-popup-content-wrapper.popup-expanded {
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   /* Better button spacing in popups */

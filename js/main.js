@@ -1346,14 +1346,24 @@ Odkaz do aplikace: ${appUrl}`;
   function updateWasteDashboard() {
     if (!nextPickupDateEl || !nextPickupCountdownEl) return;
 
-    const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
+    let lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Get the next pickup date (might be today)
-    const nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, new Date());
+    // Automatically update last pickup date if the next pickup has already passed
+    // This ensures the schedule stays current without manual updates
+    let nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, today);
     const nextPickupDay = new Date(nextPickupDate);
     nextPickupDay.setHours(0, 0, 0, 0);
+    
+    // If the calculated next pickup is in the past, update last pickup to the most recent past pickup
+    while (nextPickupDay < today) {
+      lastPickupDate = new Date(nextPickupDate);
+      nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, today);
+      nextPickupDay.setTime(nextPickupDate.getTime());
+      nextPickupDay.setHours(0, 0, 0, 0);
+    }
+    
     const isToday = nextPickupDay.getTime() === today.getTime();
     
     // If today is pickup day, show the next one after today
@@ -1368,6 +1378,9 @@ Odkaz do aplikace: ${appUrl}`;
     const countdown = formatCountdown(displayDate);
 
     nextPickupDateEl.textContent = formatDate(displayDate);
+    if (nextPickupDateLabelEl) {
+      nextPickupDateLabelEl.textContent = displayDate.toLocaleDateString("cs-CZ");
+    }
     nextPickupCountdownEl.textContent = countdown;
     if (lastPickupLabelEl) lastPickupLabelEl.textContent = formatDateShort(lastPickupDate);
     if (nextPickupSummaryEl) {

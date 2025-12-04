@@ -1714,6 +1714,10 @@
   font-weight: 600;
 }
 
+.zavady-table td:last-child {
+  padding-right: 40px; /* Make room for expand arrow */
+}
+
 .zavady-table tbody tr {
   transition: background 0.2s ease;
 }
@@ -1724,14 +1728,33 @@
 
 .zavady-row {
   cursor: pointer;
+  position: relative;
+  transition: background 0.2s ease;
+}
+
+.zavady-row::after {
+  content: '▼';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 12px;
+  transition: transform 0.3s ease, color 0.2s ease;
+  pointer-events: none;
+}
+
+.zavady-row.zavady-row-expanded::after {
+  transform: translateY(-50%) rotate(180deg);
+  color: var(--accent);
 }
 
 .zavady-row.zavady-row-expanded {
-  background: rgba(45, 212, 191, 0.12) !important;
+  background: rgba(5, 150, 105, 0.15) !important;
 }
 
 .zavady-detail-row {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(5, 150, 105, 0.08);
 }
 
 .zavady-detail-row.hidden {
@@ -1740,7 +1763,8 @@
 
 .zavady-detail-cell {
   padding: 20px !important;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(5, 150, 105, 0.08);
+  border-top: 1px solid rgba(5, 150, 105, 0.2);
 }
 
 .zavady-detail-content {

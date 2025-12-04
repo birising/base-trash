@@ -778,10 +778,12 @@ Odkaz do aplikace: ${appUrl}`;
           const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {
             popupWrapper.classList.add('popup-expanded');
-            // Ensure popup wrapper is scrollable on mobile
-            popupWrapper.style.maxHeight = '85vh';
-            popupWrapper.style.overflowY = 'auto';
-            popupWrapper.style.webkitOverflowScrolling = 'touch';
+            // Ensure popup wrapper is scrollable on mobile - use !important via setProperty
+            popupWrapper.style.setProperty('max-height', '85vh', 'important');
+            popupWrapper.style.setProperty('overflow-y', 'auto', 'important');
+            popupWrapper.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
+            popupWrapper.style.setProperty('display', 'flex', 'important');
+            popupWrapper.style.setProperty('flex-direction', 'column', 'important');
           }
           // Ensure form is scrollable on mobile
           if (newForm) {
@@ -1088,10 +1090,12 @@ Odkaz do aplikace: ${appUrl}`;
           const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {
             popupWrapper.classList.add('popup-expanded');
-            // Ensure popup wrapper is scrollable on mobile
-            popupWrapper.style.maxHeight = '85vh';
-            popupWrapper.style.overflowY = 'auto';
-            popupWrapper.style.webkitOverflowScrolling = 'touch';
+            // Ensure popup wrapper is scrollable on mobile - use !important via setProperty
+            popupWrapper.style.setProperty('max-height', '85vh', 'important');
+            popupWrapper.style.setProperty('overflow-y', 'auto', 'important');
+            popupWrapper.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
+            popupWrapper.style.setProperty('display', 'flex', 'important');
+            popupWrapper.style.setProperty('flex-direction', 'column', 'important');
           }
           // Ensure form is scrollable on mobile
           if (newForm) {
@@ -3118,11 +3122,11 @@ Odkaz do aplikace: ${appUrl}`;
     }, 500);
   }
   
-  // Start with "údržba zeleně" (zelen) as default category, unless deep link is present
+  // Start with "Hlášené závady" (zavady) as default category, unless deep link is present
   // Wait a bit to ensure data is loaded and markers are populated
   setTimeout(() => {
     if (!window.location.hash || !window.location.hash.match(/^#\w+\//)) {
-      setActiveCategory("zelen");
+      setActiveCategory("zavady");
     }
   }, 200);
   setupSidebarToggle();

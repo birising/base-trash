@@ -509,9 +509,19 @@
   display: none !important;
 }
 
+/* Ensure form is visible when not hidden */
+.leaflet-popup-content .lamp-report-form:not(.hidden) {
+  display: flex !important;
+}
+
 /* Ensure show button is visible by default */
 .leaflet-popup-content .show-report-form-btn.hidden {
   display: none !important;
+}
+
+/* Ensure show button is visible when not hidden */
+.leaflet-popup-content .show-report-form-btn:not(.hidden) {
+  display: inline-flex !important;
 }
 
 /* Ensure submit button is always at the bottom and visible */

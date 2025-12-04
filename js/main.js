@@ -785,17 +785,22 @@ Odkaz do aplikace: ${appUrl}`;
           }
           // Ensure form is scrollable on mobile
           if (newForm) {
-            newForm.style.maxHeight = 'calc(85vh - 120px)';
-            newForm.style.overflowY = 'auto';
-            newForm.style.webkitOverflowScrolling = 'touch';
+            newForm.style.maxHeight = 'none';
+            newForm.style.overflowY = 'visible';
             newForm.style.display = 'flex';
             newForm.style.flexDirection = 'column';
-            // Ensure submit button is always visible
+            newForm.style.flex = '1 1 auto';
+            newForm.style.minHeight = '0';
+            // Ensure submit button is always visible at bottom
             const submitBtn = newForm.querySelector('button[type="submit"]');
             if (submitBtn) {
               submitBtn.style.marginTop = 'auto';
               submitBtn.style.flexShrink = '0';
             }
+          }
+          // Force popup to recalculate size
+          if (popup) {
+            popup.update();
           }
           // Ensure popup is fully visible after expansion
           // Only do this for the main large map, not the small map in report modal
@@ -1090,17 +1095,22 @@ Odkaz do aplikace: ${appUrl}`;
           }
           // Ensure form is scrollable on mobile
           if (newForm) {
-            newForm.style.maxHeight = 'calc(85vh - 120px)';
-            newForm.style.overflowY = 'auto';
-            newForm.style.webkitOverflowScrolling = 'touch';
+            newForm.style.maxHeight = 'none';
+            newForm.style.overflowY = 'visible';
             newForm.style.display = 'flex';
             newForm.style.flexDirection = 'column';
-            // Ensure submit button is always visible
+            newForm.style.flex = '1 1 auto';
+            newForm.style.minHeight = '0';
+            // Ensure submit button is always visible at bottom
             const submitBtn = newForm.querySelector('button[type="submit"]');
             if (submitBtn) {
               submitBtn.style.marginTop = 'auto';
               submitBtn.style.flexShrink = '0';
             }
+          }
+          // Force popup to recalculate size
+          if (popup) {
+            popup.update();
           }
           // Ensure popup is fully visible after expansion
           // Only do this for the main large map, not the small map in report modal

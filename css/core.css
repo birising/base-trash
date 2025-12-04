@@ -1054,6 +1054,8 @@ body {
     max-height: none !important;
     overflow-y: visible !important;
     flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   /* Ensure popup content is scrollable on mobile */
@@ -1063,12 +1065,14 @@ body {
 
   /* Make forms in popups scrollable on mobile */
   .leaflet-popup-content .lamp-report-form {
-    max-height: calc(85vh - 120px) !important;
-    overflow-y: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
     -webkit-overflow-scrolling: touch !important;
     display: flex !important;
     flex-direction: column !important;
     position: relative !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
   }
 
   /* Ensure submit button is always visible at bottom */
@@ -1076,17 +1080,25 @@ body {
   .leaflet-popup-content .lamp-report-form button[type="submit"] {
     flex-shrink: 0 !important;
     margin-top: auto !important;
-    position: sticky !important;
-    bottom: 0 !important;
+    position: relative !important;
     background: linear-gradient(135deg, #f97316, #f59e0b) !important;
     z-index: 10 !important;
   }
   
-  /* Ensure wrapper itself is scrollable */
+  /* Ensure wrapper itself is scrollable when expanded */
   .leaflet-popup-content-wrapper.popup-expanded {
     max-height: 85vh !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Ensure popup content in expanded wrapper is scrollable */
+  .leaflet-popup-content-wrapper.popup-expanded .leaflet-popup-content {
+    overflow-y: visible !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
   }
 
   /* Better button spacing in popups */

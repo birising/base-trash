@@ -3232,52 +3232,12 @@ Odkaz do aplikace: ${appUrl}`;
       }),
     }).addTo(reportZavadaMapInstance);
     
-    // Pan and zoom to selected location for better visibility
-    // Position marker in the upper portion of the map so it's visible above the form fields below
-    if (reportZavadaMapInstance) {
-      // Get map container dimensions
-      const mapContainer = reportZavadaMapInstance.getContainer();
-      const mapHeight = mapContainer.clientHeight;
-      
-      // We want the marker to appear in the upper 1/4 of the map (25% from top)
-      // This ensures it's visible above the form fields that appear below the map
-      const targetYPercent = 0.25;
-      const targetY = mapHeight * targetYPercent;
-      
-      // Get current marker position in container pixels
-      const markerPoint = reportZavadaMapInstance.latLngToContainerPoint([lat, lng]);
-      
-      // Calculate how much we need to shift the view up
-      const offsetY = targetY - markerPoint.y;
-      
-      // Zoom in if needed first
-      const currentZoom = reportZavadaMapInstance.getZoom();
-      const targetZoom = currentZoom < 17 ? 17 : currentZoom;
-      
-      if (currentZoom < 17) {
-        // Set zoom first
-        reportZavadaMapInstance.setZoom(targetZoom, {
-          animate: true,
-          duration: 0.3
-        });
-      }
-      
-      // After a brief delay to let zoom settle, pan to position marker correctly
-      setTimeout(() => {
-        // Recalculate after zoom change
-        const newMarkerPoint = reportZavadaMapInstance.latLngToContainerPoint([lat, lng]);
-        const newTargetY = mapHeight * targetYPercent;
-        const finalOffsetY = newTargetY - newMarkerPoint.y;
-        
-        // Pan to position marker in upper portion
-        if (Math.abs(finalOffsetY) > 3) {
-          reportZavadaMapInstance.panBy([0, finalOffsetY], {
-            animate: true,
-            duration: 0.4
-          });
-        }
-      }, currentZoom < 17 ? 350 : 50);
-    }
+    // Disabled: Pan and zoom to selected location
+    // This was causing unwanted movement in the small report map
+    // Users can manually pan/zoom if needed
+    // if (reportZavadaMapInstance) {
+    //   ... (panning logic removed)
+    // }
     
     // Update hidden inputs
     if (reportZavadaSelectedId) reportZavadaSelectedId.value = id || '';

@@ -1343,7 +1343,7 @@ Odkaz do aplikace: ${appUrl}`;
   }
 
   function updateWasteDashboard() {
-    if (!nextPickupDateEl || !nextPickupCountdownEl || !upcomingPickupsEl) return;
+    if (!nextPickupDateEl || !nextPickupCountdownEl) return;
 
     const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
     const today = new Date();
@@ -1372,28 +1372,6 @@ Odkaz do aplikace: ${appUrl}`;
     if (nextPickupSummaryEl) {
       nextPickupSummaryEl.textContent = `Další svoz: ${displayDate.toLocaleDateString("cs-CZ")}`;
     }
-
-    const upcoming = buildUpcomingPickups(displayDate, 4, wasteSchedule.intervalDays);
-    upcomingPickupsEl.innerHTML = upcoming
-      .map(
-        (date, idx) => {
-          const dateDay = new Date(date);
-          dateDay.setHours(0, 0, 0, 0);
-          const isDateToday = dateDay.getTime() === today.getTime();
-          const label = idx === 0 
-            ? (isDateToday ? "Dnes" : "Příští svoz")
-            : `${idx + 1}. termín`;
-          return `
-        <div class="waste-row">
-          <div>
-            <div class="date">${formatDate(date)}</div>
-            <div class="label">${label}</div>
-          </div>
-          <span class="stat-chip subtle">14 dní</span>
-        </div>`;
-        }
-      )
-      .join("");
   }
 
   updateWasteDashboard();

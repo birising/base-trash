@@ -244,7 +244,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   const nextPickupCountdownEl = document.getElementById("nextPickupCountdown");
   const lastPickupLabelEl = document.getElementById("lastPickupLabel");
   const upcomingPickupsEl = document.getElementById("upcomingPickups");
-  const nextPickupSummaryEl = document.getElementById("nextPickupSummary");
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
   const mapOverlay = document.getElementById("mapOverlay");
@@ -1308,9 +1307,7 @@ Odkaz do aplikace: ${appUrl}`;
     if (counters.hladina) {
       counters.hladina.textContent = streamState.level ? streamState.level : `${dataHladina.length} senzor`;
     }
-    if (counters.odpad && nextPickupSummaryEl) {
-      counters.odpad.textContent = nextPickupSummaryEl.textContent || "–";
-    }
+    // Odpad counter is now handled by updateWasteDashboard
     // Sběrný dvůr summary is static, no update needed
     // Count active (unresolved) zavady
     if (counters.zavady) {
@@ -1383,9 +1380,6 @@ Odkaz do aplikace: ${appUrl}`;
     }
     nextPickupCountdownEl.textContent = countdown;
     if (lastPickupLabelEl) lastPickupLabelEl.textContent = formatDateShort(lastPickupDate);
-    if (nextPickupSummaryEl) {
-      nextPickupSummaryEl.textContent = `Další svoz: ${displayDate.toLocaleDateString("cs-CZ")}`;
-    }
   }
 
   updateWasteDashboard();

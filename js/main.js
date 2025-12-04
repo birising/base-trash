@@ -1338,27 +1338,32 @@ Odkaz do aplikace: ${appUrl}`;
     if (!nextPickupDateEl || !nextPickupCountdownEl || !nextPickupLabelEl || !upcomingPickupsEl) return;
 
     const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
-    const nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, new Date());
-    
-    // Check if next pickup is today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    // Get the next pickup date (might be today)
+    const nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, new Date());
     const nextPickupDay = new Date(nextPickupDate);
     nextPickupDay.setHours(0, 0, 0, 0);
     const isToday = nextPickupDay.getTime() === today.getTime();
     
-    const countdown = formatCountdown(nextPickupDate);
+    // If today is pickup day, show the next one after today
+    const displayDate = isToday 
+      ? (() => {
+          const nextAfterToday = new Date(nextPickupDate);
+          nextAfterToday.setDate(nextAfterToday.getDate() + wasteSchedule.intervalDays);
+          return nextAfterToday;
+        })()
+      : nextPickupDate;
+    
+    const countdown = formatCountdown(displayDate);
 
-    nextPickupDateEl.textContent = formatDate(nextPickupDate);
-    nextPickupLabelEl.textContent = formatDate(nextPickupDate);
+    nextPickupDateEl.textContent = formatDate(displayDate);
+    nextPickupLabelEl.textContent = formatDate(displayDate);
     nextPickupCountdownEl.textContent = countdown;
     if (lastPickupLabelEl) lastPickupLabelEl.textContent = formatDate(lastPickupDate);
     if (nextPickupSummaryEl) {
-      if (isToday) {
-        nextPickupSummaryEl.textContent = `Dnes: ${nextPickupDate.toLocaleDateString("cs-CZ")}`;
-      } else {
-        nextPickupSummaryEl.textContent = `Další svoz: ${nextPickupDate.toLocaleDateString("cs-CZ")}`;
-      }
+      nextPickupSummaryEl.textContent = `Další svoz: ${displayDate.toLocaleDateString("cs-CZ")}`;
     }
 
     const upcoming = buildUpcomingPickups(nextPickupDate, 4, wasteSchedule.intervalDays);

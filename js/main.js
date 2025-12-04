@@ -770,14 +770,41 @@ Odkaz do aplikace: ${appUrl}`;
           // Ensure popup is fully visible after expansion
           setTimeout(() => {
             if (popup && popup.isOpen() && map) {
-              const popupLatLng = marker.getLatLng();
-              // Use panTo to center popup in view without closing it
-              map.panTo(popupLatLng, {
-                animate: true,
-                duration: 0.4
-              });
+              const popupElement = popup.getElement();
+              if (popupElement) {
+                const popupRect = popupElement.getBoundingClientRect();
+                const mapContainer = map.getContainer();
+                const mapRect = mapContainer.getBoundingClientRect();
+                
+                // Check if popup is outside viewport
+                const popupBottom = popupRect.bottom;
+                const mapBottom = mapRect.bottom;
+                const popupTop = popupRect.top;
+                const mapTop = mapRect.top;
+                
+                // Calculate how much to pan down if popup is cut off at bottom
+                let panY = 0;
+                if (popupBottom > mapBottom) {
+                  panY = popupBottom - mapBottom + 20; // Add 20px padding
+                } else if (popupTop < mapTop) {
+                  panY = popupTop - mapTop - 20; // Pan up if cut off at top
+                }
+                
+                if (Math.abs(panY) > 5) {
+                  // Convert pixel offset to lat/lng offset
+                  const center = map.getCenter();
+                  const point = map.latLngToContainerPoint(center);
+                  const newPoint = L.point(point.x, point.y - panY);
+                  const newCenter = map.containerPointToLatLng(newPoint);
+                  
+                  map.panTo(newCenter, {
+                    animate: true,
+                    duration: 0.4
+                  });
+                }
+              }
             }
-          }, 100);
+          }, 150);
         });
         
         // Add form submit handler
@@ -987,15 +1014,41 @@ Odkaz do aplikace: ${appUrl}`;
           // Ensure popup is fully visible after expansion
           setTimeout(() => {
             if (popup && popup.isOpen() && map) {
-              const bounds = polygon.getBounds();
-              const center = bounds.getCenter();
-              // Use panTo to center popup in view without closing it
-              map.panTo(center, {
-                animate: true,
-                duration: 0.4
-              });
+              const popupElement = popup.getElement();
+              if (popupElement) {
+                const popupRect = popupElement.getBoundingClientRect();
+                const mapContainer = map.getContainer();
+                const mapRect = mapContainer.getBoundingClientRect();
+                
+                // Check if popup is outside viewport
+                const popupBottom = popupRect.bottom;
+                const mapBottom = mapRect.bottom;
+                const popupTop = popupRect.top;
+                const mapTop = mapRect.top;
+                
+                // Calculate how much to pan down if popup is cut off at bottom
+                let panY = 0;
+                if (popupBottom > mapBottom) {
+                  panY = popupBottom - mapBottom + 20; // Add 20px padding
+                } else if (popupTop < mapTop) {
+                  panY = popupTop - mapTop - 20; // Pan up if cut off at top
+                }
+                
+                if (Math.abs(panY) > 5) {
+                  // Convert pixel offset to lat/lng offset
+                  const center = map.getCenter();
+                  const point = map.latLngToContainerPoint(center);
+                  const newPoint = L.point(point.x, point.y - panY);
+                  const newCenter = map.containerPointToLatLng(newPoint);
+                  
+                  map.panTo(newCenter, {
+                    animate: true,
+                    duration: 0.4
+                  });
+                }
+              }
             }
-          }, 100);
+          }, 150);
         });
         
         // Add form submit handler

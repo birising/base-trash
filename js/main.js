@@ -88,7 +88,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  await loadAllData();
+  if (typeof loadAllData === 'function') {
+    await loadAllData();
+  } else {
+    console.error('loadAllData function is not available');
+  }
   
   // Load zavady data for dashboard counter
   try {
@@ -855,11 +859,8 @@ Odkaz do aplikace: ${appUrl}`;
               try {
                 response = await fetch('https://formspree.io/f/xkgdbplk', {
                   method: 'POST',
-                  body: formData,
-                  mode: 'cors',
-                  headers: {
-                    'Accept': 'application/json'
-                  }
+                  body: formData
+                  // Don't set Content-Type - browser sets it automatically with boundary for multipart/form-data
                 });
               } catch (networkError) {
                 console.error('Network error:', networkError);
@@ -1120,11 +1121,8 @@ Odkaz do aplikace: ${appUrl}`;
             try {
               response = await fetch('https://formspree.io/f/xkgdbplk', {
                 method: 'POST',
-                body: formData,
-                mode: 'cors',
-                headers: {
-                  'Accept': 'application/json'
-                }
+                body: formData
+                // Don't set Content-Type - browser sets it automatically with boundary for multipart/form-data
               });
             } catch (networkError) {
               console.error('Network error:', networkError);
@@ -3485,11 +3483,8 @@ Odkaz do aplikace: ${appUrl}`;
         try {
           response = await fetch(reportZavadaForm.action, {
             method: 'POST',
-            body: formData,
-            mode: 'cors',
-            headers: {
-              'Accept': 'application/json'
-            }
+            body: formData
+            // Don't set Content-Type - browser sets it automatically with boundary for multipart/form-data
           });
         } catch (networkError) {
           // Network error - likely CORS or connection issue

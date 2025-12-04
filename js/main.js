@@ -241,7 +241,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   const streamStatusEl = document.getElementById("streamStatus");
   const nextPickupDateEl = document.getElementById("nextPickupDate");
   const nextPickupCountdownEl = document.getElementById("nextPickupCountdown");
-  const nextPickupLabelEl = document.getElementById("nextPickupLabel");
   const lastPickupLabelEl = document.getElementById("lastPickupLabel");
   const upcomingPickupsEl = document.getElementById("upcomingPickups");
   const nextPickupSummaryEl = document.getElementById("nextPickupSummary");
@@ -376,6 +375,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   function formatDate(date) {
     return date.toLocaleDateString("cs-CZ", {
       weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
+  function formatDateShort(date) {
+    return date.toLocaleDateString("cs-CZ", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -1335,7 +1342,7 @@ Odkaz do aplikace: ${appUrl}`;
   }
 
   function updateWasteDashboard() {
-    if (!nextPickupDateEl || !nextPickupCountdownEl || !nextPickupLabelEl || !upcomingPickupsEl) return;
+    if (!nextPickupDateEl || !nextPickupCountdownEl || !upcomingPickupsEl) return;
 
     const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
     const today = new Date();
@@ -1359,14 +1366,13 @@ Odkaz do aplikace: ${appUrl}`;
     const countdown = formatCountdown(displayDate);
 
     nextPickupDateEl.textContent = formatDate(displayDate);
-    nextPickupLabelEl.textContent = formatDate(displayDate);
     nextPickupCountdownEl.textContent = countdown;
-    if (lastPickupLabelEl) lastPickupLabelEl.textContent = formatDate(lastPickupDate);
+    if (lastPickupLabelEl) lastPickupLabelEl.textContent = formatDateShort(lastPickupDate);
     if (nextPickupSummaryEl) {
       nextPickupSummaryEl.textContent = `Další svoz: ${displayDate.toLocaleDateString("cs-CZ")}`;
     }
 
-    const upcoming = buildUpcomingPickups(nextPickupDate, 4, wasteSchedule.intervalDays);
+    const upcoming = buildUpcomingPickups(displayDate, 4, wasteSchedule.intervalDays);
     upcomingPickupsEl.innerHTML = upcoming
       .map(
         (date, idx) => {

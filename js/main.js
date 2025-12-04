@@ -767,6 +767,17 @@ Odkaz do aplikace: ${appUrl}`;
           if (popupWrapper) {
             popupWrapper.classList.add('popup-expanded');
           }
+          // Ensure popup is fully visible after expansion
+          setTimeout(() => {
+            if (popup && popup.isOpen() && map) {
+              const popupLatLng = marker.getLatLng();
+              // Use panTo to center popup in view without closing it
+              map.panTo(popupLatLng, {
+                animate: true,
+                duration: 0.4
+              });
+            }
+          }, 100);
         });
         
         // Add form submit handler
@@ -973,6 +984,18 @@ Odkaz do aplikace: ${appUrl}`;
           if (popupWrapper) {
             popupWrapper.classList.add('popup-expanded');
           }
+          // Ensure popup is fully visible after expansion
+          setTimeout(() => {
+            if (popup && popup.isOpen() && map) {
+              const bounds = polygon.getBounds();
+              const center = bounds.getCenter();
+              // Use panTo to center popup in view without closing it
+              map.panTo(center, {
+                animate: true,
+                duration: 0.4
+              });
+            }
+          }, 100);
         });
         
         // Add form submit handler

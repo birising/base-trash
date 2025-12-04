@@ -768,12 +768,20 @@ Odkaz do aplikace: ${appUrl}`;
             popupWrapper.classList.add('popup-expanded');
           }
           // Ensure popup is fully visible after expansion
+          // Only do this for the main large map, not the small map in report modal
           setTimeout(() => {
             if (popup && popup.isOpen() && map) {
-              const popupElement = popup.getElement();
-              if (popupElement) {
-                const popupRect = popupElement.getBoundingClientRect();
-                const mapContainer = map.getContainer();
+              // Check if this is the main map (not the small report map)
+              const mapContainer = map.getContainer();
+              const mapId = mapContainer?.id;
+              // Skip panning for small report map (reportZavadaMap)
+              if (mapId === 'reportZavadaMap') {
+                return;
+              }
+              
+              const popupEl = popup.getElement();
+              if (popupEl) {
+                const popupRect = popupEl.getBoundingClientRect();
                 const mapRect = mapContainer.getBoundingClientRect();
                 
                 // Check if popup is outside viewport
@@ -1016,12 +1024,20 @@ Odkaz do aplikace: ${appUrl}`;
             popupWrapper.classList.add('popup-expanded');
           }
           // Ensure popup is fully visible after expansion
+          // Only do this for the main large map, not the small map in report modal
           setTimeout(() => {
             if (popup && popup.isOpen() && map) {
-              const popupElement = popup.getElement();
-              if (popupElement) {
-                const popupRect = popupElement.getBoundingClientRect();
-                const mapContainer = map.getContainer();
+              // Check if this is the main map (not the small report map)
+              const mapContainer = map.getContainer();
+              const mapId = mapContainer?.id;
+              // Skip panning for small report map (reportZavadaMap)
+              if (mapId === 'reportZavadaMap') {
+                return;
+              }
+              
+              const popupEl = popup.getElement();
+              if (popupEl) {
+                const popupRect = popupEl.getBoundingClientRect();
                 const mapRect = mapContainer.getBoundingClientRect();
                 
                 // Check if popup is outside viewport

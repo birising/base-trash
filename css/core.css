@@ -505,10 +505,6 @@ body {
     border-color: transparent;
     box-shadow: 0 4px 12px rgba(45, 212, 191, 0.3);
   }
-  
-  .nav-item.active .nav-icon svg {
-    color: #ffffff;
-  }
 
   .nav-icon {
     width: 40px;
@@ -518,18 +514,8 @@ body {
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 20px;
     flex-shrink: 0;
-  }
-  
-  .nav-icon svg {
-    width: 20px;
-    height: 20px;
-    stroke-width: 2.5;
-    color: currentColor;
-  }
-  
-  .nav-item.active .nav-icon svg {
-    stroke-width: 2.5;
   }
 
   .nav-text {

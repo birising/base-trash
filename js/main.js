@@ -1931,7 +1931,6 @@ Odkaz do aplikace: ${appUrl}`;
               <h3 class="kriminalita-title">${typeNames.join(', ')}</h3>
               <div class="kriminalita-details">
                 <div class="kriminalita-relevance">📍 ${relevanceName}</div>
-                <div class="kriminalita-location">📍 Běloky</div>
                 ${item.mp ? '<div class="kriminalita-mp">Místní působnost: Ano</div>' : ''}
               </div>
               <a href="https://kriminalita.policie.gov.cz" target="_blank" rel="noopener" class="kriminalita-link">Zdroj dat →</a>

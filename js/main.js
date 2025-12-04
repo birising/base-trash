@@ -750,33 +750,51 @@ Odkaz do aplikace: ${appUrl}`;
     // Add form submit handler for lampy, kose
     if (item.category === "lampy" || item.category === "kose") {
       marker.on('popupopen', () => {
-        const popup = marker.getPopup();
-        const popupElement = popup.getElement();
-        if (!popupElement) return;
-        
-        // Handle "Nahlásit závadu" button click
-        const showFormBtn = popupElement.querySelector('.show-report-form-btn');
-        const form = popupElement.querySelector('.lamp-report-form');
-        
-        if (showFormBtn && form) {
+        // Use setTimeout to ensure popup DOM is fully rendered
+        setTimeout(() => {
+          const popup = marker.getPopup();
+          if (!popup || !popup.isOpen()) return;
+          
+          const popupElement = popup.getElement();
+          if (!popupElement) return;
+          
+          // Find the popup content element (not the wrapper)
+          const popupContent = popupElement.querySelector('.leaflet-popup-content');
+          if (!popupContent) {
+            console.warn('Popup content not found');
+            return;
+          }
+          
+          // Handle "Nahlásit závadu" button click
+          const showFormBtn = popupContent.querySelector('.show-report-form-btn');
+          const form = popupContent.querySelector('.lamp-report-form');
+          
+          if (!showFormBtn || !form) {
+            console.warn('Show form button or form not found in popup', { showFormBtn, form });
+            return;
+          }
+          
           // Reset form visibility when popup opens
           showFormBtn.classList.remove('hidden');
           form.classList.add('hidden');
           form.reset();
           
-        // Remove existing listeners to prevent duplicates
-        const newShowBtn = showFormBtn.cloneNode(true);
-        const newForm = form.cloneNode(true);
-        showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
-        form.parentNode?.replaceChild(newForm, form);
-        
-        newShowBtn.addEventListener('click', (e) => {
-          e.stopPropagation(); // Prevent any event bubbling that might close popup
-          e.preventDefault(); // Prevent any default behavior
-          newShowBtn.classList.add('hidden');
-          newForm.classList.remove('hidden');
-          // Force display to ensure form is visible
-          newForm.style.display = 'flex';
+          // Remove existing listeners to prevent duplicates
+          const newShowBtn = showFormBtn.cloneNode(true);
+          const newForm = form.cloneNode(true);
+          showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
+          form.parentNode?.replaceChild(newForm, form);
+          
+          newShowBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent any event bubbling that might close popup
+            e.preventDefault(); // Prevent any default behavior
+            console.log('Show form button clicked'); // Debug log
+            newShowBtn.classList.add('hidden');
+            newForm.classList.remove('hidden');
+            // Force display to ensure form is visible
+            newForm.style.display = 'flex';
+            newForm.style.flexDirection = 'column';
+            console.log('Form should be visible now', newForm.style.display, newForm.classList); // Debug log
           // Add class to popup wrapper to expand it
           const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {

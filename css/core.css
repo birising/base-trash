@@ -1040,11 +1040,28 @@ body {
   /* Better popup sizing on mobile */
   .leaflet-popup-content-wrapper {
     max-width: calc(100vw - 40px);
+    max-height: 85vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .leaflet-popup-content {
     font-size: 14px;
     line-height: 1.5;
+    max-height: none;
+  }
+
+  /* Ensure popup content is scrollable on mobile */
+  .leaflet-popup-content-wrapper .leaflet-popup-content {
+    overflow-y: visible;
+  }
+
+  /* Make forms in popups scrollable on mobile */
+  .leaflet-popup-content .lamp-report-form {
+    max-height: calc(85vh - 100px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Better button spacing in popups */

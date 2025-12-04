@@ -476,11 +476,15 @@
   min-width: 320px;
   max-width: 400px;
   width: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .leaflet-popup-content-wrapper {
   max-width: 420px !important;
   transition: max-width 0.3s ease;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .leaflet-popup-content-wrapper.popup-expanded {

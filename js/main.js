@@ -1307,7 +1307,34 @@ Odkaz do aplikace: ${appUrl}`;
     if (counters.hladina) {
       counters.hladina.textContent = streamState.level ? streamState.level : `${dataHladina.length} senzor`;
     }
-    // Odpad counter is now handled by updateWasteDashboard
+    // Odpad counter - show next pickup date
+    if (counters.odpad) {
+      const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, today);
+      const nextPickupDay = new Date(nextPickupDate);
+      nextPickupDay.setHours(0, 0, 0, 0);
+      
+      // Auto-update if next pickup is in the past
+      while (nextPickupDay < today) {
+        lastPickupDate = new Date(nextPickupDate);
+        nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, today);
+        nextPickupDay.setTime(nextPickupDate.getTime());
+        nextPickupDay.setHours(0, 0, 0, 0);
+      }
+      
+      const isToday = nextPickupDay.getTime() === today.getTime();
+      const displayDate = isToday 
+        ? (() => {
+            const nextAfterToday = new Date(nextPickupDate);
+            nextAfterToday.setDate(nextAfterToday.getDate() + wasteSchedule.intervalDays);
+            return nextAfterToday;
+          })()
+        : nextPickupDate;
+      
+      counters.odpad.textContent = displayDate.toLocaleDateString("cs-CZ");
+    }
     // Sběrný dvůr summary is static, no update needed
     // Count active (unresolved) zavady
     if (counters.zavady) {

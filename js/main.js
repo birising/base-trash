@@ -758,15 +758,15 @@ Odkaz do aplikace: ${appUrl}`;
         showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
         form.parentNode?.replaceChild(newForm, form);
         
-        newShowBtn.addEventListener('click', () => {
+        newShowBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent any event bubbling that might close popup
           newShowBtn.classList.add('hidden');
           newForm.classList.remove('hidden');
-          // Update popup to ensure form is fully visible
-          setTimeout(() => {
-            if (popup && popup.isOpen()) {
-              popup.update();
-            }
-          }, 50);
+          // Add class to popup wrapper to expand it
+          const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
+          if (popupWrapper) {
+            popupWrapper.classList.add('popup-expanded');
+          }
         });
         
         // Add form submit handler
@@ -964,15 +964,15 @@ Odkaz do aplikace: ${appUrl}`;
         showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
         form.parentNode?.replaceChild(newForm, form);
         
-        newShowBtn.addEventListener('click', () => {
+        newShowBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent any event bubbling that might close popup
           newShowBtn.classList.add('hidden');
           newForm.classList.remove('hidden');
-          // Update popup to ensure form is fully visible
-          setTimeout(() => {
-            if (popup && popup.isOpen()) {
-              popup.update();
-            }
-          }, 50);
+          // Add class to popup wrapper to expand it
+          const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
+          if (popupWrapper) {
+            popupWrapper.classList.add('popup-expanded');
+          }
         });
         
         // Add form submit handler

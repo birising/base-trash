@@ -480,12 +480,21 @@
 
 .leaflet-popup-content-wrapper {
   max-width: 420px !important;
+  transition: max-width 0.3s ease;
+}
+
+.leaflet-popup-content-wrapper.popup-expanded {
+  max-width: 500px !important;
 }
 
 /* Ensure form in popup is fully visible */
 .leaflet-popup-content .lamp-report-form {
   min-width: 100%;
   box-sizing: border-box;
+}
+
+.leaflet-popup-content-wrapper.popup-expanded .leaflet-popup-content {
+  max-width: 480px;
 }
 
 /* Light, modern map styling */

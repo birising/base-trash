@@ -782,19 +782,23 @@ Odkaz do aplikace: ${appUrl}`;
                 const popupTop = popupRect.top;
                 const mapTop = mapRect.top;
                 
-                // Calculate how much to pan down if popup is cut off at bottom
+                // Calculate how much to pan to make popup visible
                 let panY = 0;
                 if (popupBottom > mapBottom) {
+                  // Popup is cut off at bottom - need to pan map down (move viewport up)
                   panY = popupBottom - mapBottom + 20; // Add 20px padding
                 } else if (popupTop < mapTop) {
-                  panY = popupTop - mapTop - 20; // Pan up if cut off at top
+                  // Popup is cut off at top - need to pan map up (move viewport down)
+                  panY = popupTop - mapTop - 20; // Subtract 20px padding
                 }
                 
                 if (Math.abs(panY) > 5) {
                   // Convert pixel offset to lat/lng offset
+                  // When panY is positive (popup cut off at bottom), we need to pan map down (add to Y)
+                  // When panY is negative (popup cut off at top), we need to pan map up (subtract from Y)
                   const center = map.getCenter();
                   const point = map.latLngToContainerPoint(center);
-                  const newPoint = L.point(point.x, point.y - panY);
+                  const newPoint = L.point(point.x, point.y + panY);
                   const newCenter = map.containerPointToLatLng(newPoint);
                   
                   map.panTo(newCenter, {
@@ -1026,19 +1030,23 @@ Odkaz do aplikace: ${appUrl}`;
                 const popupTop = popupRect.top;
                 const mapTop = mapRect.top;
                 
-                // Calculate how much to pan down if popup is cut off at bottom
+                // Calculate how much to pan to make popup visible
                 let panY = 0;
                 if (popupBottom > mapBottom) {
+                  // Popup is cut off at bottom - need to pan map down (move viewport up)
                   panY = popupBottom - mapBottom + 20; // Add 20px padding
                 } else if (popupTop < mapTop) {
-                  panY = popupTop - mapTop - 20; // Pan up if cut off at top
+                  // Popup is cut off at top - need to pan map up (move viewport down)
+                  panY = popupTop - mapTop - 20; // Subtract 20px padding
                 }
                 
                 if (Math.abs(panY) > 5) {
                   // Convert pixel offset to lat/lng offset
+                  // When panY is positive (popup cut off at bottom), we need to pan map down (add to Y)
+                  // When panY is negative (popup cut off at top), we need to pan map up (subtract from Y)
                   const center = map.getCenter();
                   const point = map.latLngToContainerPoint(center);
-                  const newPoint = L.point(point.x, point.y - panY);
+                  const newPoint = L.point(point.x, point.y + panY);
                   const newCenter = map.containerPointToLatLng(newPoint);
                   
                   map.panTo(newCenter, {

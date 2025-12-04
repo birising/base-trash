@@ -1722,6 +1722,83 @@
   background: rgba(45, 212, 191, 0.08);
 }
 
+.zavady-row {
+  cursor: pointer;
+}
+
+.zavady-row.zavady-row-expanded {
+  background: rgba(45, 212, 191, 0.12) !important;
+}
+
+.zavady-detail-row {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.zavady-detail-row.hidden {
+  display: none;
+}
+
+.zavady-detail-cell {
+  padding: 20px !important;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.zavady-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.zavady-resolved-info {
+  padding: 12px 16px;
+  background: rgba(5, 150, 105, 0.15);
+  border: 1px solid rgba(5, 150, 105, 0.3);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+.zavady-resolved-days {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.zavady-expanded-gallery {
+  margin-top: 10px;
+}
+
+.zavady-gallery-thumbnails {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.zavady-gallery-thumb {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid rgba(5, 150, 105, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.zavady-gallery-thumb:hover {
+  transform: scale(1.05);
+  border-color: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+}
+
+.zavady-no-photos {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
 .zavady-table tbody tr:last-child td {
   border-bottom: none;
 }
@@ -1947,6 +2024,31 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   padding: 0;
   margin: 0;
+  text-align: center;
+}
+
+.zavady-photo-gallery-prev::before,
+.zavady-photo-gallery-next::before {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.zavady-photo-gallery-prev,
+.zavady-photo-gallery-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zavady-photo-gallery-prev > *,
+.zavady-photo-gallery-next > * {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
 }
 
 .zavady-photo-gallery-prev {
@@ -1961,7 +2063,7 @@
 .zavady-photo-gallery-next:hover {
   background: rgba(5, 150, 105, 0.9);
   border-color: rgba(255, 255, 255, 0.6);
-  transform: translateY(-50%) scale(1.15);
+  transform: translateY(calc(-50% - 1px)) scale(1.15);
   box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
 }
 

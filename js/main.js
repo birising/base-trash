@@ -725,6 +725,7 @@ Odkaz do aplikace: ${appUrl}`;
           <div><span>Stav:</span><strong>${stateName}</strong></div>
           <div><span>Relevance:</span><strong>${relevanceName}</strong></div>
           <div><span>Typ:</span><strong>${typeNames.join(', ')}</strong></div>
+          <div><span>📍</span><strong>Běloky</strong></div>
           ${item.mp ? '<div><span>Místní působnost:</span><strong>Ano</strong></div>' : ''}
         </div>
         <div class="popup-actions">
@@ -2276,8 +2277,33 @@ Odkaz do aplikace: ${appUrl}`;
                   `;
                 }
                 
+                const resolvedInfo = item.resolved && item.resolved_date 
+                  ? `<div class="zavady-resolved-info">
+                      <strong>Vyřešeno:</strong> ${resolvedDate}
+                      ${days !== '–' ? ` <span class="zavady-resolved-days">(${days} dní v řešení)</span>` : ''}
+                    </div>`
+                  : '';
+                
+                const galleryHtml = hasPhotos 
+                  ? `<div class="zavady-expanded-gallery">
+                      <div class="zavady-gallery-thumbnails">
+                        ${photos.map((photo, idx) => `
+                          <img 
+                            src="${photo}" 
+                            alt="Fotografie ${idx + 1}" 
+                            class="zavady-gallery-thumb" 
+                            data-photo-index="${idx}"
+                            data-photos='${JSON.stringify(photos)}'
+                            loading="lazy"
+                            decoding="async"
+                          >
+                        `).join('')}
+                      </div>
+                    </div>`
+                  : '<div class="zavady-expanded-gallery"><p class="zavady-no-photos">Žádné fotografie</p></div>';
+                
                 return `
-                  <tr>
+                  <tr class="zavady-row" data-zavada-id="${item.id}">
                     <td>${reportedDate}</td>
                     <td><a href="${categoryLink}" class="zavady-category-link" data-return-to="zavady">${categoryLabel}</a></td>
                     <td>${description}</td>
@@ -2285,6 +2311,14 @@ Odkaz do aplikace: ${appUrl}`;
                     <td>${resolvedDate}</td>
                     <td>${days !== '–' ? `${days} dní` : '–'}</td>
                     <td class="zavady-photos-cell">${photoPreview}</td>
+                  </tr>
+                  <tr class="zavady-detail-row hidden" data-zavada-id="${item.id}">
+                    <td colspan="7" class="zavady-detail-cell">
+                      <div class="zavady-detail-content">
+                        ${resolvedInfo}
+                        ${galleryHtml}
+                      </div>
+                    </td>
                   </tr>
                 `;
               }).join('')}
@@ -2311,6 +2345,48 @@ Odkaz do aplikace: ${appUrl}`;
         });
       });
       
+      // Add click handlers for expandable rows
+      const zavadyRows = zavadyList.querySelectorAll('.zavady-row');
+      zavadyRows.forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', (e) => {
+          // Don't expand if clicking on category link
+          if (e.target.closest('.zavady-category-link')) {
+            return;
+          }
+          
+          const zavadaId = row.dataset.zavadaId;
+          const detailRow = zavadyList.querySelector(`.zavady-detail-row[data-zavada-id="${zavadaId}"]`);
+          
+          if (detailRow) {
+            const isHidden = detailRow.classList.contains('hidden');
+            // Close all other detail rows
+            zavadyList.querySelectorAll('.zavady-detail-row').forEach(dr => {
+              dr.classList.add('hidden');
+            });
+            // Toggle current detail row
+            if (isHidden) {
+              detailRow.classList.remove('hidden');
+              row.classList.add('zavady-row-expanded');
+            } else {
+              detailRow.classList.add('hidden');
+              row.classList.remove('zavady-row-expanded');
+            }
+          }
+        });
+      });
+      
+      // Add click handlers for gallery thumbnails in expanded view
+      const galleryThumbs = zavadyList.querySelectorAll('.zavady-gallery-thumb');
+      galleryThumbs.forEach(thumb => {
+        thumb.addEventListener('click', () => {
+          const photos = JSON.parse(thumb.dataset.photos || '[]');
+          if (photos.length > 0) {
+            openZavadyPhotoGallery(photos);
+          }
+        });
+      });
+      
       // Setup lazy loading with Intersection Observer for photo thumbnails
       if ('IntersectionObserver' in window) {
         const imageObserver = new IntersectionObserver((entries, observer) => {
@@ -2329,7 +2405,7 @@ Odkaz do aplikace: ${appUrl}`;
         });
         
         // Observe all photo thumbnails
-        const photoThumbs = zavadyList.querySelectorAll('.zavady-photo-thumb');
+        const photoThumbs = zavadyList.querySelectorAll('.zavady-photo-thumb, .zavady-gallery-thumb');
         photoThumbs.forEach(thumb => {
           if (thumb.src && !thumb.complete) {
             imageObserver.observe(thumb);

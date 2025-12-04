@@ -788,6 +788,14 @@ Odkaz do aplikace: ${appUrl}`;
             newForm.style.maxHeight = 'calc(85vh - 120px)';
             newForm.style.overflowY = 'auto';
             newForm.style.webkitOverflowScrolling = 'touch';
+            newForm.style.display = 'flex';
+            newForm.style.flexDirection = 'column';
+            // Ensure submit button is always visible
+            const submitBtn = newForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+              submitBtn.style.marginTop = 'auto';
+              submitBtn.style.flexShrink = '0';
+            }
           }
           // Ensure popup is fully visible after expansion
           // Only do this for the main large map, not the small map in report modal
@@ -1085,6 +1093,14 @@ Odkaz do aplikace: ${appUrl}`;
             newForm.style.maxHeight = 'calc(85vh - 120px)';
             newForm.style.overflowY = 'auto';
             newForm.style.webkitOverflowScrolling = 'touch';
+            newForm.style.display = 'flex';
+            newForm.style.flexDirection = 'column';
+            // Ensure submit button is always visible
+            const submitBtn = newForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+              submitBtn.style.marginTop = 'auto';
+              submitBtn.style.flexShrink = '0';
+            }
           }
           // Ensure popup is fully visible after expansion
           // Only do this for the main large map, not the small map in report modal

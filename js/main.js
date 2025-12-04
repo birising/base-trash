@@ -1309,18 +1309,18 @@ Odkaz do aplikace: ${appUrl}`;
     }
     // Odpad counter - show next pickup date
     if (counters.odpad) {
-      const lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
+      let lastPickupDate = parsePickupDate(wasteSchedule.lastPickup);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       let nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, today);
-      const nextPickupDay = new Date(nextPickupDate);
+      let nextPickupDay = new Date(nextPickupDate);
       nextPickupDay.setHours(0, 0, 0, 0);
       
       // Auto-update if next pickup is in the past
       while (nextPickupDay < today) {
         lastPickupDate = new Date(nextPickupDate);
         nextPickupDate = getNextPickupDate(lastPickupDate, wasteSchedule.intervalDays, today);
-        nextPickupDay.setTime(nextPickupDate.getTime());
+        nextPickupDay = new Date(nextPickupDate);
         nextPickupDay.setHours(0, 0, 0, 0);
       }
       

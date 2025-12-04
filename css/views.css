@@ -1756,6 +1756,23 @@
   border-radius: 10px;
   color: var(--text-main);
   font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.zavady-resolved-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.zavady-resolution-description {
+  padding-top: 8px;
+  border-top: 1px solid rgba(5, 150, 105, 0.2);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .zavady-resolved-days {

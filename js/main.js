@@ -2277,10 +2277,21 @@ Odkaz do aplikace: ${appUrl}`;
                   `;
                 }
                 
+                const resolutionText = item.resolution_description || 
+                  (item.category === 'zelen' ? 'Posekano' :
+                   item.category === 'lampy' ? 'Opraveno' :
+                   item.category === 'kose' ? 'Opraveno' :
+                   'Vyřešeno');
+                
                 const resolvedInfo = item.resolved && item.resolved_date 
                   ? `<div class="zavady-resolved-info">
-                      <strong>Vyřešeno:</strong> ${resolvedDate}
-                      ${days !== '–' ? ` <span class="zavady-resolved-days">(${days} dní v řešení)</span>` : ''}
+                      <div class="zavady-resolved-header">
+                        <strong>Vyřešeno:</strong> ${resolvedDate}
+                        ${days !== '–' ? ` <span class="zavady-resolved-days">(${days} dní v řešení)</span>` : ''}
+                      </div>
+                      <div class="zavady-resolution-description">
+                        <strong>Způsob řešení:</strong> ${resolutionText}
+                      </div>
                     </div>`
                   : '';
                 

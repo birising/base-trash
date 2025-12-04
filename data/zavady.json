@@ -23,6 +23,7 @@
     "description": "Potřeba posekat trávu u potoka, je příliš vysoká",
     "resolved": true,
     "resolved_date": "2025-01-18T09:00:00Z",
+    "resolution_description": "Tráva byla posekaná sekačkou, plocha je nyní upravená",
     "email": "obcan2@example.cz",
     "photos": [
       "assets/5D5868AA-6D25-4515-A0D7-42D141D2526F_1_102_o.jpeg",
@@ -39,6 +40,7 @@
     "description": "Koš je přeplněný a odpadky se vysypávají",
     "resolved": true,
     "resolved_date": "2025-01-11T16:30:00Z",
+    "resolution_description": "Koš byl vyprázdněn a vyčištěn, nyní je funkční",
     "email": "obcan3@example.cz",
     "photos": [
       "assets/C36236D1-0238-41F6-9CA8-6E376A54A2B7_1_105_c.jpeg"
@@ -68,6 +70,7 @@
     "description": "Remízek u polní cesty potřebuje prořezat náletové keře",
     "resolved": true,
     "resolved_date": "2025-01-14T12:00:00Z",
+    "resolution_description": "Náletové keře byly prořezány, remízek je nyní upravený",
     "email": "obcan5@example.cz",
     "photos": [
       "assets/FE71375D-4966-4FA5-88DF-12006338CBC6_1_102_o.jpeg",
@@ -100,6 +103,7 @@
     "description": "Lampa je rozbitá, sklo je rozbité",
     "resolved": true,
     "resolved_date": "2025-01-02T10:15:00Z",
+    "resolution_description": "Sklo bylo vyměněno, lampa je opravená a funkční",
     "email": "obcan7@example.cz",
     "photos": [
       "assets/A0E1ABAD-70E3-45FD-8E9E-39F25BF7B59A_1_105_c.jpeg"
@@ -114,6 +118,7 @@
     "description": "Květinové záhony u návsi potřebují údržbu",
     "resolved": true,
     "resolved_date": "2024-12-30T11:00:00Z",
+    "resolution_description": "Záhony byly ošetřeny, plevel odstraněn, květiny zality",
     "email": "obcan8@example.cz",
     "photos": [
       "assets/25E28C56-9304-4ECF-A00E-8C5A94027CF7_1_105_c.jpeg",
@@ -130,6 +135,7 @@
     "description": "Koš je plný a potřebuje vyprázdnit",
     "resolved": true,
     "resolved_date": "2024-12-21T08:00:00Z",
+    "resolution_description": "Koš byl vyprázdněn svozovou službou",
     "email": "obcan9@example.cz",
     "photos": [
       "assets/C36236D1-0238-41F6-9CA8-6E376A54A2B7_1_105_c.jpeg"
@@ -145,6 +151,7 @@
     "description": "Lampa svítí i přes den, je zřejmě závada na čidle",
     "resolved": true,
     "resolved_date": "2024-12-19T14:20:00Z",
+    "resolution_description": "Čidlo bylo vyměněno, lampa nyní správně reaguje na světlo",
     "email": "obcan10@example.cz",
     "photos": [
       "assets/A0E1ABAD-70E3-45FD-8E9E-39F25BF7B59A_1_105_c.jpeg"

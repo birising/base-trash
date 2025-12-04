@@ -1037,7 +1037,7 @@ body {
     gap: 14px;
   }
 
-  /* Better popup sizing on mobile */
+  /* Better popup sizing on mobile - ALL popups, not just expanded */
   .leaflet-popup-content-wrapper {
     max-width: calc(100vw - 40px) !important;
     max-height: 85vh !important;
@@ -1046,6 +1046,17 @@ body {
     overscroll-behavior: contain !important;
     display: flex !important;
     flex-direction: column !important;
+    position: relative !important;
+  }
+  
+  /* Ensure Leaflet popup container allows scrolling */
+  .leaflet-popup {
+    max-height: 85vh !important;
+  }
+  
+  /* Ensure popup tip doesn't interfere */
+  .leaflet-popup-tip {
+    z-index: 1001 !important;
   }
 
   .leaflet-popup-content {
@@ -1092,6 +1103,7 @@ body {
     -webkit-overflow-scrolling: touch !important;
     display: flex !important;
     flex-direction: column !important;
+    position: relative !important;
   }
   
   /* Ensure popup content in expanded wrapper is scrollable */
@@ -1099,6 +1111,15 @@ body {
     overflow-y: visible !important;
     flex: 1 1 auto !important;
     min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Force scrolling on ALL popups with forms on mobile */
+  .leaflet-popup-content-wrapper:has(.lamp-report-form) {
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   /* Better button spacing in popups */

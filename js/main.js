@@ -772,8 +772,11 @@ Odkaz do aplikace: ${appUrl}`;
         
         newShowBtn.addEventListener('click', (e) => {
           e.stopPropagation(); // Prevent any event bubbling that might close popup
+          e.preventDefault(); // Prevent any default behavior
           newShowBtn.classList.add('hidden');
           newForm.classList.remove('hidden');
+          // Force display to ensure form is visible
+          newForm.style.display = 'flex';
           // Add class to popup wrapper to expand it
           const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {
@@ -1084,8 +1087,11 @@ Odkaz do aplikace: ${appUrl}`;
         
         newShowBtn.addEventListener('click', (e) => {
           e.stopPropagation(); // Prevent any event bubbling that might close popup
+          e.preventDefault(); // Prevent any default behavior
           newShowBtn.classList.add('hidden');
           newForm.classList.remove('hidden');
+          // Force display to ensure form is visible
+          newForm.style.display = 'flex';
           // Add class to popup wrapper to expand it
           const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {

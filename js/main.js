@@ -860,27 +860,28 @@ Odkaz do aplikace: ${appUrl}`;
               submitButton.textContent = 'Odesílám...';
             }
             
+            // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
+            let response;
             try {
-              // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
-              let response;
-              try {
-                response = await fetch('https://formspree.io/f/xkgdbplk', {
-                  method: 'POST',
-                  body: formData
-                  // Don't set Content-Type - browser sets it automatically with boundary for multipart/form-data
-                });
-              } catch (networkError) {
-                // CORS errors can occur even when form is successfully submitted
-                // Check if it's a CORS error - if so, assume success (Formspree redirects)
-                if (networkError.message && (networkError.message.includes('CORS') || networkError.message.includes('Failed to fetch') || networkError.message.includes('Load failed'))) {
-                  console.log('CORS error detected, but form may have been submitted successfully');
-                  // Treat as success - Formspree often redirects which causes CORS errors
-                  response = { ok: true, status: 200 };
-                } else {
-                  console.error('Network error:', networkError);
-                  throw new Error('Chyba připojení. Zkontrolujte připojení k internetu.');
-                }
+              response = await fetch('https://formspree.io/f/xkgdbplk', {
+                method: 'POST',
+                body: formData
+                // Don't set Content-Type - browser sets it automatically with boundary for multipart/form-data
+              });
+            } catch (networkError) {
+              // CORS errors can occur even when form is successfully submitted
+              // Check if it's a CORS error - if so, assume success (Formspree redirects)
+              if (networkError.message && (networkError.message.includes('CORS') || networkError.message.includes('Failed to fetch') || networkError.message.includes('Load failed'))) {
+                console.log('CORS error detected, but form may have been submitted successfully');
+                // Treat as success - Formspree often redirects which causes CORS errors
+                response = { ok: true, status: 200 };
+              } else {
+                console.error('Network error:', networkError);
+                throw new Error('Chyba připojení. Zkontrolujte připojení k internetu.');
               }
+            }
+            
+            try {
               
               // Formspree returns 200 OK for successful submissions
               // HTTP 422 = Unprocessable Entity (validation errors)
@@ -1130,28 +1131,28 @@ Odkaz do aplikace: ${appUrl}`;
             submitButton.textContent = 'Odesílám...';
           }
           
+          // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
+          let response;
           try {
-            // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
-            let response;
-            let response;
-            try {
-              response = await fetch('https://formspree.io/f/xkgdbplk', {
-                method: 'POST',
-                body: formData
-                // Don't set Content-Type - browser sets it automatically with boundary for multipart/form-data
-              });
-            } catch (networkError) {
-              // CORS errors can occur even when form is successfully submitted
-              // Check if it's a CORS error - if so, assume success (Formspree redirects)
-              if (networkError.message && (networkError.message.includes('CORS') || networkError.message.includes('Failed to fetch') || networkError.message.includes('Load failed'))) {
-                console.log('CORS error detected, but form may have been submitted successfully');
-                // Treat as success - Formspree often redirects which causes CORS errors
-                response = { ok: true, status: 200 };
-              } else {
-                console.error('Network error:', networkError);
-                throw new Error('Chyba připojení. Zkontrolujte připojení k internetu.');
-              }
+            response = await fetch('https://formspree.io/f/xkgdbplk', {
+              method: 'POST',
+              body: formData
+              // Don't set Content-Type - browser sets it automatically with boundary for multipart/form-data
+            });
+          } catch (networkError) {
+            // CORS errors can occur even when form is successfully submitted
+            // Check if it's a CORS error - if so, assume success (Formspree redirects)
+            if (networkError.message && (networkError.message.includes('CORS') || networkError.message.includes('Failed to fetch') || networkError.message.includes('Load failed'))) {
+              console.log('CORS error detected, but form may have been submitted successfully');
+              // Treat as success - Formspree often redirects which causes CORS errors
+              response = { ok: true, status: 200 };
+            } else {
+              console.error('Network error:', networkError);
+              throw new Error('Chyba připojení. Zkontrolujte připojení k internetu.');
             }
+          }
+          
+          try {
             
             // Formspree returns 200 OK for successful submissions
             // HTTP 422 = Unprocessable Entity (validation errors)
@@ -3521,7 +3522,6 @@ Odkaz do aplikace: ${appUrl}`;
         }
         
         // Don't set Content-Type header - browser will set it automatically with boundary for multipart/form-data
-        let response;
         let response;
         try {
           response = await fetch(reportZavadaForm.action, {

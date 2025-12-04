@@ -855,7 +855,11 @@ Odkaz do aplikace: ${appUrl}`;
               try {
                 response = await fetch('https://formspree.io/f/xkgdbplk', {
                   method: 'POST',
-                  body: formData
+                  body: formData,
+                  mode: 'cors',
+                  headers: {
+                    'Accept': 'application/json'
+                  }
                 });
               } catch (networkError) {
                 console.error('Network error:', networkError);
@@ -1116,7 +1120,11 @@ Odkaz do aplikace: ${appUrl}`;
             try {
               response = await fetch('https://formspree.io/f/xkgdbplk', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                mode: 'cors',
+                headers: {
+                  'Accept': 'application/json'
+                }
               });
             } catch (networkError) {
               console.error('Network error:', networkError);
@@ -3477,7 +3485,11 @@ Odkaz do aplikace: ${appUrl}`;
         try {
           response = await fetch(reportZavadaForm.action, {
             method: 'POST',
-            body: formData
+            body: formData,
+            mode: 'cors',
+            headers: {
+              'Accept': 'application/json'
+            }
           });
         } catch (networkError) {
           // Network error - likely CORS or connection issue

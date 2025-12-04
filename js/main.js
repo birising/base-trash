@@ -775,7 +775,12 @@ Odkaz do aplikace: ${appUrl}`;
               const mapContainer = map.getContainer();
               const mapId = mapContainer?.id;
               // Skip panning for small report map (reportZavadaMap)
-              if (mapId === 'reportZavadaMap') {
+              // Check if map container is inside report modal map container
+              const isReportMap = mapId === 'reportZavadaMap' || 
+                                  mapContainer?.closest('#reportZavadaMapContainer') !== null ||
+                                  mapContainer?.closest('.report-zavada-map') !== null ||
+                                  mapContainer?.parentElement?.id === 'reportZavadaMap';
+              if (isReportMap) {
                 return;
               }
               
@@ -1031,7 +1036,12 @@ Odkaz do aplikace: ${appUrl}`;
               const mapContainer = map.getContainer();
               const mapId = mapContainer?.id;
               // Skip panning for small report map (reportZavadaMap)
-              if (mapId === 'reportZavadaMap') {
+              // Check if map container is inside report modal map container
+              const isReportMap = mapId === 'reportZavadaMap' || 
+                                  mapContainer?.closest('#reportZavadaMapContainer') !== null ||
+                                  mapContainer?.closest('.report-zavada-map') !== null ||
+                                  mapContainer?.parentElement?.id === 'reportZavadaMap';
+              if (isReportMap) {
                 return;
               }
               

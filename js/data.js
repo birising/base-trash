@@ -372,7 +372,7 @@ const dataHladina = [
 
 const wasteSchedule = {
   frequency: "Každých 14 dní",
-  lastPickup: "17.11.2025",
+  lastPickup: "01.12.2025",
   intervalDays: 14,
   contactEmail: "info@beloky.cz",
 };

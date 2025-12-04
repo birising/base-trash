@@ -854,7 +854,6 @@ async function loadKriminalitaData() {
           console.warn(`Proxy ${i + 1} selhal:`, proxyError.message);
           continue;
         }
-      }
     }
     
     if (!geojson) {

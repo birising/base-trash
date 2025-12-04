@@ -240,6 +240,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const streamUpdatedEl = document.getElementById("streamUpdated");
   const streamStatusEl = document.getElementById("streamStatus");
   const nextPickupDateEl = document.getElementById("nextPickupDate");
+  const nextPickupDateLabelEl = document.getElementById("nextPickupDateLabel");
   const nextPickupCountdownEl = document.getElementById("nextPickupCountdown");
   const lastPickupLabelEl = document.getElementById("lastPickupLabel");
   const upcomingPickupsEl = document.getElementById("upcomingPickups");

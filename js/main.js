@@ -2049,8 +2049,8 @@ Odkaz do aplikace: ${appUrl}`;
   }
 
   // Sorting state for zavady table
-  let zavadySortColumn = 'reported_date';
-  let zavadySortDirection = 'desc'; // 'asc' or 'desc'
+  let zavadySortColumn = 'status';
+  let zavadySortDirection = 'asc'; // 'asc' = unresolved first (0 before 1), 'desc' = resolved first
 
   function renderZavady(zavady) {
     if (!zavadyList) return;
@@ -2137,6 +2137,29 @@ Odkaz do aplikace: ${appUrl}`;
     
     // Sort function
     const sortZavady = (a, b) => {
+      // Always sort by resolved status first (unresolved first), then by selected column
+      const statusA = a.resolved ? 1 : 0;
+      const statusB = b.resolved ? 1 : 0;
+      
+      // If sorting by status column, use the status directly
+      if (zavadySortColumn === 'status') {
+        if (statusA !== statusB) {
+          return zavadySortDirection === 'asc' 
+            ? statusA - statusB  // 0 (unresolved) before 1 (resolved)
+            : statusB - statusA; // 1 (resolved) before 0 (unresolved)
+        }
+        // If same status, sort by reported_date desc (newest first)
+        const dateA = a.reported_date ? new Date(a.reported_date).getTime() : 0;
+        const dateB = b.reported_date ? new Date(b.reported_date).getTime() : 0;
+        return dateB - dateA;
+      }
+      
+      // For other columns, first sort by status (unresolved first), then by selected column
+      if (statusA !== statusB) {
+        return statusA - statusB; // Always unresolved (0) before resolved (1)
+      }
+      
+      // Same status, sort by selected column
       let valueA, valueB;
       
       switch (zavadySortColumn) {
@@ -2151,10 +2174,6 @@ Odkaz do aplikace: ${appUrl}`;
         case 'description':
           valueA = (a.description || a.message || 'Bez popisu').toLowerCase();
           valueB = (b.description || b.message || 'Bez popisu').toLowerCase();
-          break;
-        case 'status':
-          valueA = a.resolved ? 1 : 0;
-          valueB = b.resolved ? 1 : 0;
           break;
         case 'resolved_date':
           valueA = a.resolved_date ? new Date(a.resolved_date).getTime() : 0;

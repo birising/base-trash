@@ -795,92 +795,95 @@ Odkaz do aplikace: ${appUrl}`;
             newForm.style.display = 'flex';
             newForm.style.flexDirection = 'column';
             console.log('Form should be visible now', newForm.style.display, newForm.classList); // Debug log
-          // Add class to popup wrapper to expand it
-          const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
-          if (popupWrapper) {
-            popupWrapper.classList.add('popup-expanded');
-            // Ensure popup wrapper is scrollable on mobile - use !important via setProperty
-            popupWrapper.style.setProperty('max-height', '85vh', 'important');
-            popupWrapper.style.setProperty('overflow-y', 'auto', 'important');
-            popupWrapper.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
-            popupWrapper.style.setProperty('display', 'flex', 'important');
-            popupWrapper.style.setProperty('flex-direction', 'column', 'important');
-          }
-          // Ensure form is scrollable on mobile
-          if (newForm) {
-            newForm.style.maxHeight = 'none';
-            newForm.style.overflowY = 'visible';
-            newForm.style.display = 'flex';
-            newForm.style.flexDirection = 'column';
-            newForm.style.flex = '1 1 auto';
-            newForm.style.minHeight = '0';
-            // Ensure submit button is always visible at bottom
-            const submitBtn = newForm.querySelector('button[type="submit"]');
-            if (submitBtn) {
-              submitBtn.style.marginTop = 'auto';
-              submitBtn.style.flexShrink = '0';
+            // Add class to popup wrapper to expand it
+            const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
+            if (popupWrapper) {
+              popupWrapper.classList.add('popup-expanded');
+              // Ensure popup wrapper is scrollable on mobile - use !important via setProperty
+              popupWrapper.style.setProperty('max-height', '85vh', 'important');
+              popupWrapper.style.setProperty('overflow-y', 'auto', 'important');
+              popupWrapper.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
+              popupWrapper.style.setProperty('display', 'flex', 'important');
+              popupWrapper.style.setProperty('flex-direction', 'column', 'important');
             }
-          }
-          // Force popup to recalculate size
-          if (popup) {
-            popup.update();
-          }
-          // Ensure popup is fully visible after expansion
-          // Only do this for the main large map, not the small map in report modal
-          setTimeout(() => {
-            if (popup && popup.isOpen() && map) {
-              // Check if this is the main map (not the small report map)
-              const mapContainer = map.getContainer();
-              const mapId = mapContainer?.id;
-              // Skip panning for small report map (reportZavadaMap)
-              // Check if map container is inside report modal map container
-              const isReportMap = mapId === 'reportZavadaMap' || 
-                                  mapContainer?.closest('#reportZavadaMapContainer') !== null ||
-                                  mapContainer?.closest('.report-zavada-map') !== null ||
-                                  mapContainer?.parentElement?.id === 'reportZavadaMap';
-              if (isReportMap) {
-                return;
+            // Ensure form is scrollable on mobile
+            if (newForm) {
+              newForm.style.maxHeight = 'none';
+              newForm.style.overflowY = 'visible';
+              newForm.style.display = 'flex';
+              newForm.style.flexDirection = 'column';
+              newForm.style.flex = '1 1 auto';
+              newForm.style.minHeight = '0';
+              // Ensure submit button is always visible at bottom
+              const submitBtn = newForm.querySelector('button[type="submit"]');
+              if (submitBtn) {
+                submitBtn.style.marginTop = 'auto';
+                submitBtn.style.flexShrink = '0';
               }
-              
-              const popupEl = popup.getElement();
-              if (popupEl) {
-                const popupRect = popupEl.getBoundingClientRect();
-                const mapRect = mapContainer.getBoundingClientRect();
-                
-                // Check if popup is outside viewport
-                const popupBottom = popupRect.bottom;
-                const mapBottom = mapRect.bottom;
-                const popupTop = popupRect.top;
-                const mapTop = mapRect.top;
-                
-                // Calculate how much to pan to make popup visible
-                let panY = 0;
-                if (popupBottom > mapBottom) {
-                  // Popup is cut off at bottom - need to pan map down (move viewport up)
-                  panY = popupBottom - mapBottom + 20; // Add 20px padding
-                } else if (popupTop < mapTop) {
-                  // Popup is cut off at top - need to pan map up (move viewport down)
-                  panY = popupTop - mapTop - 20; // Subtract 20px padding
+            }
+            // Force popup to recalculate size
+            if (popup) {
+              popup.update();
+            }
+            // Ensure popup is fully visible after expansion
+            // Only do this for the main large map, not the small map in report modal
+            setTimeout(() => {
+              if (popup && popup.isOpen() && map) {
+                // Check if this is the main map (not the small report map)
+                const mapContainer = map.getContainer();
+                const mapId = mapContainer?.id;
+                // Skip panning for small report map (reportZavadaMap)
+                // Check if map container is inside report modal map container
+                const isReportMap = mapId === 'reportZavadaMap' || 
+                                    mapContainer?.closest('#reportZavadaMapContainer') !== null ||
+                                    mapContainer?.closest('.report-zavada-map') !== null ||
+                                    mapContainer?.parentElement?.id === 'reportZavadaMap';
+                if (isReportMap) {
+                  return;
                 }
                 
-                if (Math.abs(panY) > 5) {
-                  // Convert pixel offset to lat/lng offset
-                  // When panY is positive (popup cut off at bottom), we need to pan map down (add to Y)
-                  // When panY is negative (popup cut off at top), we need to pan map up (subtract from Y)
-                  const center = map.getCenter();
-                  const point = map.latLngToContainerPoint(center);
-                  const newPoint = L.point(point.x, point.y + panY);
-                  const newCenter = map.containerPointToLatLng(newPoint);
+                const popupEl = popup.getElement();
+                if (popupEl) {
+                  const popupRect = popupEl.getBoundingClientRect();
+                  const mapRect = mapContainer.getBoundingClientRect();
                   
-                  map.panTo(newCenter, {
-                    animate: true,
-                    duration: 0.4
-                  });
+                  // Check if popup is outside viewport
+                  const popupBottom = popupRect.bottom;
+                  const mapBottom = mapRect.bottom;
+                  const popupTop = popupRect.top;
+                  const mapTop = mapRect.top;
+                  
+                  // Calculate how much to pan to make popup visible
+                  let panY = 0;
+                  if (popupBottom > mapBottom) {
+                    // Popup is cut off at bottom - need to pan map down (move viewport up)
+                    panY = popupBottom - mapBottom + 20; // Add 20px padding
+                  } else if (popupTop < mapTop) {
+                    // Popup is cut off at top - need to pan map up (move viewport down)
+                    panY = popupTop - mapTop - 20; // Subtract 20px padding
+                  }
+                  
+                  if (Math.abs(panY) > 5) {
+                    // Convert pixel offset to lat/lng offset
+                    // When panY is positive (popup cut off at bottom), we need to pan map down (add to Y)
+                    // When panY is negative (popup cut off at top), we need to pan map up (subtract from Y)
+                    const center = map.getCenter();
+                    const point = map.latLngToContainerPoint(center);
+                    const newPoint = L.point(point.x, point.y + panY);
+                    const newCenter = map.containerPointToLatLng(newPoint);
+                    
+                    map.panTo(newCenter, {
+                      animate: true,
+                      duration: 0.4
+                    });
+                  }
                 }
               }
-            }
-          }, 150);
-        });
+            }, 150);
+          });
+          
+          // Add form submit handler
+          newForm.addEventListener('submit', async (e) => {
         
         // Add form submit handler
         newForm.addEventListener('submit', async (e) => {

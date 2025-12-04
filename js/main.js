@@ -244,6 +244,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const lastPickupLabelEl = document.getElementById("lastPickupLabel");
   const upcomingPickupsEl = document.getElementById("upcomingPickups");
   const nextPickupSummaryEl = document.getElementById("nextPickupSummary");
+  const sbernyDvurSummaryEl = document.getElementById("sbernyDvurSummary");
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
   const mapOverlay = document.getElementById("mapOverlay");
@@ -1310,6 +1311,7 @@ Odkaz do aplikace: ${appUrl}`;
     if (counters.odpad && nextPickupSummaryEl) {
       counters.odpad.textContent = nextPickupSummaryEl.textContent || "–";
     }
+    // Sběrný dvůr summary is static, no update needed
     // Count active (unresolved) zavady
     if (counters.zavady) {
       const activeZavady = (dataZavady && Array.isArray(dataZavady)) 
@@ -1409,7 +1411,7 @@ Odkaz do aplikace: ${appUrl}`;
     currentCategory = category;
 
     const isStreamView = category === "hladina";
-    const isWasteView = category === "odpad";
+    const isWasteView = category === "odpad" || category === "sbernyDvur";
     const isHasiciView = category === "hasici";
     const isKriminalitaView = category === "kriminalita";
     const isZavadyView = category === "zavady";
@@ -1531,7 +1533,9 @@ Odkaz do aplikace: ${appUrl}`;
                     : "Údržba zeleně · záhony"
                 : category === "hladina"
                   ? "Hladina potoka"
-                  : "Odpad & sběrný dvůr";
+                  : category === "sbernyDvur"
+                    ? "Sběrný dvůr"
+                    : "Komunální odpad";
       categoryLabel.textContent = `${labelText}`;
     }
 
@@ -1580,6 +1584,15 @@ Odkaz do aplikace: ${appUrl}`;
     if (wasteView) {
       if (isWasteView) {
         wasteView.classList.remove("hidden");
+        // If clicking on "Sběrný dvůr", scroll to that section
+        if (category === "sbernyDvur") {
+          setTimeout(() => {
+            const sbernyDvurCard = wasteView.querySelector('.waste-card.info');
+            if (sbernyDvurCard) {
+              sbernyDvurCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        }
       } else {
         wasteView.classList.add("hidden");
       }

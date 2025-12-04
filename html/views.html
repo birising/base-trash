@@ -13,11 +13,19 @@
   <div class="summary-grid dashboard-grid">
     <button class="stat-card" data-category="odpad">
       <div class="stat-top">
-        <span class="stat-label">Odpad &amp; sběrný dvůr</span>
+        <span class="stat-label">Komunální odpad</span>
         <span class="stat-chip">Plán</span>
       </div>
       <div class="stat-value" id="countOdpad">–</div>
-      <div class="stat-sub" id="nextPickupSummary">Každých 14 dní · otevřený dvůr</div>
+      <div class="stat-sub" id="nextPickupSummary">Každých 14 dní</div>
+    </button>
+    <button class="stat-card" data-category="sbernyDvur">
+      <div class="stat-top">
+        <span class="stat-label">Sběrný dvůr</span>
+        <span class="stat-chip">Info</span>
+      </div>
+      <div class="stat-value">Otevřeno</div>
+      <div class="stat-sub" id="sbernyDvurSummary">denně 8:00–20:00</div>
     </button>
     <button class="stat-card" data-category="hladina">
       <div class="stat-top">
@@ -253,8 +261,8 @@
   </div>
   <section id="wasteView" class="view waste-view hidden" aria-label="Odpad a sběrný dvůr">
     <div class="waste-grid">
-      <div class="waste-card hero">
-        <div class="eyebrow">Odpad &amp; sběrný dvůr</div>
+        <div class="waste-card hero">
+        <div class="eyebrow">Komunální odpad</div>
         <div class="headline small">Každých 14 dní</div>
         <div class="mega-date" id="nextPickupDate">–</div>
         <div class="pill primary" id="nextPickupCountdown">Načítám…</div>

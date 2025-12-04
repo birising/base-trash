@@ -882,6 +882,8 @@ Odkaz do aplikace: ${appUrl}`;
             }
             
             try {
+              // Check if response is a real Response object or our synthetic object
+              const isSyntheticResponse = !response.json || typeof response.json !== 'function';
               
               // Formspree returns 200 OK for successful submissions
               // HTTP 422 = Unprocessable Entity (validation errors)
@@ -890,25 +892,29 @@ Odkaz do aplikace: ${appUrl}`;
               const isError = response.status === 400 || response.status === 422 || response.status >= 500;
               
               if (response.ok && !isError) {
-                // Try to parse JSON if available
-                try {
-                  const result = await response.json();
-                  console.log('Formspree response:', result);
-                  // Check if JSON response indicates an error
-                  if (result.error) {
-                    const errorMsg = typeof result.error === 'string' 
-                      ? result.error 
-                      : (result.error.message || result.error.code || 'Neznámá chyba');
-                    throw new Error(errorMsg);
+                // Only try to parse JSON if it's a real Response object
+                if (!isSyntheticResponse) {
+                  try {
+                    const result = await response.json();
+                    console.log('Formspree response:', result);
+                    // Check if JSON response indicates an error
+                    if (result.error) {
+                      const errorMsg = typeof result.error === 'string' 
+                        ? result.error 
+                        : (result.error.message || result.error.code || 'Neznámá chyba');
+                      throw new Error(errorMsg);
+                    }
+                  } catch (e) {
+                    // If response is not JSON (e.g., HTML redirect page), that's OK
+                    if (e.message && !e.message.includes('JSON') && !e.message.includes('Neznámá chyba')) {
+                      throw e; // Re-throw if it's a real error
+                    }
+                    if (!e.message || e.message.includes('JSON') || e.message.includes('Neznámá chyba')) {
+                      console.log('Formspree response is not JSON (likely redirect), but submission was successful');
+                    }
                   }
-                } catch (e) {
-                  // If response is not JSON (e.g., HTML redirect page), that's OK
-                  if (e.message && !e.message.includes('JSON') && !e.message.includes('Neznámá chyba')) {
-                    throw e; // Re-throw if it's a real error
-                  }
-                  if (!e.message || e.message.includes('JSON') || e.message.includes('Neznámá chyba')) {
-                    console.log('Formspree response is not JSON (likely redirect), but submission was successful');
-                  }
+                } else {
+                  console.log('Form submitted successfully (CORS handled)');
                 }
                 // Close popup
                 marker.closePopup();
@@ -918,34 +924,37 @@ Odkaz do aplikace: ${appUrl}`;
                 showToastNotification('Hlášení odesláno!', `Děkujeme za nahlášení závady ${categoryName}. Ozveme se vám co nejdříve.`, 'success');
               } else {
                 // Try to get error message from response
-                let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
-                try {
-                  const errorData = await response.json();
-                  // Formspree error format: { error: { code: "...", message: "..." } } or { error: "..." }
-                  if (errorData.error) {
-                    if (typeof errorData.error === 'string') {
-                      errorMsg = errorData.error;
-                    } else if (errorData.error.message) {
-                      errorMsg = errorData.error.message;
-                    } else if (errorData.error.code) {
-                      const errorCodeMessages = {
-                        'REQUIRED_FIELD_MISSING': 'Chybí povinné pole.',
-                        'REQUIRED_FIELD_EMPTY': 'Povinné pole je prázdné.',
-                        'TYPE_EMAIL': 'Email má neplatný formát.',
-                        'FILES_TOO_BIG': 'Soubor je příliš velký.',
-                      };
-                      errorMsg = errorCodeMessages[errorData.error.code] || errorData.error.code;
+                let errorMsg = `HTTP ${response.status}: ${response.statusText || 'Chyba'}`;
+                // Only try to parse JSON if it's a real Response object
+                if (!isSyntheticResponse) {
+                  try {
+                    const errorData = await response.json();
+                    // Formspree error format: { error: { code: "...", message: "..." } } or { error: "..." }
+                    if (errorData.error) {
+                      if (typeof errorData.error === 'string') {
+                        errorMsg = errorData.error;
+                      } else if (errorData.error.message) {
+                        errorMsg = errorData.error.message;
+                      } else if (errorData.error.code) {
+                        const errorCodeMessages = {
+                          'REQUIRED_FIELD_MISSING': 'Chybí povinné pole.',
+                          'REQUIRED_FIELD_EMPTY': 'Povinné pole je prázdné.',
+                          'TYPE_EMAIL': 'Email má neplatný formát.',
+                          'FILES_TOO_BIG': 'Soubor je příliš velký.',
+                        };
+                        errorMsg = errorCodeMessages[errorData.error.code] || errorData.error.code;
+                      }
+                    } else if (errorData.message) {
+                      errorMsg = errorData.message;
                     }
-                  } else if (errorData.message) {
-                    errorMsg = errorData.message;
-                  }
-                  console.error('Formspree error:', errorData);
-                } catch (e) {
-                  // If not JSON, use status text
-                  if (response.status === 422) {
-                    errorMsg = 'Chyba validace. Zkontrolujte formulář.';
-                  } else if (response.status === 400) {
-                    errorMsg = 'Neplatný požadavek. Zkontrolujte formulář.';
+                    console.error('Formspree error:', errorData);
+                  } catch (e) {
+                    // If not JSON, use status text
+                    if (response.status === 422) {
+                      errorMsg = 'Chyba validace. Zkontrolujte formulář.';
+                    } else if (response.status === 400) {
+                      errorMsg = 'Neplatný požadavek. Zkontrolujte formulář.';
+                    }
                   }
                 }
                 throw new Error(errorMsg);
@@ -1153,6 +1162,8 @@ Odkaz do aplikace: ${appUrl}`;
           }
           
           try {
+            // Check if response is a real Response object or our synthetic object
+            const isSyntheticResponse = !response.json || typeof response.json !== 'function';
             
             // Formspree returns 200 OK for successful submissions
             // HTTP 422 = Unprocessable Entity (validation errors)
@@ -1161,25 +1172,29 @@ Odkaz do aplikace: ${appUrl}`;
             const isError = response.status === 400 || response.status === 422 || response.status >= 500;
             
             if (response.ok && !isError) {
-              // Try to parse JSON if available
-              try {
-                const result = await response.json();
-                console.log('Formspree response:', result);
-                // Check if JSON response indicates an error
-                if (result.error) {
-                  const errorMsg = typeof result.error === 'string' 
-                    ? result.error 
-                    : (result.error.message || result.error.code || 'Neznámá chyba');
-                  throw new Error(errorMsg);
+              // Only try to parse JSON if it's a real Response object
+              if (!isSyntheticResponse) {
+                try {
+                  const result = await response.json();
+                  console.log('Formspree response:', result);
+                  // Check if JSON response indicates an error
+                  if (result.error) {
+                    const errorMsg = typeof result.error === 'string' 
+                      ? result.error 
+                      : (result.error.message || result.error.code || 'Neznámá chyba');
+                    throw new Error(errorMsg);
+                  }
+                } catch (e) {
+                  // If response is not JSON (e.g., HTML redirect page), that's OK
+                  if (e.message && !e.message.includes('JSON') && !e.message.includes('Neznámá chyba')) {
+                    throw e; // Re-throw if it's a real error
+                  }
+                  if (!e.message || e.message.includes('JSON') || e.message.includes('Neznámá chyba')) {
+                    console.log('Formspree response is not JSON (likely redirect), but submission was successful');
+                  }
                 }
-              } catch (e) {
-                // If response is not JSON (e.g., HTML redirect page), that's OK
-                if (e.message && !e.message.includes('JSON') && !e.message.includes('Neznámá chyba')) {
-                  throw e; // Re-throw if it's a real error
-                }
-                if (!e.message || e.message.includes('JSON') || e.message.includes('Neznámá chyba')) {
-                  console.log('Formspree response is not JSON (likely redirect), but submission was successful');
-                }
+              } else {
+                console.log('Form submitted successfully (CORS handled)');
               }
               // Close popup
               polygon.closePopup();
@@ -1188,9 +1203,11 @@ Odkaz do aplikace: ${appUrl}`;
               showToastNotification('Požadavek odeslán!', 'Děkujeme za nahlášení. Po zpracování se závada zobrazí v tabulce.', 'success');
             } else {
               // Try to get error message from response
-              let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
-              try {
-                const errorData = await response.json();
+              let errorMsg = `HTTP ${response.status}: ${response.statusText || 'Chyba'}`;
+              // Only try to parse JSON if it's a real Response object
+              if (!isSyntheticResponse) {
+                try {
+                  const errorData = await response.json();
                 // Formspree error format: { error: { code: "...", message: "..." } } or { error: "..." }
                 if (errorData.error) {
                   if (typeof errorData.error === 'string') {
@@ -1220,6 +1237,7 @@ Odkaz do aplikace: ${appUrl}`;
               }
               throw new Error(errorMsg);
             }
+          }
           } catch (error) {
             console.error('Chyba při odesílání formuláře:', error);
             if (submitButton) {
@@ -3543,6 +3561,9 @@ Odkaz do aplikace: ${appUrl}`;
           }
         }
         
+        // Check if response is a real Response object or our synthetic object
+        const isSyntheticResponse = !response.json || typeof response.json !== 'function';
+        
         // Formspree returns 200 OK for successful submissions
         // HTTP 422 = Unprocessable Entity (validation errors)
         // HTTP 400 = Bad Request
@@ -3550,25 +3571,29 @@ Odkaz do aplikace: ${appUrl}`;
         const isError = response.status === 400 || response.status === 422 || response.status >= 500;
         
         if (response.ok && !isError) {
-          // Try to parse JSON response if available
-          try {
-            const result = await response.json();
-            console.log('Formspree response:', result);
-            // Check if JSON response indicates an error
-            if (result.error) {
-              const errorMsg = typeof result.error === 'string' 
-                ? result.error 
-                : (result.error.message || result.error.code || 'Neznámá chyba');
-              throw new Error(errorMsg);
+          // Only try to parse JSON if it's a real Response object
+          if (!isSyntheticResponse) {
+            try {
+              const result = await response.json();
+              console.log('Formspree response:', result);
+              // Check if JSON response indicates an error
+              if (result.error) {
+                const errorMsg = typeof result.error === 'string' 
+                  ? result.error 
+                  : (result.error.message || result.error.code || 'Neznámá chyba');
+                throw new Error(errorMsg);
+              }
+            } catch (e) {
+              // If response is not JSON (e.g., HTML redirect page), that's OK for Formspree
+              if (e.message && !e.message.includes('JSON') && !e.message.includes('Neznámá chyba')) {
+                throw e; // Re-throw if it's a real error, not JSON parse error
+              }
+              if (!e.message || e.message.includes('JSON') || e.message.includes('Neznámá chyba')) {
+                console.log('Formspree response is not JSON (likely redirect page), but submission was successful');
+              }
             }
-          } catch (e) {
-            // If response is not JSON (e.g., HTML redirect page), that's OK for Formspree
-            if (e.message && !e.message.includes('JSON') && !e.message.includes('Neznámá chyba')) {
-              throw e; // Re-throw if it's a real error, not JSON parse error
-            }
-            if (!e.message || e.message.includes('JSON') || e.message.includes('Neznámá chyba')) {
-              console.log('Formspree response is not JSON (likely redirect page), but submission was successful');
-            }
+          } else {
+            console.log('Form submitted successfully (CORS handled)');
           }
           closeReportZavadaModalWithMap();
           showToastNotification(
@@ -3578,48 +3603,51 @@ Odkaz do aplikace: ${appUrl}`;
           );
         } else {
           // Try to get error message from response
-          let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+          let errorMsg = `HTTP ${response.status}: ${response.statusText || 'Chyba'}`;
           let errorDetails = null;
           
-          try {
-            const errorText = await response.text();
-            console.error('Formspree error response:', errorText);
-            
-            // Try to parse as JSON
+          // Only try to parse response if it's a real Response object
+          if (!isSyntheticResponse) {
             try {
-              errorDetails = JSON.parse(errorText);
-              // Formspree error format: { error: { code: "...", message: "..." } } or { error: "..." }
-              if (errorDetails.error) {
-                if (typeof errorDetails.error === 'string') {
-                  errorMsg = errorDetails.error;
-                } else if (errorDetails.error.message) {
-                  errorMsg = errorDetails.error.message;
-                } else if (errorDetails.error.code) {
-                  // Map Formspree error codes to user-friendly messages
-                  const errorCodeMessages = {
-                    'REQUIRED_FIELD_MISSING': 'Chybí povinné pole. Zkontrolujte formulář.',
-                    'REQUIRED_FIELD_EMPTY': 'Povinné pole je prázdné. Vyplňte prosím všechna pole.',
-                    'TYPE_EMAIL': 'Email má neplatný formát.',
-                    'FILES_TOO_BIG': 'Soubor je příliš velký. Maximální velikost je 25 MB.',
-                    'TOO_MANY_FILES': 'Příliš mnoho souborů. Můžete nahrát maximálně jeden soubor.',
-                    'NO_FILE_UPLOADS': 'Nahrávání souborů není podporováno.',
-                    'INACTIVE': 'Formulář je deaktivován.',
-                    'BLOCKED': 'Formulář je zablokován.',
-                    'EMPTY': 'Formulář je prázdný.',
-                  };
-                  errorMsg = errorCodeMessages[errorDetails.error.code] || errorDetails.error.code;
+              const errorText = await response.text();
+              console.error('Formspree error response:', errorText);
+              
+              // Try to parse as JSON
+              try {
+                errorDetails = JSON.parse(errorText);
+                // Formspree error format: { error: { code: "...", message: "..." } } or { error: "..." }
+                if (errorDetails.error) {
+                  if (typeof errorDetails.error === 'string') {
+                    errorMsg = errorDetails.error;
+                  } else if (errorDetails.error.message) {
+                    errorMsg = errorDetails.error.message;
+                  } else if (errorDetails.error.code) {
+                    // Map Formspree error codes to user-friendly messages
+                    const errorCodeMessages = {
+                      'REQUIRED_FIELD_MISSING': 'Chybí povinné pole. Zkontrolujte formulář.',
+                      'REQUIRED_FIELD_EMPTY': 'Povinné pole je prázdné. Vyplňte prosím všechna pole.',
+                      'TYPE_EMAIL': 'Email má neplatný formát.',
+                      'FILES_TOO_BIG': 'Soubor je příliš velký. Maximální velikost je 25 MB.',
+                      'TOO_MANY_FILES': 'Příliš mnoho souborů. Můžete nahrát maximálně jeden soubor.',
+                      'NO_FILE_UPLOADS': 'Nahrávání souborů není podporováno.',
+                      'INACTIVE': 'Formulář je deaktivován.',
+                      'BLOCKED': 'Formulář je zablokován.',
+                      'EMPTY': 'Formulář je prázdný.',
+                    };
+                    errorMsg = errorCodeMessages[errorDetails.error.code] || errorDetails.error.code;
+                  }
+                } else if (errorDetails.message) {
+                  errorMsg = errorDetails.message;
                 }
-              } else if (errorDetails.message) {
-                errorMsg = errorDetails.message;
+              } catch (e) {
+                // If not JSON, use text response
+                if (errorText && errorText.length < 200) {
+                  errorMsg = errorText;
+                }
               }
             } catch (e) {
-              // If not JSON, use text response
-              if (errorText && errorText.length < 200) {
-                errorMsg = errorText;
-              }
+              console.error('Error reading response:', e);
             }
-          } catch (e) {
-            console.error('Error reading response:', e);
           }
           
           // Provide more specific error message for common status codes

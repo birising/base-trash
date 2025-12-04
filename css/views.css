@@ -476,8 +476,10 @@
   min-width: 320px;
   max-width: 400px;
   width: auto;
-  overflow-y: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
 }
 
 .leaflet-popup-content-wrapper {
@@ -485,6 +487,8 @@
   transition: max-width 0.3s ease;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
 }
 
 .leaflet-popup-content-wrapper.popup-expanded {

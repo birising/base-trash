@@ -885,11 +885,6 @@ Odkaz do aplikace: ${appUrl}`;
           // Add form submit handler
           newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-          const formData = new FormData(newForm);
-          
-          // Add form submit handler
-          newForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
             const formData = new FormData(newForm);
             
             // Check if file is included

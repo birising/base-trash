@@ -1029,7 +1029,7 @@ Odkaz do aplikace: ${appUrl}`;
         }, 50); // Small delay to ensure DOM is ready
       });
     }
-  
+    
     return marker;
   }
 

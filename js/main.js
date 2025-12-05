@@ -785,7 +785,7 @@ Odkaz do aplikace: ${appUrl}`;
             const target = e.target;
             // Check if the clicked element or its parent is the show form button
             const clickedBtn = target.closest('.show-report-form-btn');
-            if (!clickedBtn || clickedBtn !== showFormBtn) return;
+            if (!clickedBtn) return;
             
             e.stopPropagation(); // Prevent any event bubbling that might close popup
             e.preventDefault(); // Prevent any default behavior
@@ -1148,7 +1148,7 @@ Odkaz do aplikace: ${appUrl}`;
           const target = e.target;
           // Check if the clicked element or its parent is the show form button
           const clickedBtn = target.closest('.show-report-form-btn');
-          if (!clickedBtn || clickedBtn !== showFormBtn) return;
+          if (!clickedBtn) return;
           
           e.stopPropagation(); // Prevent any event bubbling that might close popup
           e.preventDefault(); // Prevent any default behavior

@@ -884,11 +884,16 @@ Odkaz do aplikace: ${appUrl}`;
           
           // Add form submit handler
           newForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
+            e.preventDefault();
           const formData = new FormData(newForm);
           
-          // Check if file is included
-          const fileInput = newForm.querySelector('input[type="file"]');
+          // Add form submit handler
+          newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(newForm);
+            
+            // Check if file is included
+            const fileInput = newForm.querySelector('input[type="file"]');
             if (fileInput && fileInput.files && fileInput.files.length > 0) {
               const file = fileInput.files[0];
               console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);

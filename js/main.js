@@ -884,9 +884,6 @@ Odkaz do aplikace: ${appUrl}`;
           
           // Add form submit handler
           newForm.addEventListener('submit', async (e) => {
-        
-        // Add form submit handler
-        newForm.addEventListener('submit', async (e) => {
           e.preventDefault();
           const formData = new FormData(newForm);
           
@@ -1024,9 +1021,10 @@ Odkaz do aplikace: ${appUrl}`;
               showToastNotification('Chyba při odesílání', error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
             }
           });
-        }
-      });
-    }
+        }, 50); // Small delay to ensure DOM is ready
+      }
+    });
+  }
     
     return marker;
   }

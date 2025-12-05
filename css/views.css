@@ -514,6 +514,13 @@
   display: flex !important;
 }
 
+/* Force form visibility - even stronger rule */
+.leaflet-popup-content .lamp-report-form[style*="display: flex"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 /* Ensure show button is visible by default */
 .leaflet-popup-content .show-report-form-btn.hidden {
   display: none !important;

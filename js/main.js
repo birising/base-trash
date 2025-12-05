@@ -772,22 +772,62 @@ Odkaz do aplikace: ${appUrl}`;
           
           // Function to show form - use multiple methods to ensure visibility
           const showForm = () => {
+            console.log('[FORM] showForm called');
+            
             // Hide button
             showFormBtn.classList.add('hidden');
             showFormBtn.style.setProperty('display', 'none', 'important');
+            console.log('[FORM] Button hidden');
             
             // Show form - remove hidden class
             form.classList.remove('hidden');
+            console.log('[FORM] Removed hidden class, form.classList:', form.classList.toString());
             
-            // Force visibility with multiple methods
-            form.style.setProperty('display', 'flex', 'important');
-            form.style.setProperty('flex-direction', 'column', 'important');
-            form.style.setProperty('visibility', 'visible', 'important');
-            form.style.setProperty('opacity', '1', 'important');
-            form.style.setProperty('max-height', 'none', 'important');
-            form.style.setProperty('overflow-y', 'visible', 'important');
-            form.style.setProperty('flex', '1 1 auto', 'important');
-            form.style.setProperty('min-height', '0', 'important');
+            // Force visibility with multiple methods - use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+              // Force visibility with multiple methods
+              form.style.setProperty('display', 'flex', 'important');
+              form.style.setProperty('flex-direction', 'column', 'important');
+              form.style.setProperty('visibility', 'visible', 'important');
+              form.style.setProperty('opacity', '1', 'important');
+              form.style.setProperty('max-height', 'none', 'important');
+              form.style.setProperty('overflow-y', 'visible', 'important');
+              form.style.setProperty('flex', '1 1 auto', 'important');
+              form.style.setProperty('min-height', '0', 'important');
+              
+              // Check if form is actually visible
+              const computedStyle = window.getComputedStyle(form);
+              const isVisible = form.offsetHeight > 0 && form.offsetWidth > 0;
+              console.log('[FORM] After setting styles:', {
+                hasHidden: form.classList.contains('hidden'),
+                inlineDisplay: form.style.display,
+                computedDisplay: computedStyle.display,
+                offsetHeight: form.offsetHeight,
+                offsetWidth: form.offsetWidth,
+                isVisible: isVisible,
+                parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
+                parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent'
+              });
+              
+              // If still not visible, try additional methods
+              if (!isVisible || computedStyle.display === 'none') {
+                console.warn('[FORM] Form still not visible, trying additional methods');
+                // Remove form from DOM and re-append to force reflow
+                const parent = form.parentElement;
+                if (parent) {
+                  const nextSibling = form.nextSibling;
+                  parent.removeChild(form);
+                  if (nextSibling) {
+                    parent.insertBefore(form, nextSibling);
+                  } else {
+                    parent.appendChild(form);
+                  }
+                  // Re-apply styles
+                  form.style.setProperty('display', 'flex', 'important');
+                  form.style.setProperty('visibility', 'visible', 'important');
+                }
+              }
+            });
             
             // Expand popup wrapper
             const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
@@ -1102,22 +1142,62 @@ Odkaz do aplikace: ${appUrl}`;
         
         // Function to show form - use multiple methods to ensure visibility
         const showForm = () => {
+          console.log('[ZELEN] showForm called');
+          
           // Hide button
           showFormBtn.classList.add('hidden');
           showFormBtn.style.setProperty('display', 'none', 'important');
+          console.log('[ZELEN] Button hidden');
           
           // Show form - remove hidden class
           form.classList.remove('hidden');
+          console.log('[ZELEN] Removed hidden class, form.classList:', form.classList.toString());
           
-          // Force visibility with multiple methods
-          form.style.setProperty('display', 'flex', 'important');
-          form.style.setProperty('flex-direction', 'column', 'important');
-          form.style.setProperty('visibility', 'visible', 'important');
-          form.style.setProperty('opacity', '1', 'important');
-          form.style.setProperty('max-height', 'none', 'important');
-          form.style.setProperty('overflow-y', 'visible', 'important');
-          form.style.setProperty('flex', '1 1 auto', 'important');
-          form.style.setProperty('min-height', '0', 'important');
+          // Force visibility with multiple methods - use requestAnimationFrame to ensure DOM is ready
+          requestAnimationFrame(() => {
+            // Force visibility with multiple methods
+            form.style.setProperty('display', 'flex', 'important');
+            form.style.setProperty('flex-direction', 'column', 'important');
+            form.style.setProperty('visibility', 'visible', 'important');
+            form.style.setProperty('opacity', '1', 'important');
+            form.style.setProperty('max-height', 'none', 'important');
+            form.style.setProperty('overflow-y', 'visible', 'important');
+            form.style.setProperty('flex', '1 1 auto', 'important');
+            form.style.setProperty('min-height', '0', 'important');
+            
+            // Check if form is actually visible
+            const computedStyle = window.getComputedStyle(form);
+            const isVisible = form.offsetHeight > 0 && form.offsetWidth > 0;
+            console.log('[ZELEN] After setting styles:', {
+              hasHidden: form.classList.contains('hidden'),
+              inlineDisplay: form.style.display,
+              computedDisplay: computedStyle.display,
+              offsetHeight: form.offsetHeight,
+              offsetWidth: form.offsetWidth,
+              isVisible: isVisible,
+              parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
+              parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent'
+            });
+            
+            // If still not visible, try additional methods
+            if (!isVisible || computedStyle.display === 'none') {
+              console.warn('[ZELEN] Form still not visible, trying additional methods');
+              // Remove form from DOM and re-append to force reflow
+              const parent = form.parentElement;
+              if (parent) {
+                const nextSibling = form.nextSibling;
+                parent.removeChild(form);
+                if (nextSibling) {
+                  parent.insertBefore(form, nextSibling);
+                } else {
+                  parent.appendChild(form);
+                }
+                // Re-apply styles
+                form.style.setProperty('display', 'flex', 'important');
+                form.style.setProperty('visibility', 'visible', 'important');
+              }
+            }
+          });
           
           // Expand popup wrapper
           const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');

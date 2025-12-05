@@ -1311,34 +1311,19 @@
 .report-zavada-icon {
   font-size: 24px;
   font-weight: 300;
-  line-height: 28px;
+  line-height: 1;
   width: 28px;
   height: 28px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   background: rgba(11, 18, 32, 0.1);
   border-radius: 50%;
-  text-align: center;
   padding: 0;
   margin: 0;
-  position: relative;
-}
-
-.report-zavada-icon {
-  font-size: 24px;
-  font-weight: 300;
-  line-height: 28px;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(11, 18, 32, 0.1);
-  border-radius: 50%;
+  flex-shrink: 0;
   text-align: center;
-  padding: 0;
-  margin: 0;
+  vertical-align: middle;
 }
 
 .report-zavada-label {

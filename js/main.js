@@ -2600,9 +2600,12 @@ Odkaz do aplikace: ${appUrl}`;
           
           if (detailRow) {
             const isHidden = detailRow.classList.contains('hidden');
-            // Close all other detail rows
+            // Close all other detail rows and remove expanded class from all rows
             zavadyList.querySelectorAll('.zavady-detail-row').forEach(dr => {
               dr.classList.add('hidden');
+            });
+            zavadyList.querySelectorAll('.zavady-row').forEach(r => {
+              r.classList.remove('zavady-row-expanded');
             });
             // Toggle current detail row
             if (isHidden) {

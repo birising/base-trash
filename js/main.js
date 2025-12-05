@@ -970,10 +970,14 @@ Odkaz do aplikace: ${appUrl}`;
                   console.log('Form submitted successfully (CORS handled)');
                 }
                 // Close popup
-                marker.closePopup();
+                if (marker) {
+                  marker.closePopup();
+                } else if (polygon) {
+                  polygon.closePopup();
+                }
                 
                 // Show toast notification
-                const categoryName = item.category === "lampy" ? "lampy" : "koše";
+                const categoryName = item?.category === "lampy" ? "lampy" : (item?.category === "kose" ? "koše" : "zeleně");
                 showToastNotification('Hlášení odesláno!', `Děkujeme za nahlášení závady ${categoryName}. Ozveme se vám co nejdříve.`, 'success');
               } else {
                 // Try to get error message from response
@@ -1083,15 +1087,30 @@ Odkaz do aplikace: ${appUrl}`;
     
     // Add form submit handler for zelen
     polygon.on('popupopen', () => {
-      const popup = polygon.getPopup();
-      const popupElement = popup.getElement();
-      if (!popupElement) return;
-      
-      // Handle "Nahlásit závadu" button click
-      const showFormBtn = popupElement.querySelector('.show-report-form-btn');
-      const form = popupElement.querySelector('.lamp-report-form');
-      
-      if (showFormBtn && form) {
+      // Use setTimeout to ensure popup DOM is fully rendered
+      setTimeout(() => {
+        const popup = polygon.getPopup();
+        if (!popup || !popup.isOpen()) return;
+        
+        const popupElement = popup.getElement();
+        if (!popupElement) return;
+        
+        // Find the popup content element (not the wrapper)
+        const popupContent = popupElement.querySelector('.leaflet-popup-content');
+        if (!popupContent) {
+          console.warn('Popup content not found for zelen');
+          return;
+        }
+        
+        // Handle "Nahlásit závadu" button click
+        const showFormBtn = popupContent.querySelector('.show-report-form-btn');
+        const form = popupContent.querySelector('.lamp-report-form');
+        
+        if (!showFormBtn || !form) {
+          console.warn('Show form button or form not found in popup for zelen', { showFormBtn, form });
+          return;
+        }
+        
         // Reset form visibility when popup opens
         showFormBtn.classList.remove('hidden');
         form.classList.add('hidden');
@@ -1110,8 +1129,10 @@ Odkaz do aplikace: ${appUrl}`;
           newForm.classList.remove('hidden');
           // Force display to ensure form is visible
           newForm.style.display = 'flex';
+          newForm.style.flexDirection = 'column';
+          console.log('Form should be visible now for zelen', newForm.style.display, newForm.classList); // Debug log
           // Add class to popup wrapper to expand it
-          const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
+          const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {
             popupWrapper.classList.add('popup-expanded');
             // Ensure popup wrapper is scrollable on mobile - use !important via setProperty
@@ -1325,7 +1346,6 @@ Odkaz do aplikace: ${appUrl}`;
               }
               throw new Error(errorMsg);
             }
-          }
           } catch (error) {
             console.error('Chyba při odesílání formuláře:', error);
             if (submitButton) {
@@ -1335,7 +1355,7 @@ Odkaz do aplikace: ${appUrl}`;
             showToastNotification('Chyba při odesílání', error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
           }
         });
-      }
+      }, 50); // Small delay to ensure DOM is ready
     });
 
     polygon.on("mouseover", () => {

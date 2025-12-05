@@ -779,22 +779,24 @@ Odkaz do aplikace: ${appUrl}`;
           form.classList.add('hidden');
           form.reset();
           
-          // Remove existing listeners to prevent duplicates
-          const newShowBtn = showFormBtn.cloneNode(true);
-          const newForm = form.cloneNode(true);
-          showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
-          form.parentNode?.replaceChild(newForm, form);
-          
-          newShowBtn.addEventListener('click', (e) => {
+          // Use event delegation on popup content to handle button clicks
+          // This is more reliable than cloning and replacing elements
+          const handleButtonClick = (e) => {
+            const target = e.target;
+            // Check if the clicked element or its parent is the show form button
+            const clickedBtn = target.closest('.show-report-form-btn');
+            if (!clickedBtn || clickedBtn !== showFormBtn) return;
+            
             e.stopPropagation(); // Prevent any event bubbling that might close popup
             e.preventDefault(); // Prevent any default behavior
             console.log('Show form button clicked'); // Debug log
-            newShowBtn.classList.add('hidden');
-            newForm.classList.remove('hidden');
+            
+            showFormBtn.classList.add('hidden');
+            form.classList.remove('hidden');
             // Force display to ensure form is visible
-            newForm.style.display = 'flex';
-            newForm.style.flexDirection = 'column';
-            console.log('Form should be visible now', newForm.style.display, newForm.classList); // Debug log
+            form.style.display = 'flex';
+            form.style.flexDirection = 'column';
+            console.log('Form should be visible now', form.style.display, form.classList); // Debug log
             // Add class to popup wrapper to expand it
             const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
             if (popupWrapper) {
@@ -807,15 +809,15 @@ Odkaz do aplikace: ${appUrl}`;
               popupWrapper.style.setProperty('flex-direction', 'column', 'important');
             }
             // Ensure form is scrollable on mobile
-            if (newForm) {
-              newForm.style.maxHeight = 'none';
-              newForm.style.overflowY = 'visible';
-              newForm.style.display = 'flex';
-              newForm.style.flexDirection = 'column';
-              newForm.style.flex = '1 1 auto';
-              newForm.style.minHeight = '0';
+            if (form) {
+              form.style.maxHeight = 'none';
+              form.style.overflowY = 'visible';
+              form.style.display = 'flex';
+              form.style.flexDirection = 'column';
+              form.style.flex = '1 1 auto';
+              form.style.minHeight = '0';
               // Ensure submit button is always visible at bottom
-              const submitBtn = newForm.querySelector('button[type="submit"]');
+              const submitBtn = form.querySelector('button[type="submit"]');
               if (submitBtn) {
                 submitBtn.style.marginTop = 'auto';
                 submitBtn.style.flexShrink = '0';
@@ -880,15 +882,24 @@ Odkaz do aplikace: ${appUrl}`;
                 }
               }
             }, 150);
-          });
+          };
+          
+          // Attach event listener to popup content using event delegation
+          popupContent.addEventListener('click', handleButtonClick);
+          
+          // Store handler reference for cleanup on popup close
+          marker._reportFormHandler = handleButtonClick;
+          
+          // Store category for use in form submit handler
+          const itemCategory = item?.category || showFormBtn.getAttribute('data-category') || 'zeleně';
           
           // Add form submit handler
-          newForm.addEventListener('submit', async (e) => {
+          form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(newForm);
+            const formData = new FormData(form);
             
             // Check if file is included
-            const fileInput = newForm.querySelector('input[type="file"]');
+            const fileInput = form.querySelector('input[type="file"]');
             if (fileInput && fileInput.files && fileInput.files.length > 0) {
               const file = fileInput.files[0];
               console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
@@ -898,7 +909,7 @@ Odkaz do aplikace: ${appUrl}`;
               }
             }
             
-            const submitButton = newForm.querySelector('button[type="submit"]');
+            const submitButton = form.querySelector('button[type="submit"]');
             const originalText = submitButton?.textContent;
             
             if (submitButton) {
@@ -977,7 +988,7 @@ Odkaz do aplikace: ${appUrl}`;
                 }
                 
                 // Show toast notification
-                const categoryName = item?.category === "lampy" ? "lampy" : (item?.category === "kose" ? "koše" : "zeleně");
+                const categoryName = itemCategory === "lampy" ? "lampy" : (itemCategory === "kose" ? "koše" : "zeleně");
                 showToastNotification('Hlášení odesláno!', `Děkujeme za nahlášení závady ${categoryName}. Ozveme se vám co nejdříve.`, 'success');
               } else {
                 // Try to get error message from response
@@ -1026,6 +1037,21 @@ Odkaz do aplikace: ${appUrl}`;
             }
           });
         }, 50); // Small delay to ensure DOM is ready
+      });
+      
+      // Clean up event listener when popup closes
+      marker.on('popupclose', () => {
+        const popup = marker.getPopup();
+        if (popup) {
+          const popupElement = popup.getElement();
+          if (popupElement) {
+            const popupContent = popupElement.querySelector('.leaflet-popup-content');
+            if (popupContent && marker._reportFormHandler) {
+              popupContent.removeEventListener('click', marker._reportFormHandler);
+              delete marker._reportFormHandler;
+            }
+          }
+        }
       });
     }
     
@@ -1116,21 +1142,24 @@ Odkaz do aplikace: ${appUrl}`;
         form.classList.add('hidden');
         form.reset();
         
-        // Remove existing listeners to prevent duplicates
-        const newShowBtn = showFormBtn.cloneNode(true);
-        const newForm = form.cloneNode(true);
-        showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
-        form.parentNode?.replaceChild(newForm, form);
-        
-        newShowBtn.addEventListener('click', (e) => {
+        // Use event delegation on popup content to handle button clicks
+        // This is more reliable than cloning and replacing elements
+        const handleButtonClick = (e) => {
+          const target = e.target;
+          // Check if the clicked element or its parent is the show form button
+          const clickedBtn = target.closest('.show-report-form-btn');
+          if (!clickedBtn || clickedBtn !== showFormBtn) return;
+          
           e.stopPropagation(); // Prevent any event bubbling that might close popup
           e.preventDefault(); // Prevent any default behavior
-          newShowBtn.classList.add('hidden');
-          newForm.classList.remove('hidden');
+          console.log('Show form button clicked for zelen'); // Debug log
+          
+          showFormBtn.classList.add('hidden');
+          form.classList.remove('hidden');
           // Force display to ensure form is visible
-          newForm.style.display = 'flex';
-          newForm.style.flexDirection = 'column';
-          console.log('Form should be visible now for zelen', newForm.style.display, newForm.classList); // Debug log
+          form.style.display = 'flex';
+          form.style.flexDirection = 'column';
+          console.log('Form should be visible now for zelen', form.style.display, form.classList); // Debug log
           // Add class to popup wrapper to expand it
           const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {
@@ -1143,15 +1172,15 @@ Odkaz do aplikace: ${appUrl}`;
             popupWrapper.style.setProperty('flex-direction', 'column', 'important');
           }
           // Ensure form is scrollable on mobile
-          if (newForm) {
-            newForm.style.maxHeight = 'none';
-            newForm.style.overflowY = 'visible';
-            newForm.style.display = 'flex';
-            newForm.style.flexDirection = 'column';
-            newForm.style.flex = '1 1 auto';
-            newForm.style.minHeight = '0';
+          if (form) {
+            form.style.maxHeight = 'none';
+            form.style.overflowY = 'visible';
+            form.style.display = 'flex';
+            form.style.flexDirection = 'column';
+            form.style.flex = '1 1 auto';
+            form.style.minHeight = '0';
             // Ensure submit button is always visible at bottom
-            const submitBtn = newForm.querySelector('button[type="submit"]');
+            const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
               submitBtn.style.marginTop = 'auto';
               submitBtn.style.flexShrink = '0';
@@ -1216,15 +1245,24 @@ Odkaz do aplikace: ${appUrl}`;
               }
             }
           }, 150);
-        });
+        };
+        
+        // Attach event listener to popup content using event delegation
+        popupContent.addEventListener('click', handleButtonClick);
+        
+        // Store handler reference for cleanup on popup close
+        polygon._reportFormHandler = handleButtonClick;
+        
+        // Store category for use in form submit handler (zelen is always green areas)
+        const itemCategory = 'zelen';
         
         // Add form submit handler
-        newForm.addEventListener('submit', async (e) => {
+        form.addEventListener('submit', async (e) => {
           e.preventDefault();
-          const formData = new FormData(newForm);
+          const formData = new FormData(form);
           
           // Check if file is included
-          const fileInput = newForm.querySelector('input[type="file"]');
+          const fileInput = form.querySelector('input[type="file"]');
           if (fileInput && fileInput.files && fileInput.files.length > 0) {
             const file = fileInput.files[0];
             console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
@@ -1234,7 +1272,7 @@ Odkaz do aplikace: ${appUrl}`;
             }
           }
           
-          const submitButton = newForm.querySelector('button[type="submit"]');
+          const submitButton = form.querySelector('button[type="submit"]');
           const originalText = submitButton?.textContent;
           
           if (submitButton) {
@@ -1317,31 +1355,32 @@ Odkaz do aplikace: ${appUrl}`;
               if (!isSyntheticResponse) {
                 try {
                   const errorData = await response.json();
-                // Formspree error format: { error: { code: "...", message: "..." } } or { error: "..." }
-                if (errorData.error) {
-                  if (typeof errorData.error === 'string') {
-                    errorMsg = errorData.error;
-                  } else if (errorData.error.message) {
-                    errorMsg = errorData.error.message;
-                  } else if (errorData.error.code) {
-                    const errorCodeMessages = {
-                      'REQUIRED_FIELD_MISSING': 'Chybí povinné pole.',
-                      'REQUIRED_FIELD_EMPTY': 'Povinné pole je prázdné.',
-                      'TYPE_EMAIL': 'Email má neplatný formát.',
-                      'FILES_TOO_BIG': 'Soubor je příliš velký.',
-                    };
-                    errorMsg = errorCodeMessages[errorData.error.code] || errorData.error.code;
+                  // Formspree error format: { error: { code: "...", message: "..." } } or { error: "..." }
+                  if (errorData.error) {
+                    if (typeof errorData.error === 'string') {
+                      errorMsg = errorData.error;
+                    } else if (errorData.error.message) {
+                      errorMsg = errorData.error.message;
+                    } else if (errorData.error.code) {
+                      const errorCodeMessages = {
+                        'REQUIRED_FIELD_MISSING': 'Chybí povinné pole.',
+                        'REQUIRED_FIELD_EMPTY': 'Povinné pole je prázdné.',
+                        'TYPE_EMAIL': 'Email má neplatný formát.',
+                        'FILES_TOO_BIG': 'Soubor je příliš velký.',
+                      };
+                      errorMsg = errorCodeMessages[errorData.error.code] || errorData.error.code;
+                    }
+                  } else if (errorData.message) {
+                    errorMsg = errorData.message;
                   }
-                } else if (errorData.message) {
-                  errorMsg = errorData.message;
-                }
-                console.error('Formspree error:', errorData);
-              } catch (e) {
-                // If not JSON, use status text
-                if (response.status === 422) {
-                  errorMsg = 'Chyba validace. Zkontrolujte formulář.';
-                } else if (response.status === 400) {
-                  errorMsg = 'Neplatný požadavek. Zkontrolujte formulář.';
+                  console.error('Formspree error:', errorData);
+                } catch (e) {
+                  // If not JSON, use status text
+                  if (response.status === 422) {
+                    errorMsg = 'Chyba validace. Zkontrolujte formulář.';
+                  } else if (response.status === 400) {
+                    errorMsg = 'Neplatný požadavek. Zkontrolujte formulář.';
+                  }
                 }
               }
               throw new Error(errorMsg);
@@ -1356,6 +1395,21 @@ Odkaz do aplikace: ${appUrl}`;
           }
         });
       }, 50); // Small delay to ensure DOM is ready
+    });
+    
+    // Clean up event listener when popup closes
+    polygon.on('popupclose', () => {
+      const popup = polygon.getPopup();
+      if (popup) {
+        const popupElement = popup.getElement();
+        if (popupElement) {
+          const popupContent = popupElement.querySelector('.leaflet-popup-content');
+          if (popupContent && polygon._reportFormHandler) {
+            popupContent.removeEventListener('click', polygon._reportFormHandler);
+            delete polygon._reportFormHandler;
+          }
+        }
+      }
     });
 
     polygon.on("mouseover", () => {

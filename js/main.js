@@ -750,29 +750,60 @@ Odkaz do aplikace: ${appUrl}`;
     // Add form submit handler for lampy, kose
     if (item.category === "lampy" || item.category === "kose") {
       marker.on('popupopen', () => {
+        console.log('[LAMPY/KOSE] popupopen event fired for category:', item.category);
         // Use setTimeout to ensure popup DOM is fully rendered
         setTimeout(() => {
+          console.log('[LAMPY/KOSE] setTimeout callback executed');
           const popup = marker.getPopup();
-          if (!popup || !popup.isOpen()) return;
+          if (!popup || !popup.isOpen()) {
+            console.warn('[LAMPY/KOSE] Popup not found or not open', { popup, isOpen: popup?.isOpen() });
+            return;
+          }
+          console.log('[LAMPY/KOSE] Popup is open');
           
           const popupElement = popup.getElement();
-          if (!popupElement) return;
+          if (!popupElement) {
+            console.warn('[LAMPY/KOSE] Popup element not found');
+            return;
+          }
+          console.log('[LAMPY/KOSE] Popup element found');
           
           // Find the popup content element (not the wrapper)
           const popupContent = popupElement.querySelector('.leaflet-popup-content');
           if (!popupContent) {
-            console.warn('Popup content not found');
+            console.warn('[LAMPY/KOSE] Popup content not found');
             return;
           }
+          console.log('[LAMPY/KOSE] Popup content found');
           
           // Handle "Nahlásit závadu" button click
           const showFormBtn = popupContent.querySelector('.show-report-form-btn');
           const form = popupContent.querySelector('.lamp-report-form');
           
+          console.log('[LAMPY/KOSE] Looking for elements', {
+            showFormBtn: !!showFormBtn,
+            form: !!form,
+            allButtons: popupContent.querySelectorAll('button').length,
+            allForms: popupContent.querySelectorAll('form').length,
+            popupContentHTML: popupContent.innerHTML.substring(0, 300)
+          });
+          
           if (!showFormBtn || !form) {
-            console.warn('Show form button or form not found in popup', { showFormBtn, form });
+            console.warn('[LAMPY/KOSE] Show form button or form not found in popup', { 
+              showFormBtn, 
+              form,
+              allButtons: Array.from(popupContent.querySelectorAll('button')).map(b => ({
+                classes: b.className,
+                text: b.textContent
+              })),
+              allForms: Array.from(popupContent.querySelectorAll('form')).map(f => ({
+                classes: f.className,
+                action: f.action
+              }))
+            });
             return;
           }
+          console.log('[LAMPY/KOSE] Both elements found, setting up handlers');
           
           // Reset form visibility when popup opens
           showFormBtn.classList.remove('hidden');
@@ -782,21 +813,68 @@ Odkaz do aplikace: ${appUrl}`;
           // Use event delegation on popup content to handle button clicks
           // This is more reliable than cloning and replacing elements
           const handleButtonClick = (e) => {
+            console.log('[LAMPY/KOSE] handleButtonClick called', {
+              target: e.target,
+              targetTag: e.target.tagName,
+              targetClasses: e.target.className
+            });
             const target = e.target;
             // Check if the clicked element or its parent is the show form button
             const clickedBtn = target.closest('.show-report-form-btn');
-            if (!clickedBtn) return;
+            console.log('[LAMPY/KOSE] closest check', {
+              clickedBtn: !!clickedBtn,
+              clickedBtnElement: clickedBtn,
+              showFormBtn: showFormBtn,
+              areSame: clickedBtn === showFormBtn
+            });
+            if (!clickedBtn) {
+              console.log('[LAMPY/KOSE] No show-report-form-btn found, ignoring click');
+              return;
+            }
             
             e.stopPropagation(); // Prevent any event bubbling that might close popup
             e.preventDefault(); // Prevent any default behavior
-            console.log('Show form button clicked'); // Debug log
+            console.log('[LAMPY/KOSE] Show form button clicked, showing form');
+            
+            // Check state before changes
+            const formBefore = {
+              hasHidden: form.classList.contains('hidden'),
+              display: window.getComputedStyle(form).display,
+              visibility: window.getComputedStyle(form).visibility,
+              opacity: window.getComputedStyle(form).opacity,
+              height: window.getComputedStyle(form).height,
+              width: window.getComputedStyle(form).width,
+              parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
+              parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent'
+            };
+            console.log('[LAMPY/KOSE] Form state BEFORE changes:', formBefore);
             
             showFormBtn.classList.add('hidden');
             form.classList.remove('hidden');
             // Force display to ensure form is visible
             form.style.display = 'flex';
             form.style.flexDirection = 'column';
-            console.log('Form should be visible now', form.style.display, form.classList); // Debug log
+            
+            // Check state after changes
+            const formAfter = {
+              hasHidden: form.classList.contains('hidden'),
+              inlineDisplay: form.style.display,
+              computedDisplay: window.getComputedStyle(form).display,
+              visibility: window.getComputedStyle(form).visibility,
+              opacity: window.getComputedStyle(form).opacity,
+              height: window.getComputedStyle(form).height,
+              width: window.getComputedStyle(form).width,
+              offsetHeight: form.offsetHeight,
+              offsetWidth: form.offsetWidth,
+              parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
+              parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent',
+              isVisible: form.offsetHeight > 0 && form.offsetWidth > 0
+            };
+            console.log('[LAMPY/KOSE] Form state AFTER changes:', formAfter);
+            console.log('[LAMPY/KOSE] Form element:', form);
+            console.log('[LAMPY/KOSE] Form classList:', form.classList.toString());
+            console.log('[LAMPY/KOSE] Form style.display:', form.style.display);
+            console.log('[LAMPY/KOSE] Computed display:', window.getComputedStyle(form).display);
             // Add class to popup wrapper to expand it
             const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
             if (popupWrapper) {
@@ -885,10 +963,13 @@ Odkaz do aplikace: ${appUrl}`;
           };
           
           // Attach event listener to popup content using event delegation
+          console.log('[LAMPY/KOSE] Adding click event listener to popupContent');
           popupContent.addEventListener('click', handleButtonClick);
+          console.log('[LAMPY/KOSE] Event listener added successfully');
           
           // Store handler reference for cleanup on popup close
           marker._reportFormHandler = handleButtonClick;
+          console.log('[LAMPY/KOSE] Handler stored in marker._reportFormHandler');
           
           // Store category for use in form submit handler
           const itemCategory = item?.category || showFormBtn.getAttribute('data-category') || 'zeleně';
@@ -1113,29 +1194,60 @@ Odkaz do aplikace: ${appUrl}`;
     
     // Add form submit handler for zelen
     polygon.on('popupopen', () => {
+      console.log('[ZELEN] popupopen event fired');
       // Use setTimeout to ensure popup DOM is fully rendered
       setTimeout(() => {
+        console.log('[ZELEN] setTimeout callback executed');
         const popup = polygon.getPopup();
-        if (!popup || !popup.isOpen()) return;
+        if (!popup || !popup.isOpen()) {
+          console.warn('[ZELEN] Popup not found or not open', { popup, isOpen: popup?.isOpen() });
+          return;
+        }
+        console.log('[ZELEN] Popup is open');
         
         const popupElement = popup.getElement();
-        if (!popupElement) return;
+        if (!popupElement) {
+          console.warn('[ZELEN] Popup element not found');
+          return;
+        }
+        console.log('[ZELEN] Popup element found');
         
         // Find the popup content element (not the wrapper)
         const popupContent = popupElement.querySelector('.leaflet-popup-content');
         if (!popupContent) {
-          console.warn('Popup content not found for zelen');
+          console.warn('[ZELEN] Popup content not found');
           return;
         }
+        console.log('[ZELEN] Popup content found');
         
         // Handle "Nahlásit závadu" button click
         const showFormBtn = popupContent.querySelector('.show-report-form-btn');
         const form = popupContent.querySelector('.lamp-report-form');
         
+        console.log('[ZELEN] Looking for elements', {
+          showFormBtn: !!showFormBtn,
+          form: !!form,
+          allButtons: popupContent.querySelectorAll('button').length,
+          allForms: popupContent.querySelectorAll('form').length,
+          popupContentHTML: popupContent.innerHTML.substring(0, 300)
+        });
+        
         if (!showFormBtn || !form) {
-          console.warn('Show form button or form not found in popup for zelen', { showFormBtn, form });
+          console.warn('[ZELEN] Show form button or form not found in popup', { 
+            showFormBtn, 
+            form,
+            allButtons: Array.from(popupContent.querySelectorAll('button')).map(b => ({
+              classes: b.className,
+              text: b.textContent
+            })),
+            allForms: Array.from(popupContent.querySelectorAll('form')).map(f => ({
+              classes: f.className,
+              action: f.action
+            }))
+          });
           return;
         }
+        console.log('[ZELEN] Both elements found, setting up handlers');
         
         // Reset form visibility when popup opens
         showFormBtn.classList.remove('hidden');
@@ -1145,21 +1257,68 @@ Odkaz do aplikace: ${appUrl}`;
         // Use event delegation on popup content to handle button clicks
         // This is more reliable than cloning and replacing elements
         const handleButtonClick = (e) => {
+          console.log('[ZELEN] handleButtonClick called', {
+            target: e.target,
+            targetTag: e.target.tagName,
+            targetClasses: e.target.className
+          });
           const target = e.target;
           // Check if the clicked element or its parent is the show form button
           const clickedBtn = target.closest('.show-report-form-btn');
-          if (!clickedBtn) return;
+          console.log('[ZELEN] closest check', {
+            clickedBtn: !!clickedBtn,
+            clickedBtnElement: clickedBtn,
+            showFormBtn: showFormBtn,
+            areSame: clickedBtn === showFormBtn
+          });
+          if (!clickedBtn) {
+            console.log('[ZELEN] No show-report-form-btn found, ignoring click');
+            return;
+          }
           
           e.stopPropagation(); // Prevent any event bubbling that might close popup
           e.preventDefault(); // Prevent any default behavior
-          console.log('Show form button clicked for zelen'); // Debug log
+          console.log('[ZELEN] Show form button clicked, showing form');
+          
+          // Check state before changes
+          const formBefore = {
+            hasHidden: form.classList.contains('hidden'),
+            display: window.getComputedStyle(form).display,
+            visibility: window.getComputedStyle(form).visibility,
+            opacity: window.getComputedStyle(form).opacity,
+            height: window.getComputedStyle(form).height,
+            width: window.getComputedStyle(form).width,
+            parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
+            parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent'
+          };
+          console.log('[ZELEN] Form state BEFORE changes:', formBefore);
           
           showFormBtn.classList.add('hidden');
           form.classList.remove('hidden');
           // Force display to ensure form is visible
           form.style.display = 'flex';
           form.style.flexDirection = 'column';
-          console.log('Form should be visible now for zelen', form.style.display, form.classList); // Debug log
+          
+          // Check state after changes
+          const formAfter = {
+            hasHidden: form.classList.contains('hidden'),
+            inlineDisplay: form.style.display,
+            computedDisplay: window.getComputedStyle(form).display,
+            visibility: window.getComputedStyle(form).visibility,
+            opacity: window.getComputedStyle(form).opacity,
+            height: window.getComputedStyle(form).height,
+            width: window.getComputedStyle(form).width,
+            offsetHeight: form.offsetHeight,
+            offsetWidth: form.offsetWidth,
+            parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
+            parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent',
+            isVisible: form.offsetHeight > 0 && form.offsetWidth > 0
+          };
+          console.log('[ZELEN] Form state AFTER changes:', formAfter);
+          console.log('[ZELEN] Form element:', form);
+          console.log('[ZELEN] Form classList:', form.classList.toString());
+          console.log('[ZELEN] Form style.display:', form.style.display);
+          console.log('[ZELEN] Computed display:', window.getComputedStyle(form).display);
           // Add class to popup wrapper to expand it
           const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {
@@ -1248,10 +1407,13 @@ Odkaz do aplikace: ${appUrl}`;
         };
         
         // Attach event listener to popup content using event delegation
+        console.log('[ZELEN] Adding click event listener to popupContent');
         popupContent.addEventListener('click', handleButtonClick);
+        console.log('[ZELEN] Event listener added successfully');
         
         // Store handler reference for cleanup on popup close
         polygon._reportFormHandler = handleButtonClick;
+        console.log('[ZELEN] Handler stored in polygon._reportFormHandler');
         
         // Store category for use in form submit handler (zelen is always green areas)
         const itemCategory = 'zelen';

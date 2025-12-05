@@ -1030,8 +1030,8 @@ Odkaz do aplikace: ${appUrl}`;
       });
     }
   
-  return marker;
-}
+    return marker;
+  }
 
   function createPolygon(area, color, style) {
     const baseStyle = style || greenspaceStyles.trava;

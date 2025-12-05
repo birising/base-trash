@@ -750,163 +750,102 @@ Odkaz do aplikace: ${appUrl}`;
     // Add form submit handler for lampy, kose
     if (item.category === "lampy" || item.category === "kose") {
       marker.on('popupopen', () => {
-        setTimeout(() => {
-          const popup = marker.getPopup();
-          if (!popup || !popup.isOpen()) return;
-          
-          const popupElement = popup.getElement();
-          if (!popupElement) return;
-          
-          const popupContent = popupElement.querySelector('.leaflet-popup-content');
-          if (!popupContent) return;
-          
-          const showFormBtn = popupContent.querySelector('.show-report-form-btn');
-          const form = popupContent.querySelector('.lamp-report-form');
-          
-          if (!showFormBtn || !form) return;
-          
+        const popup = marker.getPopup();
+        const popupElement = popup.getElement();
+        if (!popupElement) return;
+        
+        // Handle "Nahlásit závadu" button click
+        const showFormBtn = popupElement.querySelector('.show-report-form-btn');
+        const form = popupElement.querySelector('.lamp-report-form');
+        
+        if (showFormBtn && form) {
           // Reset form visibility when popup opens
           showFormBtn.classList.remove('hidden');
           form.classList.add('hidden');
           form.reset();
           
-          // Function to show form - use multiple methods to ensure visibility
-          const showForm = () => {
-            console.log('[FORM] showForm called');
-            
-            // Hide button
-            showFormBtn.classList.add('hidden');
-            showFormBtn.style.setProperty('display', 'none', 'important');
-            console.log('[FORM] Button hidden');
-            
-            // Show form - remove hidden class
-            form.classList.remove('hidden');
-            console.log('[FORM] Removed hidden class, form.classList:', form.classList.toString());
-            
-            // Force visibility with multiple methods - use requestAnimationFrame to ensure DOM is ready
-            requestAnimationFrame(() => {
-              // Force visibility with multiple methods
-              form.style.setProperty('display', 'flex', 'important');
-              form.style.setProperty('flex-direction', 'column', 'important');
-              form.style.setProperty('visibility', 'visible', 'important');
-              form.style.setProperty('opacity', '1', 'important');
-              form.style.setProperty('max-height', 'none', 'important');
-              form.style.setProperty('overflow-y', 'visible', 'important');
-              form.style.setProperty('flex', '1 1 auto', 'important');
-              form.style.setProperty('min-height', '0', 'important');
-              
-              // Check if form is actually visible
-              const computedStyle = window.getComputedStyle(form);
-              const isVisible = form.offsetHeight > 0 && form.offsetWidth > 0;
-              console.log('[FORM] After setting styles:', {
-                hasHidden: form.classList.contains('hidden'),
-                inlineDisplay: form.style.display,
-                computedDisplay: computedStyle.display,
-                offsetHeight: form.offsetHeight,
-                offsetWidth: form.offsetWidth,
-                isVisible: isVisible,
-                parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
-                parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent'
-              });
-              
-              // If still not visible, try additional methods
-              if (!isVisible || computedStyle.display === 'none') {
-                console.warn('[FORM] Form still not visible, trying additional methods');
-                // Remove form from DOM and re-append to force reflow
-                const parent = form.parentElement;
-                if (parent) {
-                  const nextSibling = form.nextSibling;
-                  parent.removeChild(form);
-                  if (nextSibling) {
-                    parent.insertBefore(form, nextSibling);
-                  } else {
-                    parent.appendChild(form);
-                  }
-                  // Re-apply styles
-                  form.style.setProperty('display', 'flex', 'important');
-                  form.style.setProperty('visibility', 'visible', 'important');
-                }
-              }
-            });
-            
-            // Expand popup wrapper
-            const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
+          // Remove existing listeners to prevent duplicates
+          const newShowBtn = showFormBtn.cloneNode(true);
+          const newForm = form.cloneNode(true);
+          showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
+          form.parentNode?.replaceChild(newForm, form);
+          
+          newShowBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent any event bubbling that might close popup
+            newShowBtn.classList.add('hidden');
+            newForm.classList.remove('hidden');
+            // Add class to popup wrapper to expand it
+            const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
             if (popupWrapper) {
               popupWrapper.classList.add('popup-expanded');
-              popupWrapper.style.setProperty('max-height', '85vh', 'important');
-              popupWrapper.style.setProperty('overflow-y', 'auto', 'important');
-              popupWrapper.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
-              popupWrapper.style.setProperty('display', 'flex', 'important');
-              popupWrapper.style.setProperty('flex-direction', 'column', 'important');
             }
-            
-            // Ensure submit button is visible
-            const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) {
-              submitBtn.style.setProperty('margin-top', 'auto', 'important');
-              submitBtn.style.setProperty('flex-shrink', '0', 'important');
-            }
-            
-            // Force popup to recalculate size
-            if (popup) {
-              popup.update();
-            }
-            
-            // Ensure popup is visible after expansion
+            // Ensure popup is fully visible after expansion
+            // Only do this for the main large map, not the small map in report modal
             setTimeout(() => {
               if (popup && popup.isOpen() && map) {
+                // Check if this is the main map (not the small report map)
                 const mapContainer = map.getContainer();
                 const mapId = mapContainer?.id;
+                // Skip panning for small report map (reportZavadaMap)
+                // Check if map container is inside report modal map container
                 const isReportMap = mapId === 'reportZavadaMap' || 
                                     mapContainer?.closest('#reportZavadaMapContainer') !== null ||
                                     mapContainer?.closest('.report-zavada-map') !== null ||
                                     mapContainer?.parentElement?.id === 'reportZavadaMap';
-                if (isReportMap) return;
+                if (isReportMap) {
+                  return;
+                }
                 
                 const popupEl = popup.getElement();
                 if (popupEl) {
                   const popupRect = popupEl.getBoundingClientRect();
                   const mapRect = mapContainer.getBoundingClientRect();
                   
+                  // Check if popup is outside viewport
+                  const popupBottom = popupRect.bottom;
+                  const mapBottom = mapRect.bottom;
+                  const popupTop = popupRect.top;
+                  const mapTop = mapRect.top;
+                  
+                  // Calculate how much to pan to make popup visible
                   let panY = 0;
-                  if (popupRect.bottom > mapRect.bottom) {
-                    panY = popupRect.bottom - mapRect.bottom + 20;
-                  } else if (popupRect.top < mapRect.top) {
-                    panY = popupRect.top - mapRect.top - 20;
+                  if (popupBottom > mapBottom) {
+                    // Popup is cut off at bottom - need to pan map down (move viewport up)
+                    panY = popupBottom - mapBottom + 20; // Add 20px padding
+                  } else if (popupTop < mapTop) {
+                    // Popup is cut off at top - need to pan map up (move viewport down)
+                    panY = popupTop - mapTop - 20; // Subtract 20px padding
                   }
                   
                   if (Math.abs(panY) > 5) {
+                    // Convert pixel offset to lat/lng offset
+                    // When panY is positive (popup cut off at bottom), we need to pan map down (add to Y)
+                    // When panY is negative (popup cut off at top), we need to pan map up (subtract from Y)
                     const center = map.getCenter();
                     const point = map.latLngToContainerPoint(center);
                     const newPoint = L.point(point.x, point.y + panY);
                     const newCenter = map.containerPointToLatLng(newPoint);
-                    map.panTo(newCenter, { animate: true, duration: 0.4 });
+                    
+                    map.panTo(newCenter, {
+                      animate: true,
+                      duration: 0.4
+                    });
                   }
                 }
               }
             }, 150);
-          };
-          
-          // Direct event listener on button - simpler and more reliable
-          showFormBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            showForm();
           });
           
-          // Store handler reference for cleanup
-          marker._reportFormHandler = showForm;
-          
           // Store category for use in form submit handler
-          const itemCategory = item?.category || showFormBtn.getAttribute('data-category') || 'zeleně';
+          const itemCategory = item?.category || newShowBtn.getAttribute('data-category') || 'zeleně';
           
           // Add form submit handler
-          form.addEventListener('submit', async (e) => {
+          newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(form);
+            const formData = new FormData(newForm);
             
             // Check if file is included
-            const fileInput = form.querySelector('input[type="file"]');
+            const fileInput = newForm.querySelector('input[type="file"]');
             if (fileInput && fileInput.files && fileInput.files.length > 0) {
               const file = fileInput.files[0];
               console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
@@ -916,7 +855,7 @@ Odkaz do aplikace: ${appUrl}`;
               }
             }
             
-            const submitButton = form.querySelector('button[type="submit"]');
+            const submitButton = newForm.querySelector('button[type="submit"]');
             const originalText = submitButton?.textContent;
             
             if (submitButton) {
@@ -1043,7 +982,7 @@ Odkaz do aplikace: ${appUrl}`;
               showToastNotification('Chyba při odesílání', error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
             }
           });
-        }, 50); // Small delay to ensure DOM is ready
+        }
       });
       
       // Clean up event listener when popup closes
@@ -1120,163 +1059,102 @@ Odkaz do aplikace: ${appUrl}`;
     
     // Add form submit handler for zelen
     polygon.on('popupopen', () => {
-      setTimeout(() => {
-        const popup = polygon.getPopup();
-        if (!popup || !popup.isOpen()) return;
-        
-        const popupElement = popup.getElement();
-        if (!popupElement) return;
-        
-        const popupContent = popupElement.querySelector('.leaflet-popup-content');
-        if (!popupContent) return;
-        
-        const showFormBtn = popupContent.querySelector('.show-report-form-btn');
-        const form = popupContent.querySelector('.lamp-report-form');
-        
-        if (!showFormBtn || !form) return;
-        
+      const popup = polygon.getPopup();
+      const popupElement = popup.getElement();
+      if (!popupElement) return;
+      
+      // Handle "Nahlásit závadu" button click
+      const showFormBtn = popupElement.querySelector('.show-report-form-btn');
+      const form = popupElement.querySelector('.lamp-report-form');
+      
+      if (showFormBtn && form) {
         // Reset form visibility when popup opens
         showFormBtn.classList.remove('hidden');
         form.classList.add('hidden');
         form.reset();
         
-        // Function to show form - use multiple methods to ensure visibility
-        const showForm = () => {
-          console.log('[ZELEN] showForm called');
-          
-          // Hide button
-          showFormBtn.classList.add('hidden');
-          showFormBtn.style.setProperty('display', 'none', 'important');
-          console.log('[ZELEN] Button hidden');
-          
-          // Show form - remove hidden class
-          form.classList.remove('hidden');
-          console.log('[ZELEN] Removed hidden class, form.classList:', form.classList.toString());
-          
-          // Force visibility with multiple methods - use requestAnimationFrame to ensure DOM is ready
-          requestAnimationFrame(() => {
-            // Force visibility with multiple methods
-            form.style.setProperty('display', 'flex', 'important');
-            form.style.setProperty('flex-direction', 'column', 'important');
-            form.style.setProperty('visibility', 'visible', 'important');
-            form.style.setProperty('opacity', '1', 'important');
-            form.style.setProperty('max-height', 'none', 'important');
-            form.style.setProperty('overflow-y', 'visible', 'important');
-            form.style.setProperty('flex', '1 1 auto', 'important');
-            form.style.setProperty('min-height', '0', 'important');
-            
-            // Check if form is actually visible
-            const computedStyle = window.getComputedStyle(form);
-            const isVisible = form.offsetHeight > 0 && form.offsetWidth > 0;
-            console.log('[ZELEN] After setting styles:', {
-              hasHidden: form.classList.contains('hidden'),
-              inlineDisplay: form.style.display,
-              computedDisplay: computedStyle.display,
-              offsetHeight: form.offsetHeight,
-              offsetWidth: form.offsetWidth,
-              isVisible: isVisible,
-              parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
-              parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent'
-            });
-            
-            // If still not visible, try additional methods
-            if (!isVisible || computedStyle.display === 'none') {
-              console.warn('[ZELEN] Form still not visible, trying additional methods');
-              // Remove form from DOM and re-append to force reflow
-              const parent = form.parentElement;
-              if (parent) {
-                const nextSibling = form.nextSibling;
-                parent.removeChild(form);
-                if (nextSibling) {
-                  parent.insertBefore(form, nextSibling);
-                } else {
-                  parent.appendChild(form);
-                }
-                // Re-apply styles
-                form.style.setProperty('display', 'flex', 'important');
-                form.style.setProperty('visibility', 'visible', 'important');
-              }
-            }
-          });
-          
-          // Expand popup wrapper
-          const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
+        // Remove existing listeners to prevent duplicates
+        const newShowBtn = showFormBtn.cloneNode(true);
+        const newForm = form.cloneNode(true);
+        showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
+        form.parentNode?.replaceChild(newForm, form);
+        
+        newShowBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent any event bubbling that might close popup
+          newShowBtn.classList.add('hidden');
+          newForm.classList.remove('hidden');
+          // Add class to popup wrapper to expand it
+          const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {
             popupWrapper.classList.add('popup-expanded');
-            popupWrapper.style.setProperty('max-height', '85vh', 'important');
-            popupWrapper.style.setProperty('overflow-y', 'auto', 'important');
-            popupWrapper.style.setProperty('-webkit-overflow-scrolling', 'touch', 'important');
-            popupWrapper.style.setProperty('display', 'flex', 'important');
-            popupWrapper.style.setProperty('flex-direction', 'column', 'important');
           }
-          
-          // Ensure submit button is visible
-          const submitBtn = form.querySelector('button[type="submit"]');
-          if (submitBtn) {
-            submitBtn.style.setProperty('margin-top', 'auto', 'important');
-            submitBtn.style.setProperty('flex-shrink', '0', 'important');
-          }
-          
-          // Force popup to recalculate size
-          if (popup) {
-            popup.update();
-          }
-          
-          // Ensure popup is visible after expansion
+          // Ensure popup is fully visible after expansion
+          // Only do this for the main large map, not the small map in report modal
           setTimeout(() => {
             if (popup && popup.isOpen() && map) {
+              // Check if this is the main map (not the small report map)
               const mapContainer = map.getContainer();
               const mapId = mapContainer?.id;
+              // Skip panning for small report map (reportZavadaMap)
+              // Check if map container is inside report modal map container
               const isReportMap = mapId === 'reportZavadaMap' || 
                                   mapContainer?.closest('#reportZavadaMapContainer') !== null ||
                                   mapContainer?.closest('.report-zavada-map') !== null ||
                                   mapContainer?.parentElement?.id === 'reportZavadaMap';
-              if (isReportMap) return;
+              if (isReportMap) {
+                return;
+              }
               
               const popupEl = popup.getElement();
               if (popupEl) {
                 const popupRect = popupEl.getBoundingClientRect();
                 const mapRect = mapContainer.getBoundingClientRect();
                 
+                // Check if popup is outside viewport
+                const popupBottom = popupRect.bottom;
+                const mapBottom = mapRect.bottom;
+                const popupTop = popupRect.top;
+                const mapTop = mapRect.top;
+                
+                // Calculate how much to pan to make popup visible
                 let panY = 0;
-                if (popupRect.bottom > mapRect.bottom) {
-                  panY = popupRect.bottom - mapRect.bottom + 20;
-                } else if (popupRect.top < mapRect.top) {
-                  panY = popupRect.top - mapRect.top - 20;
+                if (popupBottom > mapBottom) {
+                  // Popup is cut off at bottom - need to pan map down (move viewport up)
+                  panY = popupBottom - mapBottom + 20; // Add 20px padding
+                } else if (popupTop < mapTop) {
+                  // Popup is cut off at top - need to pan map up (move viewport down)
+                  panY = popupTop - mapTop - 20; // Subtract 20px padding
                 }
                 
                 if (Math.abs(panY) > 5) {
+                  // Convert pixel offset to lat/lng offset
+                  // When panY is positive (popup cut off at bottom), we need to pan map down (add to Y)
+                  // When panY is negative (popup cut off at top), we need to pan map up (subtract from Y)
                   const center = map.getCenter();
                   const point = map.latLngToContainerPoint(center);
                   const newPoint = L.point(point.x, point.y + panY);
                   const newCenter = map.containerPointToLatLng(newPoint);
-                  map.panTo(newCenter, { animate: true, duration: 0.4 });
+                  
+                  map.panTo(newCenter, {
+                    animate: true,
+                    duration: 0.4
+                  });
                 }
               }
             }
           }, 150);
-        };
-        
-        // Direct event listener on button - simpler and more reliable
-        showFormBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          showForm();
         });
-        
-        // Store handler reference for cleanup
-        polygon._reportFormHandler = showForm;
         
         // Store category for use in form submit handler (zelen is always green areas)
         const itemCategory = 'zelen';
         
         // Add form submit handler
-        form.addEventListener('submit', async (e) => {
+        newForm.addEventListener('submit', async (e) => {
           e.preventDefault();
-          const formData = new FormData(form);
+          const formData = new FormData(newForm);
           
           // Check if file is included
-          const fileInput = form.querySelector('input[type="file"]');
+          const fileInput = newForm.querySelector('input[type="file"]');
           if (fileInput && fileInput.files && fileInput.files.length > 0) {
             const file = fileInput.files[0];
             console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
@@ -1286,7 +1164,7 @@ Odkaz do aplikace: ${appUrl}`;
             }
           }
           
-          const submitButton = form.querySelector('button[type="submit"]');
+          const submitButton = newForm.querySelector('button[type="submit"]');
           const originalText = submitButton?.textContent;
           
           if (submitButton) {
@@ -1408,7 +1286,7 @@ Odkaz do aplikace: ${appUrl}`;
             showToastNotification('Chyba při odesílání', error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
           }
         });
-      }, 50); // Small delay to ensure DOM is ready
+      }
     });
     
     // Clean up event listener when popup closes

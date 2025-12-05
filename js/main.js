@@ -850,31 +850,60 @@ Odkaz do aplikace: ${appUrl}`;
             console.log('[LAMPY/KOSE] Form state BEFORE changes:', formBefore);
             
             showFormBtn.classList.add('hidden');
+            console.log('[LAMPY/KOSE] Added hidden to button, button classes:', showFormBtn.classList.toString());
+            
+            // Remove hidden class and force visibility
             form.classList.remove('hidden');
-            // Force display to ensure form is visible
-            form.style.display = 'flex';
-            form.style.flexDirection = 'column';
+            console.log('[LAMPY/KOSE] Removed hidden from form, form classes:', form.classList.toString());
+            console.log('[LAMPY/KOSE] Form has hidden class?', form.classList.contains('hidden'));
+            
+            // Force display to ensure form is visible - use setProperty with important
+            form.style.setProperty('display', 'flex', 'important');
+            form.style.setProperty('flex-direction', 'column', 'important');
+            form.style.setProperty('visibility', 'visible', 'important');
+            form.style.setProperty('opacity', '1', 'important');
+            console.log('[LAMPY/KOSE] Set inline styles with !important');
             
             // Check state after changes
+            const computedStyle = window.getComputedStyle(form);
             const formAfter = {
               hasHidden: form.classList.contains('hidden'),
               inlineDisplay: form.style.display,
-              computedDisplay: window.getComputedStyle(form).display,
-              visibility: window.getComputedStyle(form).visibility,
-              opacity: window.getComputedStyle(form).opacity,
-              height: window.getComputedStyle(form).height,
-              width: window.getComputedStyle(form).width,
+              computedDisplay: computedStyle.display,
+              computedVisibility: computedStyle.visibility,
+              computedOpacity: computedStyle.opacity,
+              visibility: computedStyle.visibility,
+              opacity: computedStyle.opacity,
+              height: computedStyle.height,
+              width: computedStyle.width,
               offsetHeight: form.offsetHeight,
               offsetWidth: form.offsetWidth,
+              clientHeight: form.clientHeight,
+              clientWidth: form.clientWidth,
+              scrollHeight: form.scrollHeight,
+              scrollWidth: form.scrollWidth,
               parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
               parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent',
-              isVisible: form.offsetHeight > 0 && form.offsetWidth > 0
+              parentOffsetHeight: form.parentElement ? form.parentElement.offsetHeight : 'no parent',
+              isVisible: form.offsetHeight > 0 && form.offsetWidth > 0,
+              allComputedStyles: {
+                display: computedStyle.display,
+                visibility: computedStyle.visibility,
+                opacity: computedStyle.opacity,
+                position: computedStyle.position,
+                zIndex: computedStyle.zIndex,
+                transform: computedStyle.transform
+              }
             };
             console.log('[LAMPY/KOSE] Form state AFTER changes:', formAfter);
             console.log('[LAMPY/KOSE] Form element:', form);
             console.log('[LAMPY/KOSE] Form classList:', form.classList.toString());
             console.log('[LAMPY/KOSE] Form style.display:', form.style.display);
-            console.log('[LAMPY/KOSE] Computed display:', window.getComputedStyle(form).display);
+            console.log('[LAMPY/KOSE] Form style.visibility:', form.style.visibility);
+            console.log('[LAMPY/KOSE] Computed display:', computedStyle.display);
+            console.log('[LAMPY/KOSE] Computed visibility:', computedStyle.visibility);
+            console.log('[LAMPY/KOSE] Form offsetHeight:', form.offsetHeight, 'offsetWidth:', form.offsetWidth);
+            console.log('[LAMPY/KOSE] Form clientHeight:', form.clientHeight, 'clientWidth:', form.clientWidth);
             // Add class to popup wrapper to expand it
             const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
             if (popupWrapper) {
@@ -1294,31 +1323,60 @@ Odkaz do aplikace: ${appUrl}`;
           console.log('[ZELEN] Form state BEFORE changes:', formBefore);
           
           showFormBtn.classList.add('hidden');
+          console.log('[ZELEN] Added hidden to button, button classes:', showFormBtn.classList.toString());
+          
+          // Remove hidden class and force visibility
           form.classList.remove('hidden');
-          // Force display to ensure form is visible
-          form.style.display = 'flex';
-          form.style.flexDirection = 'column';
+          console.log('[ZELEN] Removed hidden from form, form classes:', form.classList.toString());
+          console.log('[ZELEN] Form has hidden class?', form.classList.contains('hidden'));
+          
+          // Force display to ensure form is visible - use setProperty with important
+          form.style.setProperty('display', 'flex', 'important');
+          form.style.setProperty('flex-direction', 'column', 'important');
+          form.style.setProperty('visibility', 'visible', 'important');
+          form.style.setProperty('opacity', '1', 'important');
+          console.log('[ZELEN] Set inline styles with !important');
           
           // Check state after changes
+          const computedStyle = window.getComputedStyle(form);
           const formAfter = {
             hasHidden: form.classList.contains('hidden'),
             inlineDisplay: form.style.display,
-            computedDisplay: window.getComputedStyle(form).display,
-            visibility: window.getComputedStyle(form).visibility,
-            opacity: window.getComputedStyle(form).opacity,
-            height: window.getComputedStyle(form).height,
-            width: window.getComputedStyle(form).width,
+            computedDisplay: computedStyle.display,
+            computedVisibility: computedStyle.visibility,
+            computedOpacity: computedStyle.opacity,
+            visibility: computedStyle.visibility,
+            opacity: computedStyle.opacity,
+            height: computedStyle.height,
+            width: computedStyle.width,
             offsetHeight: form.offsetHeight,
             offsetWidth: form.offsetWidth,
+            clientHeight: form.clientHeight,
+            clientWidth: form.clientWidth,
+            scrollHeight: form.scrollHeight,
+            scrollWidth: form.scrollWidth,
             parentDisplay: form.parentElement ? window.getComputedStyle(form.parentElement).display : 'no parent',
             parentVisibility: form.parentElement ? window.getComputedStyle(form.parentElement).visibility : 'no parent',
-            isVisible: form.offsetHeight > 0 && form.offsetWidth > 0
+            parentOffsetHeight: form.parentElement ? form.parentElement.offsetHeight : 'no parent',
+            isVisible: form.offsetHeight > 0 && form.offsetWidth > 0,
+            allComputedStyles: {
+              display: computedStyle.display,
+              visibility: computedStyle.visibility,
+              opacity: computedStyle.opacity,
+              position: computedStyle.position,
+              zIndex: computedStyle.zIndex,
+              transform: computedStyle.transform
+            }
           };
           console.log('[ZELEN] Form state AFTER changes:', formAfter);
           console.log('[ZELEN] Form element:', form);
           console.log('[ZELEN] Form classList:', form.classList.toString());
           console.log('[ZELEN] Form style.display:', form.style.display);
-          console.log('[ZELEN] Computed display:', window.getComputedStyle(form).display);
+          console.log('[ZELEN] Form style.visibility:', form.style.visibility);
+          console.log('[ZELEN] Computed display:', computedStyle.display);
+          console.log('[ZELEN] Computed visibility:', computedStyle.visibility);
+          console.log('[ZELEN] Form offsetHeight:', form.offsetHeight, 'offsetWidth:', form.offsetWidth);
+          console.log('[ZELEN] Form clientHeight:', form.clientHeight, 'clientWidth:', form.clientWidth);
           // Add class to popup wrapper to expand it
           const popupWrapper = popupContent?.closest('.leaflet-popup-content-wrapper');
           if (popupWrapper) {

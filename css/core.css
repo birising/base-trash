@@ -1046,7 +1046,7 @@ body {
   /* Better popup sizing on mobile - ALL popups, not just expanded */
   .leaflet-popup-content-wrapper {
     max-width: calc(100vw - 40px) !important;
-    max-height: 85vh !important;
+    max-height: 75vh !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain !important;
@@ -1057,7 +1057,7 @@ body {
   
   /* Ensure Leaflet popup container allows scrolling */
   .leaflet-popup {
-    max-height: 85vh !important;
+    max-height: 75vh !important;
   }
   
   /* Ensure popup tip doesn't interfere */
@@ -1078,6 +1078,7 @@ body {
   /* Ensure popup content is scrollable on mobile */
   .leaflet-popup-content-wrapper .leaflet-popup-content {
     overflow-y: visible !important;
+    padding-bottom: 20px !important;
   }
 
   /* Make forms in popups scrollable on mobile */
@@ -1090,6 +1091,7 @@ body {
     position: relative !important;
     flex: 1 1 auto !important;
     min-height: 0 !important;
+    padding-bottom: 20px !important;
   }
 
   /* Ensure submit button is always visible at bottom */
@@ -1097,14 +1099,17 @@ body {
   .leaflet-popup-content .lamp-report-form button[type="submit"] {
     flex-shrink: 0 !important;
     margin-top: auto !important;
-    position: relative !important;
+    margin-bottom: 10px !important;
+    position: sticky !important;
+    bottom: 0 !important;
     background: linear-gradient(135deg, #f97316, #f59e0b) !important;
     z-index: 10 !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2) !important;
   }
   
   /* Ensure wrapper itself is scrollable when expanded */
   .leaflet-popup-content-wrapper.popup-expanded {
-    max-height: 85vh !important;
+    max-height: 75vh !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     display: flex !important;
@@ -1119,13 +1124,24 @@ body {
     min-height: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+    padding-bottom: 20px !important;
   }
   
   /* Force scrolling on ALL popups with forms on mobile */
   .leaflet-popup-content-wrapper:has(.lamp-report-form) {
-    max-height: 85vh !important;
+    max-height: 75vh !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Ensure form fields have proper spacing on mobile */
+  .leaflet-popup-content .lamp-report-form .popup-form-label {
+    margin-bottom: 12px !important;
+  }
+  
+  .leaflet-popup-content .lamp-report-form .popup-form-input,
+  .leaflet-popup-content .lamp-report-form .popup-form-textarea {
+    margin-bottom: 8px !important;
   }
 
   /* Better button spacing in popups */

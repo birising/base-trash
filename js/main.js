@@ -1390,6 +1390,28 @@ Odkaz do aplikace: ${appUrl}`;
     });
   }
 
+  // Update sběrný dvůr status function
+  function updateSbernyDvurStatus() {
+    const wasteSbernyDvurEl = document.getElementById("wasteSbernyDvur");
+    if (!wasteSbernyDvurEl) return;
+    
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTime = currentHour * 60 + currentMinute; // Time in minutes from midnight
+    const openTime = 8 * 60; // 8:00 in minutes
+    const closeTime = 16 * 60; // 16:00 in minutes
+    
+    if (dayOfWeek === 6 && currentTime >= openTime && currentTime < closeTime) {
+      wasteSbernyDvurEl.textContent = "Sběrný dvůr otevřen";
+      wasteSbernyDvurEl.style.color = "var(--accent)";
+      wasteSbernyDvurEl.style.fontWeight = "600";
+    } else {
+      wasteSbernyDvurEl.textContent = "";
+    }
+  }
+
   function updateCounters() {
     if (counters.lampy) counters.lampy.textContent = dataLampy.length;
     if (counters.kontejnery) counters.kontejnery.textContent = dataKontejnery.length;
@@ -1425,7 +1447,11 @@ Odkaz do aplikace: ${appUrl}`;
       
       counters.odpad.textContent = displayDate.toLocaleDateString("cs-CZ");
     }
-    // Sběrný dvůr summary is static, no update needed
+    
+    // Update sběrný dvůr status (will be handled by interval, but update here too)
+    if (typeof updateSbernyDvurStatus === 'function') {
+      updateSbernyDvurStatus();
+    }
     // Count active (unresolved) zavady
     if (counters.zavady) {
       const activeZavady = (dataZavady && Array.isArray(dataZavady)) 
@@ -3160,6 +3186,10 @@ Odkaz do aplikace: ${appUrl}`;
     syncGreenspaceLayerInputs();
   }
   fetchStreamLevel();
+  
+  // Update sběrný dvůr status immediately and then every minute
+  updateSbernyDvurStatus();
+  setInterval(updateSbernyDvurStatus, 60000); // Update every minute
   
   // Load kriminalita data asynchronously in background (non-blocking)
   // This allows the app to display immediately while kriminalita loads separately

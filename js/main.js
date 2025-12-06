@@ -2240,6 +2240,56 @@ Odkaz do aplikace: ${appUrl}`;
   let zavadySortColumn = 'status';
   let zavadySortDirection = 'asc'; // 'asc' = unresolved first (0 before 1), 'desc' = resolved first
 
+  // Initialize map for zavada detail
+  function initializeZavadyMap(container, lat, lng) {
+    if (!window.L || !container) return;
+    
+    // Small delay to ensure container is visible
+    setTimeout(() => {
+      try {
+        const map = L.map(container, {
+          zoomControl: true,
+          attributionControl: true,
+          scrollWheelZoom: false,
+          doubleClickZoom: false,
+          boxZoom: false,
+          keyboard: false,
+          dragging: true,
+          touchZoom: true
+        });
+        
+        // Set view to zavada location
+        map.setView([lat, lng], 16);
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(map);
+        
+        // Add marker
+        L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: 'zavady-map-marker',
+            html: '<div style="background: #f97316; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6);">!</div>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+          })
+        }).addTo(map);
+        
+        // Store map instance for cleanup
+        container._mapInstance = map;
+        
+        // Invalidate size after a short delay to ensure proper rendering
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+      } catch (error) {
+        console.error('Chyba při inicializaci mapy závady:', error);
+      }
+    }, 50);
+  }
+
   function renderZavady(zavady) {
     if (!zavadyList) return;
     
@@ -2500,6 +2550,16 @@ Odkaz do aplikace: ${appUrl}`;
                     </div>`
                   : '<div class="zavady-expanded-gallery"><p class="zavady-no-photos">Žádné fotografie</p></div>';
                 
+                // Map HTML - only if we have coordinates
+                const mapHtml = (item.lat && item.lng) 
+                  ? `<div class="zavady-map-container">
+                      <div class="zavady-map-header">
+                        <strong>Lokace závady</strong>
+                      </div>
+                      <div id="zavady-map-${item.id}" class="zavady-map" data-lat="${item.lat}" data-lng="${item.lng}"></div>
+                    </div>`
+                  : '';
+                
                 return `
                   <tr class="zavady-row" data-zavada-id="${item.id}">
                     <td>${reportedDate}</td>
@@ -2514,6 +2574,7 @@ Odkaz do aplikace: ${appUrl}`;
                     <td colspan="7" class="zavady-detail-cell">
                       <div class="zavady-detail-content">
                         ${resolvedInfo}
+                        ${mapHtml}
                         ${galleryHtml}
                       </div>
                     </td>
@@ -2569,6 +2630,17 @@ Odkaz do aplikace: ${appUrl}`;
             if (isHidden) {
               detailRow.classList.remove('hidden');
               row.classList.add('zavady-row-expanded');
+              
+              // Initialize map if it exists and hasn't been initialized
+              const mapContainer = detailRow.querySelector(`#zavady-map-${zavadaId}`);
+              if (mapContainer && !mapContainer.dataset.initialized) {
+                const lat = parseFloat(mapContainer.dataset.lat);
+                const lng = parseFloat(mapContainer.dataset.lng);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                  initializeZavadyMap(mapContainer, lat, lng);
+                  mapContainer.dataset.initialized = 'true';
+                }
+              }
             } else {
               detailRow.classList.add('hidden');
               row.classList.remove('zavady-row-expanded');

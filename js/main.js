@@ -215,6 +215,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     hladina: L.layerGroup(),
     odpad: L.layerGroup(),
     kriminalita: L.layerGroup(),
+    zavadyMapa: L.layerGroup(),
   };
   
   // Store marker references by category and ID/coordinates for deep linking
@@ -262,7 +263,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const zavadyView = document.getElementById("zavadyView");
   const zavadyList = document.getElementById("zavadyList");
 
-  const mapCategories = ["kose", "lampy", "kontejnery", "zelen"];
+  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "zavady-mapa"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
   let currentCategory = null;
@@ -1351,6 +1352,345 @@ Odkaz do aplikace: ${appUrl}`;
   populateLayer("kontejnery");
   populateLayer("hladina");
 
+  // Populate zavady on map
+  async function populateZavadyMapLayer(zavady) {
+    if (!map || !zavady || !Array.isArray(zavady)) return;
+    
+    // Clear existing zavady markers
+    layers.zavadyMapa.clearLayers();
+    
+    // Filter zavady that have coordinates
+    const zavadyWithCoords = zavady.filter(z => z.lat && z.lng);
+    
+    if (zavadyWithCoords.length === 0) return;
+    
+    // Helper functions
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '–';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return dateStr;
+      }
+    };
+    
+    const getCategoryLabel = (category) => {
+      const labels = {
+        'zelen': 'Údržba zeleně',
+        'kose': 'Koš',
+        'lampy': 'Lampa',
+        'ostatni': 'Ostatní'
+      };
+      return labels[category] || category;
+    };
+    
+    zavadyWithCoords.forEach(zavada => {
+      const lat = parseFloat(zavada.lat);
+      const lng = parseFloat(zavada.lng);
+      
+      if (isNaN(lat) || isNaN(lng)) return;
+      
+      // Create marker with orange icon
+      const marker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: 'zavady-map-marker',
+          html: '<div style="background: #f97316; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6);">!</div>',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        })
+      });
+      
+      // Create popup content
+      const reportedDate = formatDate(zavada.reported_date);
+      const description = zavada.description || 'Bez popisu';
+      const statusText = zavada.resolved ? 'Vyřešeno' : 'Nahlášeno';
+      const statusColor = zavada.resolved ? '#22c55e' : '#f59e0b';
+      const categoryLabel = getCategoryLabel(zavada.category || 'unknown');
+      const photos = zavada.photos || [];
+      const hasPhotos = Array.isArray(photos) && photos.length > 0;
+      
+      // Photo gallery HTML
+      let photoGalleryHtml = '';
+      if (hasPhotos) {
+        photoGalleryHtml = `
+          <div class="zavady-popup-gallery">
+            <div class="zavady-popup-gallery-title">Fotografie (${photos.length})</div>
+            <div class="zavady-popup-gallery-thumbnails">
+              ${photos.map((photo, idx) => `
+                <img 
+                  src="${photo}" 
+                  alt="Fotografie ${idx + 1}" 
+                  class="zavady-popup-gallery-thumb" 
+                  data-photo-index="${idx}"
+                  data-photos='${JSON.stringify(photos)}'
+                  loading="lazy"
+                  decoding="async"
+                >
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+      
+      // GPS coordinates
+      const gpsCoords = `${lat}, ${lng}`;
+      const appUrl = `${window.location.origin}${window.location.pathname}#zavady/${zavada.id}`;
+      
+      const popupContent = `
+        <div class="zavady-popup-content">
+          <div class="zavady-popup-header">
+            <strong>${description}</strong>
+            <div class="zavady-popup-meta">
+              <span class="zavady-popup-category">${categoryLabel}</span>
+              <span class="zavady-popup-status" style="color: ${statusColor}">${statusText}</span>
+            </div>
+            <div class="zavady-popup-date">Nahlášeno: ${reportedDate}</div>
+          </div>
+          ${photoGalleryHtml}
+          <div class="popup-actions">
+            <button class="popup-button show-report-form-btn" data-category="zavady-mapa" data-item-id="${zavada.id || 'N/A'}" data-item-name="${description}" data-gps="${gpsCoords}" data-app-url="${appUrl}">Nahlásit další závadu</button>
+            <form class="lamp-report-form hidden" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="form_type" value="zavada_report">
+              <input type="hidden" name="zavada_id" value="${zavada.id || 'N/A'}">
+              <input type="hidden" name="zavada_name" value="${description}">
+              <input type="hidden" name="gps_coords" value="${gpsCoords}">
+              <input type="hidden" name="app_url" value="${appUrl}">
+              <label class="popup-form-label">
+                Váš email:
+                <input type="email" name="email" required class="popup-form-input">
+              </label>
+              <label class="popup-form-label">
+                Popis závady:
+                <textarea name="message" rows="3" class="popup-form-textarea" placeholder="Popište prosím další závadu..."></textarea>
+              </label>
+              <label class="popup-form-label">
+                Fotografie (volitelné):
+                <input type="file" name="upload" accept="image/*" class="popup-form-input">
+              </label>
+              <button type="submit" class="popup-button">Odeslat</button>
+            </form>
+          </div>
+        </div>
+      `;
+      
+      marker.bindPopup(popupContent, {
+        maxWidth: 400,
+        className: 'zavady-popup'
+      });
+      
+      // Add event listeners for popup
+      marker.on('popupopen', () => {
+        const popup = marker.getPopup();
+        const popupElement = popup.getElement();
+        if (!popupElement) return;
+        
+        // Handle gallery thumbnails click
+        const galleryThumbs = popupElement.querySelectorAll('.zavady-popup-gallery-thumb');
+        galleryThumbs.forEach(thumb => {
+          thumb.addEventListener('click', () => {
+            const photos = JSON.parse(thumb.dataset.photos || '[]');
+            if (photos.length > 0) {
+              openZavadyPhotoGallery(photos);
+            }
+          });
+        });
+        
+        // Handle "Nahlásit další závadu" button click
+        const showFormBtn = popupElement.querySelector('.show-report-form-btn');
+        const form = popupElement.querySelector('.lamp-report-form');
+        
+        if (showFormBtn && form) {
+          // Reset form visibility when popup opens
+          showFormBtn.classList.remove('hidden');
+          form.classList.add('hidden');
+          form.reset();
+          
+          // Remove existing listeners to prevent duplicates
+          const newShowBtn = showFormBtn.cloneNode(true);
+          const newForm = form.cloneNode(true);
+          showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
+          form.parentNode?.replaceChild(newForm, form);
+          
+          newShowBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            newShowBtn.classList.add('hidden');
+            newForm.classList.remove('hidden');
+            const popupWrapper = popupElement?.closest('.leaflet-popup-content-wrapper');
+            if (popupWrapper) {
+              popupWrapper.classList.add('popup-expanded');
+            }
+            setTimeout(() => {
+              if (popup && popup.isOpen() && map) {
+                const mapContainer = map.getContainer();
+                const mapId = mapContainer?.id;
+                const isReportMap = mapId === 'reportZavadaMap' || 
+                                    mapContainer?.closest('#reportZavadaMapContainer') !== null ||
+                                    mapContainer?.closest('.report-zavada-map') !== null ||
+                                    mapContainer?.parentElement?.id === 'reportZavadaMap';
+                if (isReportMap) return;
+                
+                const popupEl = popup.getElement();
+                if (popupEl) {
+                  const popupRect = popupEl.getBoundingClientRect();
+                  const mapRect = mapContainer.getBoundingClientRect();
+                  
+                  let panY = 0;
+                  if (popupRect.bottom > mapRect.bottom) {
+                    panY = popupRect.bottom - mapRect.bottom + 20;
+                  } else if (popupRect.top < mapRect.top) {
+                    panY = popupRect.top - mapRect.top - 20;
+                  }
+                  
+                  if (Math.abs(panY) > 5) {
+                    const center = map.getCenter();
+                    const point = map.latLngToContainerPoint(center);
+                    const newPoint = L.point(point.x, point.y + panY);
+                    const newCenter = map.containerPointToLatLng(newPoint);
+                    map.panTo(newCenter, { animate: true, duration: 0.4 });
+                  }
+                }
+              }
+            }, 150);
+          });
+          
+          // Store category for use in form submit handler
+          const itemCategory = 'zavady-mapa';
+          
+          // Add form submit handler
+          newForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(newForm);
+            
+            // Check if file is included
+            const fileInput = newForm.querySelector('input[type="file"]');
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+              const file = fileInput.files[0];
+              console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
+              if (!formData.has('upload')) {
+                formData.append('upload', file);
+              }
+            }
+            
+            const submitButton = newForm.querySelector('button[type="submit"]');
+            const originalText = submitButton?.textContent;
+            
+            if (submitButton) {
+              submitButton.disabled = true;
+              submitButton.textContent = 'Odesílám...';
+            }
+            
+            let response;
+            try {
+              response = await fetch('https://formspree.io/f/xkgdbplk', {
+                method: 'POST',
+                body: formData
+              });
+            } catch (networkError) {
+              if (networkError.message && (networkError.message.includes('CORS') || networkError.message.includes('Failed to fetch') || networkError.message.includes('Load failed'))) {
+                console.log('CORS error detected, but form may have been submitted successfully');
+                response = { 
+                  ok: true, 
+                  status: 200,
+                  statusText: 'OK',
+                  json: undefined,
+                  text: undefined
+                };
+              } else {
+                console.error('Network error:', networkError);
+                throw new Error('Chyba připojení. Zkontrolujte připojení k internetu.');
+              }
+            }
+            
+            try {
+              const isSyntheticResponse = !response.json || typeof response.json !== 'function';
+              const isError = response.status === 400 || response.status === 422 || response.status >= 500;
+              
+              if (response.ok && !isError) {
+                if (!isSyntheticResponse) {
+                  try {
+                    const result = await response.json();
+                    console.log('Formspree response:', result);
+                    if (result.error) {
+                      const errorMsg = typeof result.error === 'string' 
+                        ? result.error 
+                        : (result.error.message || result.error.code || 'Neznámá chyba');
+                      throw new Error(errorMsg);
+                    }
+                  } catch (e) {
+                    if (e.message && !e.message.includes('JSON') && !e.message.includes('Neznámá chyba')) {
+                      throw e;
+                    }
+                    if (!e.message || e.message.includes('JSON') || e.message.includes('Neznámá chyba')) {
+                      console.log('Formspree response is not JSON (likely redirect), but submission was successful');
+                    }
+                  }
+                } else {
+                  console.log('Form submitted successfully (CORS handled)');
+                }
+                marker.closePopup();
+                showToastNotification('Hlášení odesláno!', 'Děkujeme za nahlášení závady. Ozveme se vám co nejdříve.', 'success');
+              } else {
+                let errorMsg = `HTTP ${response.status}: ${response.statusText || 'Chyba'}`;
+                if (!isSyntheticResponse) {
+                  try {
+                    const errorData = await response.json();
+                    if (errorData.error) {
+                      if (typeof errorData.error === 'string') {
+                        errorMsg = errorData.error;
+                      } else if (errorData.error.message) {
+                        errorMsg = errorData.error.message;
+                      } else if (errorData.error.code) {
+                        const errorCodeMessages = {
+                          'REQUIRED_FIELD_MISSING': 'Chybí povinné pole.',
+                          'REQUIRED_FIELD_EMPTY': 'Povinné pole je prázdné.',
+                          'TYPE_EMAIL': 'Email má neplatný formát.',
+                          'FILES_TOO_BIG': 'Soubor je příliš velký.',
+                        };
+                        errorMsg = errorCodeMessages[errorData.error.code] || errorData.error.code;
+                      }
+                    } else if (errorData.message) {
+                      errorMsg = errorData.message;
+                    }
+                    console.error('Formspree error:', errorData);
+                  } catch (e) {
+                    if (response.status === 422) {
+                      errorMsg = 'Chyba validace. Zkontrolujte formulář.';
+                    } else if (response.status === 400) {
+                      errorMsg = 'Neplatný požadavek. Zkontrolujte formulář.';
+                    }
+                  }
+                }
+                throw new Error(errorMsg);
+              }
+            } catch (error) {
+              console.error('Chyba při odesílání formuláře:', error);
+              if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText || 'Odeslat';
+              }
+              showToastNotification('Chyba při odesílání', error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.', 'error');
+            }
+          });
+        }
+      });
+      
+      marker.addTo(layers.zavadyMapa);
+    });
+    
+    // Fit map to bounds if we have markers
+    if (zavadyWithCoords.length > 0) {
+      const bounds = L.latLngBounds(zavadyWithCoords.map(z => [parseFloat(z.lat), parseFloat(z.lng)]));
+      setTimeout(() => {
+        if (map) {
+          map.invalidateSize();
+          map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+        }
+      }, 100);
+    }
+  }
+
   function greenspaceByType(type) {
     const normalized = type === "zahony" ? "zahony" : "trava";
     return dataZelene.filter((area) => (area.type || "trava") === normalized);
@@ -1613,9 +1953,12 @@ Odkaz do aplikace: ${appUrl}`;
         Object.entries(layers).forEach(([key, layer]) => {
           const isTravaLayer = key === "zelenTrava";
           const isZahonyLayer = key === "zelenZahony";
+          const isZavadyMapaLayer = key === "zavadyMapa";
           const shouldShow = isGreenspace
             ? (isTravaLayer && greenspaceVisibility.trava) || (isZahonyLayer && greenspaceVisibility.zahony)
-            : key === category;
+            : category === "zavady-mapa"
+              ? isZavadyMapaLayer
+              : key === category;
           
           // Check if layer is already on map to avoid duplicate adds
           const isOnMap = map.hasLayer(layer);
@@ -1657,17 +2000,31 @@ Odkaz do aplikace: ${appUrl}`;
 
     if (isMapCategory) {
       const greenspaceData = visibleGreenspaceData();
-      const activeData =
-        category === "kose"
-          ? dataKose
-          : category === "lampy"
-            ? dataLampy
-            : category === "kontejnery"
-              ? dataKontejnery
-              : greenspaceData;
+      let activeData;
+      
+      if (category === "zavady-mapa") {
+        // Load and display zavady on map
+        loadZavadyData().then(zavady => {
+          populateZavadyMapLayer(zavady);
+        }).catch(error => {
+          console.error('Chyba při načítání závad pro mapu:', error);
+        });
+        activeData = [];
+      } else {
+        activeData =
+          category === "kose"
+            ? dataKose
+            : category === "lampy"
+              ? dataLampy
+              : category === "kontejnery"
+                ? dataKontejnery
+                : greenspaceData;
+      }
 
       const coords =
-        category === "zelen" ? activeData.flatMap((area) => area.coords) : activeData.map((item) => [item.lat, item.lng]);
+        category === "zelen" ? activeData.flatMap((area) => area.coords) : 
+        category === "zavady-mapa" ? [] : 
+        activeData.map((item) => [item.lat, item.lng]);
 
       if (coords.length) {
         const bounds = L.latLngBounds(coords);
@@ -1676,6 +2033,14 @@ Odkaz do aplikace: ${appUrl}`;
           if (map) {
             map.invalidateSize();
             map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+          }
+        });
+      } else if (category === "zavady-mapa") {
+        // Set default view for zavady map
+        requestAnimationFrame(() => {
+          if (map) {
+            map.invalidateSize();
+            map.setView([50.1322, 14.222], 14);
           }
         });
       }
@@ -1689,6 +2054,8 @@ Odkaz do aplikace: ${appUrl}`;
             ? "Kriminalita"
           : category === "zavady"
             ? "Hlášené závady"
+          : category === "zavady-mapa"
+            ? "Mapa závad"
           : category === "lampy"
             ? "Lampy"
             : category === "kontejnery"

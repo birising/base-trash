@@ -1050,16 +1050,32 @@ async function loadZavadyData() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      const payload = await response.json();
+      const text = await response.text();
+      console.log('Response text length:', text.length);
+      console.log('Response text preview:', text.substring(0, 500));
       
-      if (!Array.isArray(payload)) {
-        console.warn('Zavady data nejsou pole, používáme prázdné pole');
-        dataZavady = [];
-        return [];
+      if (!text || text.trim().length === 0) {
+        console.error('Zavady soubor je prázdný!');
+        throw new Error('Soubor je prázdný');
       }
       
-      dataZavady = payload;
-      return payload;
+      const payload = JSON.parse(text);
+    console.log('Načtená data závad:', payload);
+    console.log('Počet závad:', Array.isArray(payload) ? payload.length : 'Není pole');
+    
+    if (!Array.isArray(payload)) {
+      console.warn('Zavady data nejsou pole, používáme prázdné pole');
+      dataZavady = [];
+      return [];
+    }
+    
+    if (payload.length === 0) {
+      console.warn('Zavady data jsou prázdné pole!');
+    }
+    
+    dataZavady = payload;
+    console.log('Data závad uložena, počet:', dataZavady.length);
+    return payload;
     } catch (error) {
       clearTimeout(timeoutId);
       
@@ -1083,7 +1099,35 @@ async function loadZavadyData() {
         clearTimeout(fallbackTimeout);
         
         if (fallbackResponse.ok) {
-          const payload = await fallbackResponse.json();
+          const fallbackText = await fallbackResponse.text();
+          console.log('Fallback response text length:', fallbackText.length);
+          
+          if (!fallbackText || fallbackText.trim().length === 0) {
+            console.warn('Fallback soubor z S3 je prázdný, používám lokální data');
+            // Try to load from local file directly
+            try {
+              const localResponse = await fetch(`${dataBaseUrl}/zavady.json`, { cache: "no-store" });
+              if (localResponse.ok) {
+                const localText = await localResponse.text();
+                if (localText && localText.trim().length > 0) {
+                  const localPayload = JSON.parse(localText);
+                  if (Array.isArray(localPayload)) {
+                    dataZavady = localPayload;
+                    console.log('Načtena lokální data závad, počet:', localPayload.length);
+                    return localPayload;
+                  }
+                }
+              }
+            } catch (localError) {
+              console.warn('Lokální soubor se nepodařilo načíst:', localError);
+            }
+            throw new Error('Fallback soubor je prázdný');
+          }
+          
+          const payload = JSON.parse(fallbackText);
+          console.log('Fallback payload:', payload);
+          console.log('Fallback počet závad:', Array.isArray(payload) ? payload.length : 'Není pole');
+          
           if (Array.isArray(payload)) {
             dataZavady = payload;
             return payload;

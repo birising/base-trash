@@ -252,6 +252,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   const greenspaceLayerInputs = greenspaceLayersControl
     ? greenspaceLayersControl.querySelectorAll("[data-greenspace-layer]")
     : [];
+  const mapaLayersControl = document.getElementById("mapaLayers");
+  const mapaLayerInputs = mapaLayersControl
+    ? mapaLayersControl.querySelectorAll("[data-map-layer]")
+    : [];
   // Get DOM elements - must be after includes are loaded
   const mapView = document.getElementById("mapView");
   const streamView = document.getElementById("streamView");
@@ -263,9 +267,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   const zavadyView = document.getElementById("zavadyView");
   const zavadyList = document.getElementById("zavadyList");
 
-  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "zavady-mapa"];
+  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "zavady-mapa", "mapa"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
+  const mapLayersVisibility = { lampy: true, kose: true, zavady: true, zelen: true };
   let currentCategory = null;
   const DEFAULT_CATEGORY = "kose";
 
@@ -1679,8 +1684,8 @@ Odkaz do aplikace: ${appUrl}`;
       marker.addTo(layers.zavadyMapa);
     });
     
-    // Fit map to bounds if we have markers
-    if (zavadyWithCoords.length > 0) {
+    // Fit map to bounds if we have markers and we're in zavady-mapa view (not unified mapa)
+    if (zavadyWithCoords.length > 0 && currentCategory === "zavady-mapa") {
       const bounds = L.latLngBounds(zavadyWithCoords.map(z => [parseFloat(z.lat), parseFloat(z.lng)]));
       setTimeout(() => {
         if (map) {
@@ -1688,6 +1693,32 @@ Odkaz do aplikace: ${appUrl}`;
           map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
         }
       }, 100);
+    } else if (zavadyWithCoords.length > 0 && currentCategory === "mapa" && mapLayersVisibility.zavady) {
+      // For unified map, update bounds to include zavady
+      setTimeout(() => {
+        if (map) {
+          const allCoords = [];
+          if (mapLayersVisibility.lampy && dataLampy) {
+            allCoords.push(...dataLampy.map(item => [item.lat, item.lng]));
+          }
+          if (mapLayersVisibility.kose && dataKose) {
+            allCoords.push(...dataKose.map(item => [item.lat, item.lng]));
+          }
+          if (mapLayersVisibility.zavady) {
+            allCoords.push(...zavadyWithCoords.map(z => [parseFloat(z.lat), parseFloat(z.lng)]));
+          }
+          if (mapLayersVisibility.zelen) {
+            const gsData = visibleGreenspaceData();
+            allCoords.push(...gsData.flatMap((area) => area.coords));
+          }
+          
+          if (allCoords.length > 0) {
+            const bounds = L.latLngBounds(allCoords);
+            map.invalidateSize();
+            map.flyToBounds(bounds, { padding: [28, 28], duration: 0.4, easeLinearity: 0.25 });
+          }
+        }
+      }, 200);
     }
   }
 
@@ -1727,6 +1758,16 @@ Odkaz do aplikace: ${appUrl}`;
     greenspaceLayerInputs.forEach((input) => {
       const key = input.dataset.greenspaceLayer === "zahony" ? "zahony" : "trava";
       input.checked = greenspaceVisibility[key];
+    });
+  }
+
+  function syncMapaLayerInputs() {
+    if (!mapaLayerInputs.length) return;
+    mapaLayerInputs.forEach((input) => {
+      const key = input.dataset.mapLayer;
+      if (key && mapLayersVisibility.hasOwnProperty(key)) {
+        input.checked = mapLayersVisibility[key];
+      }
     });
   }
 
@@ -1954,11 +1995,28 @@ Odkaz do aplikace: ${appUrl}`;
           const isTravaLayer = key === "zelenTrava";
           const isZahonyLayer = key === "zelenZahony";
           const isZavadyMapaLayer = key === "zavadyMapa";
-          const shouldShow = isGreenspace
-            ? (isTravaLayer && greenspaceVisibility.trava) || (isZahonyLayer && greenspaceVisibility.zahony)
-            : category === "zavady-mapa"
-              ? isZavadyMapaLayer
-              : key === category;
+          let shouldShow = false;
+          
+          if (category === "mapa") {
+            // Unified map - show layers based on mapLayersVisibility
+            if (key === "lampy") {
+              shouldShow = mapLayersVisibility.lampy;
+            } else if (key === "kose") {
+              shouldShow = mapLayersVisibility.kose;
+            } else if (isZavadyMapaLayer) {
+              shouldShow = mapLayersVisibility.zavady;
+            } else if (isTravaLayer) {
+              shouldShow = mapLayersVisibility.zelen && greenspaceVisibility.trava;
+            } else if (isZahonyLayer) {
+              shouldShow = mapLayersVisibility.zelen && greenspaceVisibility.zahony;
+            }
+          } else if (isGreenspace) {
+            shouldShow = (isTravaLayer && greenspaceVisibility.trava) || (isZahonyLayer && greenspaceVisibility.zahony);
+          } else if (category === "zavady-mapa") {
+            shouldShow = isZavadyMapaLayer;
+          } else {
+            shouldShow = key === category;
+          }
           
           // Check if layer is already on map to avoid duplicate adds
           const isOnMap = map.hasLayer(layer);
@@ -2002,7 +2060,73 @@ Odkaz do aplikace: ${appUrl}`;
       const greenspaceData = visibleGreenspaceData();
       let activeData;
       
-      if (category === "zavady-mapa") {
+      if (category === "mapa") {
+        // Unified map - load zavady and prepare all data
+        loadZavadyData().then(zavady => {
+          populateZavadyMapLayer(zavady);
+          // Update bounds after zavady are loaded
+          if (mapLayersVisibility.zavady) {
+            const zavadyWithCoords = zavady.filter(z => z.lat && z.lng);
+            if (zavadyWithCoords.length > 0) {
+              const allCoords = [];
+              if (mapLayersVisibility.lampy && dataLampy) {
+                allCoords.push(...dataLampy.map(item => [item.lat, item.lng]));
+              }
+              if (mapLayersVisibility.kose && dataKose) {
+                allCoords.push(...dataKose.map(item => [item.lat, item.lng]));
+              }
+              allCoords.push(...zavadyWithCoords.map(z => [parseFloat(z.lat), parseFloat(z.lng)]));
+              if (mapLayersVisibility.zelen) {
+                const gsData = visibleGreenspaceData();
+                allCoords.push(...gsData.flatMap((area) => area.coords));
+              }
+              
+              if (allCoords.length > 0) {
+                const bounds = L.latLngBounds(allCoords);
+                setTimeout(() => {
+                  if (map) {
+                    map.invalidateSize();
+                    map.flyToBounds(bounds, { padding: [28, 28], duration: 0.4, easeLinearity: 0.25 });
+                  }
+                }, 300);
+              }
+            }
+          }
+        }).catch(error => {
+          console.error('Chyba při načítání závad pro mapu:', error);
+        });
+        
+        // Collect all coordinates from visible layers (without zavady for now)
+        const allCoords = [];
+        if (mapLayersVisibility.lampy && dataLampy) {
+          allCoords.push(...dataLampy.map(item => [item.lat, item.lng]));
+        }
+        if (mapLayersVisibility.kose && dataKose) {
+          allCoords.push(...dataKose.map(item => [item.lat, item.lng]));
+        }
+        if (mapLayersVisibility.zelen) {
+          const gsData = visibleGreenspaceData();
+          allCoords.push(...gsData.flatMap((area) => area.coords));
+        }
+        
+        if (allCoords.length > 0) {
+          const bounds = L.latLngBounds(allCoords);
+          requestAnimationFrame(() => {
+            if (map) {
+              map.invalidateSize();
+              map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+            }
+          });
+        } else {
+          requestAnimationFrame(() => {
+            if (map) {
+              map.invalidateSize();
+              map.setView([50.1322, 14.222], 14);
+            }
+          });
+        }
+        activeData = [];
+      } else if (category === "zavady-mapa") {
         // Load and display zavady on map
         loadZavadyData().then(zavady => {
           populateZavadyMapLayer(zavady);
@@ -2023,10 +2147,10 @@ Odkaz do aplikace: ${appUrl}`;
 
       const coords =
         category === "zelen" ? activeData.flatMap((area) => area.coords) : 
-        category === "zavady-mapa" ? [] : 
+        category === "zavady-mapa" || category === "mapa" ? [] : 
         activeData.map((item) => [item.lat, item.lng]);
 
-      if (coords.length) {
+      if (coords.length && category !== "mapa") {
         const bounds = L.latLngBounds(coords);
         // Ensure map is visible and sized before flying to bounds
         requestAnimationFrame(() => {
@@ -2056,6 +2180,8 @@ Odkaz do aplikace: ${appUrl}`;
             ? "Hlášené závady"
           : category === "zavady-mapa"
             ? "Mapa závad"
+          : category === "mapa"
+            ? "Mapa"
           : category === "lampy"
             ? "Lampy"
             : category === "kontejnery"
@@ -2081,11 +2207,19 @@ Odkaz do aplikace: ${appUrl}`;
       }
     }
     if (greenspaceLayersControl) {
-      if (isGreenspace) {
+      if (isGreenspace && category !== "mapa") {
         greenspaceLayersControl.classList.remove("hidden");
         syncGreenspaceLayerInputs();
       } else {
         greenspaceLayersControl.classList.add("hidden");
+      }
+    }
+    if (mapaLayersControl) {
+      if (category === "mapa") {
+        mapaLayersControl.classList.remove("hidden");
+        syncMapaLayerInputs();
+      } else {
+        mapaLayersControl.classList.add("hidden");
       }
     }
     if (mapView) {
@@ -3664,6 +3798,87 @@ Odkaz do aplikace: ${appUrl}`;
       });
     });
     syncGreenspaceLayerInputs();
+  }
+  
+  // Setup event listeners for unified map layers
+  if (mapaLayerInputs.length) {
+    mapaLayerInputs.forEach((input) => {
+      input.addEventListener("change", () => {
+        const key = input.dataset.mapLayer;
+        if (!key || !mapLayersVisibility.hasOwnProperty(key)) return;
+        
+        const enabled = input.checked;
+        mapLayersVisibility[key] = enabled;
+        
+        // Update layers on map if we're in unified map view
+        if (currentCategory === "mapa" && map) {
+          requestAnimationFrame(() => {
+            Object.entries(layers).forEach(([layerKey, layer]) => {
+              const isTravaLayer = layerKey === "zelenTrava";
+              const isZahonyLayer = layerKey === "zelenZahony";
+              const isZavadyMapaLayer = layerKey === "zavadyMapa";
+              let shouldShow = false;
+              
+              if (layerKey === "lampy") {
+                shouldShow = mapLayersVisibility.lampy;
+              } else if (layerKey === "kose") {
+                shouldShow = mapLayersVisibility.kose;
+              } else if (isZavadyMapaLayer) {
+                shouldShow = mapLayersVisibility.zavady;
+              } else if (isTravaLayer) {
+                shouldShow = mapLayersVisibility.zelen && greenspaceVisibility.trava;
+              } else if (isZahonyLayer) {
+                shouldShow = mapLayersVisibility.zelen && greenspaceVisibility.zahony;
+              }
+              
+              const isOnMap = map.hasLayer(layer);
+              if (shouldShow && !isOnMap) {
+                map.addLayer(layer);
+              } else if (!shouldShow && isOnMap) {
+                map.removeLayer(layer);
+              }
+            });
+            
+            // Update bounds to show all visible layers
+            const updateBounds = () => {
+              const allCoords = [];
+              if (mapLayersVisibility.lampy && dataLampy) {
+                allCoords.push(...dataLampy.map(item => [item.lat, item.lng]));
+              }
+              if (mapLayersVisibility.kose && dataKose) {
+                allCoords.push(...dataKose.map(item => [item.lat, item.lng]));
+              }
+              if (mapLayersVisibility.zavady) {
+                // Get zavady coordinates from markers on map
+                layers.zavadyMapa.eachLayer((marker) => {
+                  const latlng = marker.getLatLng();
+                  allCoords.push([latlng.lat, latlng.lng]);
+                });
+              }
+              if (mapLayersVisibility.zelen) {
+                const gsData = visibleGreenspaceData();
+                allCoords.push(...gsData.flatMap((area) => area.coords));
+              }
+              
+              if (allCoords.length > 0) {
+                const bounds = L.latLngBounds(allCoords);
+                map.flyToBounds(bounds, { padding: [28, 28], duration: 0.4, easeLinearity: 0.25 });
+              }
+            };
+            
+            // If zavady layer was toggled, wait a bit for markers to be added/removed
+            if (key === "zavady") {
+              setTimeout(updateBounds, 100);
+            } else {
+              updateBounds();
+            }
+            
+            map.invalidateSize();
+          });
+        }
+      });
+    });
+    syncMapaLayerInputs();
   }
   fetchStreamLevel();
   

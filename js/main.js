@@ -252,6 +252,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const greenspaceLayerInputs = greenspaceLayersControl
     ? greenspaceLayersControl.querySelectorAll("[data-greenspace-layer]")
     : [];
+  const greenspaceBanner = document.getElementById("greenspaceBanner");
   const mapaLayersControl = document.getElementById("mapaLayers");
   const mapaLayerInputs = mapaLayersControl
     ? mapaLayersControl.querySelectorAll("[data-map-layer]")
@@ -273,6 +274,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const mapLayersVisibility = { lampy: false, kose: true, zavady: true, zelen: false };
   let currentCategory = null;
   const DEFAULT_CATEGORY = "kose";
+  let mapClickHandler = null;
 
   const backButton = document.getElementById("backButton");
   const brandLogo = document.getElementById("brandLogo");
@@ -571,7 +573,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         popupTitle = 'Trestný čin';
       }
     }
-    const useIcon = item.category === "kose" || item.category === "lampy" || item.category === "kriminalita";
+    const useIcon = item.category === "lampy" || item.category === "kriminalita";
     const binStatus = item.category === "kose" ? evaluateBinStatus(item) : null;
     const marker = useIcon
       ? L.marker([lat, lng], {
@@ -580,24 +582,25 @@ window.addEventListener("DOMContentLoaded", async () => {
             text: item.category === "lampy" ? null : (item.category === "kriminalita" ? null : undefined),
           }),
         })
-      : L.circleMarker([lat, lng], {
-          radius: 8,
-          color,
-          weight: 2,
-          fillColor: color,
-          fillOpacity: 0.85,
-        });
+      : item.category === "kose"
+        ? L.circleMarker([lat, lng], {
+            radius: 10,
+            color: "#10b981",
+            weight: 2,
+            fillColor: "#10b981",
+            fillOpacity: 0.85,
+          })
+        : L.circleMarker([lat, lng], {
+            radius: 8,
+            color,
+            weight: 2,
+            fillColor: color,
+            fillOpacity: 0.85,
+          });
 
     let popupContent = `<strong>${popupTitle}</strong>`;
     if (item.category === "kose") {
-      const status = binStatus || evaluateBinStatus(item);
-      const fill = item.fillLevel != null ? `${item.fillLevel}%` : "–";
-      const battery = item.batteryLevel != null ? `${item.batteryLevel}%` : "–";
-      const updatedRelative = formatRelativeTime(item.lastUpdated);
-      const updatedAbsolute = formatAbsoluteDate(item.lastUpdated);
-      const statusBadges = status.states
-        .map((state) => `<span class="status-chip status-${state.tone}">${state.text}</span>`)
-        .join("");
+      // Always show "Sensor not installed" for all bins
       // GPS souřadnice
       const gpsCoords = `${item.lat}, ${item.lng}`;
       
@@ -608,13 +611,10 @@ window.addEventListener("DOMContentLoaded", async () => {
       
       popupContent += `
         <div class="popup-details">
-          <div><span>Naplněnost:</span><strong>${fill}</strong></div>
-          <div><span>Poslední aktualizace:</span><strong>${updatedRelative}</strong></div>
-          <div class="popup-subtext">${updatedAbsolute}</div>
-          <div><span>Stav baterie:</span><strong>${battery}</strong></div>
-        </div>
-        <div class="popup-status popup-${status.severity}">
-          <div class="status-chip-row">${statusBadges}</div>
+          <div class="popup-no-sensor">
+            <span class="popup-no-sensor-icon">⚠️</span>
+            <span class="popup-no-sensor-text">Senzor není osazen</span>
+          </div>
         </div>
         <div class="popup-actions">
           <button class="popup-button show-report-form-btn" data-category="kose" data-item-id="${item.id || 'N/A'}" data-item-name="${popupTitle}" data-gps="${gpsCoords}" data-app-url="${appUrl}">Nahlásit závadu</button>
@@ -1384,6 +1384,7 @@ Odkaz do aplikace: ${appUrl}`;
     const getCategoryLabel = (category) => {
       const labels = {
         'zelen': 'Údržba zeleně',
+        'udrzba zelene': 'Údržba zeleně',
         'kose': 'Koš',
         'lampy': 'Lampa',
         'ostatni': 'Ostatní'
@@ -1424,15 +1425,22 @@ Odkaz do aplikace: ${appUrl}`;
             <div class="zavady-popup-gallery-title">Fotografie (${photos.length})</div>
             <div class="zavady-popup-gallery-thumbnails">
               ${photos.map((photo, idx) => `
-                <img 
-                  src="${photo}" 
-                  alt="Fotografie ${idx + 1}" 
-                  class="zavady-popup-gallery-thumb" 
-                  data-photo-index="${idx}"
-                  data-photos='${JSON.stringify(photos)}'
-                  loading="lazy"
-                  decoding="async"
-                >
+                <div class="zavady-popup-gallery-thumb-wrapper">
+                  <div class="zavady-popup-gallery-thumb-loading">
+                    <div class="zavady-popup-gallery-thumb-spinner"></div>
+                  </div>
+                  <img 
+                    src="${photo}" 
+                    alt="Fotografie ${idx + 1}" 
+                    class="zavady-popup-gallery-thumb" 
+                    data-photo-index="${idx}"
+                    data-photos='${JSON.stringify(photos)}'
+                    loading="lazy"
+                    decoding="async"
+                    onload="this.parentElement.querySelector('.zavady-popup-gallery-thumb-loading').classList.add('hidden')"
+                    onerror="this.parentElement.querySelector('.zavady-popup-gallery-thumb-loading').classList.add('hidden')"
+                  >
+                </div>
               `).join('')}
             </div>
           </div>
@@ -1490,6 +1498,91 @@ Odkaz do aplikace: ${appUrl}`;
         const popup = marker.getPopup();
         const popupElement = popup.getElement();
         if (!popupElement) return;
+        
+        // Force light background with dark text for zavady popup - use setTimeout to ensure Leaflet has finished rendering
+        const applyLightTheme = () => {
+          const contentWrapper = popupElement.querySelector('.leaflet-popup-content-wrapper');
+          const content = popupElement.querySelector('.leaflet-popup-content');
+          const tip = popupElement.querySelector('.leaflet-popup-tip');
+          
+          if (contentWrapper) {
+            contentWrapper.style.setProperty('background', 'linear-gradient(145deg, #ffffff, #f8fafc)', 'important');
+            contentWrapper.style.setProperty('background-color', '#ffffff', 'important');
+            contentWrapper.style.setProperty('background-image', 'none', 'important');
+            contentWrapper.style.setProperty('color', '#0b1220', 'important');
+            contentWrapper.style.setProperty('border', '1px solid rgba(15, 23, 42, 0.15)', 'important');
+          }
+          
+          if (content) {
+            content.style.setProperty('color', '#0b1220', 'important');
+            content.style.setProperty('background', 'transparent', 'important');
+            content.style.setProperty('background-color', 'transparent', 'important');
+            content.style.setProperty('background-image', 'none', 'important');
+          }
+          
+          if (tip) {
+            tip.style.setProperty('background', '#ffffff', 'important');
+            tip.style.setProperty('background-color', '#ffffff', 'important');
+            tip.style.setProperty('background-image', 'none', 'important');
+            tip.style.setProperty('border', '1px solid rgba(15, 23, 42, 0.15)', 'important');
+          }
+          
+          // Also set text colors for all child elements - force dark text for all text elements
+          const allTextElements = popupElement.querySelectorAll('*');
+          allTextElements.forEach(el => {
+            // Skip images, buttons with specific styling, and gallery thumbs
+            if (el.tagName === 'IMG' || 
+                el.classList.contains('popup-button') || 
+                el.classList.contains('zavady-popup-gallery-thumb') ||
+                el.classList.contains('zavady-popup-gallery-thumb-loading') ||
+                el.classList.contains('zavady-popup-gallery-thumb-spinner')) {
+              return;
+            }
+            
+            // Special cases for specific elements
+            if (el.classList.contains('zavady-popup-category')) {
+              el.style.setProperty('color', '#059669', 'important');
+            } else if (el.classList.contains('zavady-popup-date')) {
+              el.style.setProperty('color', '#475569', 'important');
+            } else if (el.classList.contains('zavady-popup-header') && el.tagName === 'STRONG') {
+              el.style.setProperty('color', '#0b1220', 'important');
+            } else {
+              // For all other text elements, always force dark color for visibility on light background
+              const hasText = el.textContent && el.textContent.trim().length > 0;
+              const isTextElement = ['P', 'SPAN', 'DIV', 'STRONG', 'EM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LABEL'].includes(el.tagName);
+              if (hasText || isTextElement) {
+                // Always set dark color for text elements in zavady popup to ensure visibility
+                el.style.setProperty('color', '#0b1220', 'important');
+              }
+            }
+          });
+        };
+        
+        // Apply immediately and after multiple delays to ensure it sticks
+        applyLightTheme();
+        setTimeout(applyLightTheme, 0);
+        setTimeout(applyLightTheme, 10);
+        setTimeout(applyLightTheme, 50);
+        setTimeout(applyLightTheme, 100);
+        setTimeout(applyLightTheme, 200);
+        
+        // Use MutationObserver to watch for style changes and reapply
+        const observer = new MutationObserver(() => {
+          applyLightTheme();
+        });
+        
+        if (popupElement) {
+          observer.observe(popupElement, {
+            attributes: true,
+            attributeFilter: ['style', 'class'],
+            subtree: true
+          });
+          
+          // Clean up observer when popup closes
+          marker.once('popupclose', () => {
+            observer.disconnect();
+          });
+        }
         
         // Handle gallery thumbnails click
         const galleryThumbs = popupElement.querySelectorAll('.zavady-popup-gallery-thumb');
@@ -2214,6 +2307,13 @@ Odkaz do aplikace: ${appUrl}`;
         greenspaceLayersControl.classList.add("hidden");
       }
     }
+    if (greenspaceBanner) {
+      if (isGreenspace && category !== "mapa") {
+        greenspaceBanner.classList.remove("hidden");
+      } else {
+        greenspaceBanner.classList.add("hidden");
+      }
+    }
     if (mapaLayersControl) {
       if (category === "mapa") {
         mapaLayersControl.classList.remove("hidden");
@@ -2308,6 +2408,25 @@ Odkaz do aplikace: ${appUrl}`;
 
     // Show/hide back button on mobile when not on default category
     updateBackButtonVisibility();
+    
+    // Add/remove click handler for reporting zavady on map
+    if (map) {
+      // Remove existing handler if any
+      if (mapClickHandler) {
+        map.off('click', mapClickHandler);
+        mapClickHandler = null;
+      }
+      
+      // Add handler for unified map to report zavady
+      if (category === "mapa") {
+        mapClickHandler = (e) => {
+          const lat = e.latlng.lat;
+          const lng = e.latlng.lng;
+          openReportZavadaModal(lat, lng);
+        };
+        map.on('click', mapClickHandler);
+      }
+    }
   }
 
   function updateBackButtonVisibility() {
@@ -2847,6 +2966,7 @@ Odkaz do aplikace: ${appUrl}`;
     const getCategoryLabel = (category) => {
       const labels = {
         'zelen': 'Údržba zeleně',
+        'udrzba zelene': 'Údržba zeleně',
         'kose': 'Koš',
         'lampy': 'Lampa',
         'ostatni': 'Ostatní'
@@ -3038,15 +3158,22 @@ Odkaz do aplikace: ${appUrl}`;
                   ? `<div class="zavady-expanded-gallery">
                       <div class="zavady-gallery-thumbnails">
                         ${photos.map((photo, idx) => `
-                          <img 
-                            src="${photo}" 
-                            alt="Fotografie ${idx + 1}" 
-                            class="zavady-gallery-thumb" 
-                            data-photo-index="${idx}"
-                            data-photos='${JSON.stringify(photos)}'
-                            loading="lazy"
-                            decoding="async"
-                          >
+                          <div class="zavady-gallery-thumb-wrapper">
+                            <div class="zavady-gallery-thumb-loading">
+                              <div class="zavady-gallery-thumb-spinner"></div>
+                            </div>
+                            <img 
+                              src="${photo}" 
+                              alt="Fotografie ${idx + 1}" 
+                              class="zavady-gallery-thumb" 
+                              data-photo-index="${idx}"
+                              data-photos='${JSON.stringify(photos)}'
+                              loading="lazy"
+                              decoding="async"
+                              onload="this.parentElement.querySelector('.zavady-gallery-thumb-loading').classList.add('hidden')"
+                              onerror="this.parentElement.querySelector('.zavady-gallery-thumb-loading').classList.add('hidden')"
+                            >
+                          </div>
                         `).join('')}
                       </div>
                     </div>`
@@ -3660,6 +3787,61 @@ Odkaz do aplikace: ${appUrl}`;
     map.invalidateSize();
   }
   
+  // Update URL with current layer visibility
+  function updateLayerParams() {
+    if (currentCategory !== "mapa") return;
+    
+    // Get enabled layers
+    const enabledLayers = Object.entries(mapLayersVisibility)
+      .filter(([key, enabled]) => enabled)
+      .map(([key]) => key);
+    
+    const url = new URL(window.location);
+    
+    if (enabledLayers.length > 0) {
+      url.searchParams.set('layers', enabledLayers.join(','));
+    } else {
+      url.searchParams.delete('layers');
+    }
+    
+    // Update URL without reload
+    window.history.pushState({}, '', url);
+  }
+
+  // Handle URL parameters for map layers (e.g., ?layers=zavady or ?layers=zavady,kose)
+  function handleLayerParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const layersParam = urlParams.get('layers');
+    
+    if (!layersParam) return false;
+    
+    // Parse layers from URL (e.g., "zavady" or "zavady,kose")
+    const requestedLayers = layersParam.split(',').map(l => l.trim().toLowerCase());
+    
+    // Reset all layers to false
+    Object.keys(mapLayersVisibility).forEach(key => {
+      mapLayersVisibility[key] = false;
+    });
+    
+    // Set requested layers to true
+    requestedLayers.forEach(layer => {
+      if (mapLayersVisibility.hasOwnProperty(layer)) {
+        mapLayersVisibility[layer] = true;
+      }
+    });
+    
+    // If any layers were set, switch to unified map view
+    if (requestedLayers.some(layer => mapLayersVisibility.hasOwnProperty(layer))) {
+      // Sync checkboxes if they exist
+      if (mapaLayerInputs && mapaLayerInputs.length > 0) {
+        syncMapaLayerInputs();
+      }
+      return true;
+    }
+    
+    return false;
+  }
+
   // Handle deep linking from URL hash (e.g., #lampy/1 or #lampy/50.133935,14.222031 or #zelen/50.133935,14.222031)
   function handleDeepLink() {
     const hash = window.location.hash.slice(1); // Remove #
@@ -3755,10 +3937,16 @@ Odkaz do aplikace: ${appUrl}`;
     }, 500);
   }
   
-  // Start with "Hlášené závady" (zavady) as default category, unless deep link is present
+  // Handle URL parameters for map layers first
+  const hasLayerParams = handleLayerParams();
+  
+  // Start with "Hlášené závady" (zavady) as default category, unless deep link or layer params are present
   // Wait a bit to ensure data is loaded and markers are populated
   setTimeout(() => {
-    if (!window.location.hash || !window.location.hash.match(/^#\w+\//)) {
+    if (hasLayerParams) {
+      // If layer params are present, switch to unified map
+      setActiveCategory("mapa");
+    } else if (!window.location.hash || !window.location.hash.match(/^#\w+\//)) {
       setActiveCategory("zavady");
     }
   }, 200);
@@ -3876,6 +4064,9 @@ Odkaz do aplikace: ${appUrl}`;
             map.invalidateSize();
           });
         }
+        
+        // Update URL with new layer configuration
+        updateLayerParams();
       });
     });
     syncMapaLayerInputs();
@@ -4004,10 +4195,33 @@ Odkaz do aplikace: ${appUrl}`;
   const reportZavadaModalCancel = reportZavadaModal?.querySelector('.report-zavada-form-cancel');
   const reportZavadaModalBackdrop = reportZavadaModal?.querySelector('.report-zavada-modal-backdrop');
   
-  function openReportZavadaModal() {
+  function openReportZavadaModal(lat = null, lng = null) {
     if (reportZavadaModal) {
       reportZavadaModal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
+      
+      // If coordinates provided, pre-fill them
+      if (lat !== null && lng !== null && reportZavadaSelectedLat && reportZavadaSelectedLng) {
+        reportZavadaSelectedLat.value = lat.toFixed(6);
+        reportZavadaSelectedLng.value = lng.toFixed(6);
+        if (reportZavadaSelectedName) {
+          reportZavadaSelectedName.value = 'Ostatní';
+        }
+        if (reportZavadaSelectedDiv) {
+          reportZavadaSelectedDiv.classList.remove('hidden');
+        }
+        if (reportZavadaSelectedText) {
+          reportZavadaSelectedText.textContent = `Ostatní (${lat.toFixed(6)}, ${lng.toFixed(6)})`;
+        }
+        // Initialize map in modal and show marker
+        if (reportZavadaMapDiv) {
+          initReportZavadaMap();
+          if (reportZavadaCategorySelect) {
+            reportZavadaCategorySelect.value = 'ostatni';
+            showObjectsOnMap('ostatni');
+          }
+        }
+      }
     }
   }
   

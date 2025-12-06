@@ -26,5 +26,19 @@
     "photos": [
       "assets/image-7db34c26-8520-494a-8cf3-a8d8a572d95b.jpeg"
     ]
+  },
+  {
+    "id": 3,
+    "reported_date": "2025-12-06T10:00:00Z",
+    "category": "udrzba zelene",
+    "lat": 50.1310111,
+    "lng": 14.2111556,
+    "description": "Suchý strom 01",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-7a1296bb-f3b0-412b-8ab1-80d7446c0ac7.jpeg"
+    ]
   }
 ]

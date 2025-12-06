@@ -634,6 +634,34 @@ body {
   flex-wrap: wrap;
 }
 
+.greenspace-banner {
+  min-width: 200px;
+  padding: 10px 14px;
+  background: linear-gradient(145deg, rgba(251, 191, 36, 0.95), rgba(245, 158, 11, 0.9));
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 12px;
+  color: #78350f;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.greenspace-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.greenspace-banner-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.greenspace-banner-text {
+  line-height: 1.4;
+}
+
 .layer-switcher {
   min-width: 160px;
   padding: 10px 12px;
@@ -903,6 +931,13 @@ body {
   background: linear-gradient(135deg, #ffffff, #eef2ff);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
   border-color: var(--border);
+}
+
+:root[data-theme="light"] .greenspace-banner {
+  background: linear-gradient(145deg, rgba(251, 191, 36, 0.95), rgba(245, 158, 11, 0.9));
+  border-color: rgba(251, 191, 36, 0.4);
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.25);
+  color: #78350f;
 }
 
 :root[data-theme="light"] .layer-switcher {

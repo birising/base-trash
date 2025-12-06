@@ -382,11 +382,82 @@
     min-height: 300px;
   }
 
-  /* Better layer switcher on mobile */
+  /* Better layer switcher on mobile - compact version */
   .layer-switcher {
     min-width: auto;
-    width: calc(100vw - 40px);
-    max-width: 280px;
+    width: auto;
+    max-width: calc(100vw - 20px);
+    padding: 6px 8px !important;
+    border-radius: 12px !important;
+    font-size: 12px;
+  }
+  
+  .layer-switcher-title {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+    padding: 0 4px;
+  }
+  
+  .layer-switcher-row {
+    padding: 3px 4px !important;
+    gap: 6px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+  }
+  
+  .layer-switcher-row input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0;
+  }
+  
+  .layer-switcher-row span {
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
+  
+  /* Make layer switcher horizontal/compact grid on mobile */
+  #mapaLayers {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  #mapaLayers .layer-switcher-row {
+    border-top: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  
+  #mapaLayers .layer-switcher-row:last-child {
+    border-bottom: none;
+  }
+  
+  /* Optional: horizontal grid layout for even more compact design */
+  @media (max-width: 480px) {
+    #mapaLayers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2px;
+      padding: 4px !important;
+    }
+    
+    #mapaLayers .layer-switcher-title {
+      grid-column: 1 / -1;
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    #mapaLayers .layer-switcher-row {
+      border-bottom: none;
+      padding: 4px 2px !important;
+      font-size: 11px !important;
+    }
+    
+    #mapaLayers .layer-switcher-row input[type="checkbox"] {
+      width: 14px !important;
+      height: 14px !important;
+    }
   }
 
   /* Better popup details */
@@ -696,6 +767,28 @@
   color: #6b7280;
   margin-top: -2px;
   margin-bottom: 4px;
+}
+
+.popup-no-sensor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 8px;
+  color: #78350f;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.popup-no-sensor-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.popup-no-sensor-text {
+  line-height: 1.4;
 }
 
 .status-chip-row {
@@ -1888,15 +1981,52 @@
   justify-content: flex-start;
 }
 
-.zavady-gallery-thumb {
+.zavady-gallery-thumb-wrapper {
+  position: relative;
   width: 120px;
   height: 120px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.zavady-gallery-thumb-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(5, 150, 105, 0.2);
+  border-radius: 10px;
+  z-index: 1;
+}
+
+.zavady-gallery-thumb-loading.hidden {
+  display: none;
+}
+
+.zavady-gallery-thumb-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(5, 150, 105, 0.2);
+  border-top-color: rgba(5, 150, 105, 0.8);
+  border-radius: 50%;
+  animation: zavady-thumb-spin 0.8s linear infinite;
+}
+
+.zavady-gallery-thumb {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 10px;
   border: 2px solid rgba(5, 150, 105, 0.4);
   cursor: pointer;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.05);
+  display: block;
 }
 
 .zavady-gallery-thumb:hover {
@@ -1911,6 +2041,70 @@
   font-style: italic;
   padding: 20px;
   text-align: center;
+}
+
+/* Zavady popup on map - light background with dark text - use very specific selectors to override Leaflet defaults */
+/* Force light background ALWAYS, regardless of theme */
+.leaflet-container .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper,
+.leaflet-popup.zavady-popup .leaflet-popup-content-wrapper,
+.leaflet-container .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper[style],
+.leaflet-popup.zavady-popup .leaflet-popup-content-wrapper[style],
+.leaflet-popup.zavady-popup .leaflet-popup-content-wrapper,
+body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
+  background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid rgba(15, 23, 42, 0.15) !important;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.2) !important;
+  color: #0b1220 !important;
+}
+
+.leaflet-popup.zavady-popup .leaflet-popup-content {
+  color: #0b1220 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.leaflet-container .leaflet-popup.zavady-popup .leaflet-popup-tip,
+.leaflet-popup.zavady-popup .leaflet-popup-tip {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid rgba(15, 23, 42, 0.15) !important;
+  border-top: none !important;
+  border-left: none !important;
+}
+
+/* Zavady popup on map - ensure all text is dark colored for light background */
+.leaflet-popup.zavady-popup * {
+  color: #0b1220 !important;
+}
+
+.leaflet-popup.zavady-popup .zavady-popup-header strong {
+  color: #0b1220 !important;
+}
+
+.leaflet-popup.zavady-popup .zavady-popup-category {
+  color: #059669 !important; /* Green accent color */
+}
+
+.leaflet-popup.zavady-popup .zavady-popup-date {
+  color: #475569 !important;
+}
+
+.leaflet-popup.zavady-popup .zavady-popup-gallery-title {
+  color: #0b1220 !important;
+}
+
+.leaflet-popup.zavady-popup .popup-button {
+  color: #ffffff !important;
+  background: rgba(249, 115, 22, 0.9) !important;
+  border-color: rgba(249, 115, 22, 1) !important;
+}
+
+.leaflet-popup.zavady-popup .popup-button:hover {
+  background: rgba(249, 115, 22, 1) !important;
+  color: #ffffff !important;
 }
 
 /* Zavady popup on map */
@@ -1928,7 +2122,7 @@
 
 .zavady-popup-header strong {
   font-size: 16px;
-  color: var(--text-main);
+  color: rgba(255, 255, 255, 0.95);
   line-height: 1.4;
 }
 
@@ -1974,15 +2168,58 @@
   flex-wrap: wrap;
 }
 
-.zavady-popup-gallery-thumb {
+.zavady-popup-gallery-thumb-wrapper {
+  position: relative;
   width: 80px;
   height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.zavady-popup-gallery-thumb-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(249, 115, 22, 0.2);
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.zavady-popup-gallery-thumb-loading.hidden {
+  display: none;
+}
+
+.zavady-popup-gallery-thumb-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(249, 115, 22, 0.2);
+  border-top-color: rgba(249, 115, 22, 0.8);
+  border-radius: 50%;
+  animation: zavady-thumb-spin 0.8s linear infinite;
+}
+
+@keyframes zavady-thumb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.zavady-popup-gallery-thumb {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 8px;
   border: 2px solid rgba(249, 115, 22, 0.4);
   cursor: pointer;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.05);
+  display: block;
 }
 
 .zavady-popup-gallery-thumb:hover {

@@ -40,5 +40,19 @@
     "photos": [
       "assets/image-7a1296bb-f3b0-412b-8ab1-80d7446c0ac7.jpeg"
     ]
+  },
+  {
+    "id": 4,
+    "reported_date": "2025-04-02T10:30:00Z",
+    "category": "zelen",
+    "lat": 50.1327278,
+    "lng": 14.2213167,
+    "description": "Poničené zábradlí",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-e4944ae3-0a8d-4e38-a050-17ba716edace.jpeg"
+    ]
   }
 ]

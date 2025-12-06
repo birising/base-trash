@@ -388,7 +388,7 @@ const floodThresholds = [
 const streamCsvUrl = "https://trash-beloky.s3.eu-central-1.amazonaws.com/sensors/water_level.csv";
 const streamCsvFallbackUrl = `${dataBaseUrl}/hladina.csv`;
 
-const STREAM_MAX_WINDOW_HOURS = 24;
+const STREAM_MAX_WINDOW_HOURS = 12;
 let streamHistory = [];
 let streamHistoryTimes = [];
 const streamState = {

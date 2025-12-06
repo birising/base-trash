@@ -12,5 +12,19 @@
     "photos": [
       "assets/image-9813e422-21e2-4aad-bf4f-06837a3dbb0d.jpeg"
     ]
+  },
+  {
+    "id": 2,
+    "reported_date": "2025-12-02T19:23:00Z",
+    "category": "zelen",
+    "lat": 50.1308778,
+    "lng": 14.2129056,
+    "description": "Asfaltový recyklát v trávě",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-7db34c26-8520-494a-8cf3-a8d8a572d95b.jpeg"
+    ]
   }
 ]

@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": 1,
+    "reported_date": "2025-12-01T09:23:00Z",
+    "category": "ostatni",
+    "lat": 50.1340525,
+    "lng": 14.2189911,
+    "description": "Černá skládka - \"za Běloky\"",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": []
+  }
+]

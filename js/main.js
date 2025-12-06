@@ -1393,6 +1393,7 @@ Odkaz do aplikace: ${appUrl}`;
   // Update sběrný dvůr status function
   function updateSbernyDvurStatus() {
     const wasteSbernyDvurEl = document.getElementById("wasteSbernyDvur");
+    const odpadCounterEl = counters.odpad;
     if (!wasteSbernyDvurEl) return;
     
     const now = new Date();
@@ -1403,12 +1404,49 @@ Odkaz do aplikace: ${appUrl}`;
     const openTime = 8 * 60; // 8:00 in minutes
     const closeTime = 16 * 60; // 16:00 in minutes
     
-    if (dayOfWeek === 6 && currentTime >= openTime && currentTime < closeTime) {
+    const isOpen = dayOfWeek === 6 && currentTime >= openTime && currentTime < closeTime;
+    
+    if (isOpen) {
       wasteSbernyDvurEl.textContent = "Sběrný dvůr otevřen";
       wasteSbernyDvurEl.style.color = "var(--accent)";
-      wasteSbernyDvurEl.style.fontWeight = "600";
+      wasteSbernyDvurEl.style.fontWeight = "800";
+      wasteSbernyDvurEl.style.fontSize = "26px";
+      wasteSbernyDvurEl.style.lineHeight = "1.2";
+      wasteSbernyDvurEl.style.marginTop = "0";
+      wasteSbernyDvurEl.style.marginBottom = "4px";
+      
+      // Move sběrný dvůr above odpad date
+      const parent = wasteSbernyDvurEl.parentElement;
+      if (parent && odpadCounterEl && odpadCounterEl.parentElement === parent) {
+        parent.insertBefore(wasteSbernyDvurEl, odpadCounterEl);
+      }
+      
+      // Make odpad date smaller when sběrný dvůr is open
+      if (odpadCounterEl) {
+        odpadCounterEl.style.fontSize = "16px";
+        odpadCounterEl.style.opacity = "0.6";
+        odpadCounterEl.style.fontWeight = "600";
+      }
     } else {
       wasteSbernyDvurEl.textContent = "";
+      wasteSbernyDvurEl.style.fontSize = "";
+      wasteSbernyDvurEl.style.fontWeight = "";
+      wasteSbernyDvurEl.style.color = "";
+      wasteSbernyDvurEl.style.marginTop = "";
+      wasteSbernyDvurEl.style.marginBottom = "";
+      
+      // Restore original order
+      const parent = wasteSbernyDvurEl.parentElement;
+      if (parent && odpadCounterEl && odpadCounterEl.parentElement === parent) {
+        parent.insertBefore(odpadCounterEl, wasteSbernyDvurEl);
+      }
+      
+      // Restore odpad date to normal size
+      if (odpadCounterEl) {
+        odpadCounterEl.style.fontSize = "";
+        odpadCounterEl.style.opacity = "";
+        odpadCounterEl.style.fontWeight = "";
+      }
     }
   }
 

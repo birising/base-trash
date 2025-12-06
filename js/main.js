@@ -3227,6 +3227,48 @@ Odkaz do aplikace: ${appUrl}`;
   }
   fetchStreamLevel();
   
+  // Auto-refresh stream data every 5 minutes when page is visible
+  let streamRefreshInterval = null;
+  const STREAM_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+  
+  const startStreamAutoRefresh = () => {
+    if (streamRefreshInterval) return; // Already running
+    
+    streamRefreshInterval = setInterval(() => {
+      // Only refresh if page is visible
+      if (!document.hidden) {
+        refreshStreamData(false).catch(error => {
+          console.warn('Automatické obnovení dat hladiny potoka selhalo:', error);
+        });
+      }
+    }, STREAM_REFRESH_INTERVAL_MS);
+  };
+  
+  const stopStreamAutoRefresh = () => {
+    if (streamRefreshInterval) {
+      clearInterval(streamRefreshInterval);
+      streamRefreshInterval = null;
+    }
+  };
+  
+  // Start auto-refresh when page becomes visible
+  if (!document.hidden) {
+    startStreamAutoRefresh();
+  }
+  
+  // Handle page visibility changes (pause when tab is in background)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopStreamAutoRefresh();
+    } else {
+      startStreamAutoRefresh();
+      // Refresh immediately when page becomes visible again
+      refreshStreamData(false).catch(error => {
+        console.warn('Obnovení dat hladiny potoka při zobrazení stránky selhalo:', error);
+      });
+    }
+  });
+  
   // Update sběrný dvůr status immediately and then every minute
   updateSbernyDvurStatus();
   setInterval(updateSbernyDvurStatus, 60000); // Update every minute

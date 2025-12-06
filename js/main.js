@@ -2347,7 +2347,8 @@ Odkaz do aplikace: ${appUrl}`;
       const labels = {
         'zelen': 'Údržba zeleně',
         'kose': 'Koš',
-        'lampy': 'Lampa'
+        'lampy': 'Lampa',
+        'ostatni': 'Ostatní'
       };
       return labels[category] || category;
     };
@@ -2370,7 +2371,7 @@ Odkaz do aplikace: ${appUrl}`;
     };
     
     const getStatusText = (resolved) => {
-      return resolved ? 'Vyřešeno' : 'V řešení';
+      return resolved ? 'Vyřešeno' : 'Nahlášeno';
     };
     
     // Sort function

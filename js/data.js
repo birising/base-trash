@@ -1029,8 +1029,9 @@ async function loadKriminalitaDataAsync() {
 
 async function loadZavadyData() {
   try {
-    const zavadyUrl = "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady.json";
-    const zavadyFallbackUrl = `${dataBaseUrl}/zavady.json`;
+    // For development: use local file first, then fallback to S3
+    const zavadyUrl = `${dataBaseUrl}/zavady.json`;
+    const zavadyFallbackUrl = "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady.json";
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout

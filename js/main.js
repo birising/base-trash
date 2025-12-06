@@ -1509,9 +1509,11 @@ Odkaz do aplikace: ${appUrl}`;
       }
     }
     if (levelReading) {
-      const levelText = streamState.level ? `Aktuální: ${streamState.level}` : "Načítám data senzorů…";
-      const stamp = streamState.updated ? ` · ${streamState.updated}` : "";
-      levelReading.textContent = `${levelText}${stamp}`;
+      if (streamState.updated) {
+        levelReading.textContent = `Naposledy měřeno: ${streamState.updated}`;
+      } else {
+        levelReading.textContent = "Načítám data senzorů…";
+      }
     }
     if (streamLevelEl) streamLevelEl.textContent = streamState.level || "–";
     if (streamUpdatedEl) {

@@ -1527,48 +1527,49 @@ Odkaz do aplikace: ${appUrl}`;
             tip.style.setProperty('border', '1px solid rgba(15, 23, 42, 0.15)', 'important');
           }
           
-          // Also set text colors for all child elements - force dark text for all text elements
-          const allTextElements = popupElement.querySelectorAll('*');
-          allTextElements.forEach(el => {
-            // Skip images, buttons with specific styling, and gallery thumbs
-            if (el.tagName === 'IMG' || 
-                el.classList.contains('popup-button') || 
-                el.classList.contains('zavady-popup-gallery-thumb') ||
-                el.classList.contains('zavady-popup-gallery-thumb-loading') ||
-                el.classList.contains('zavady-popup-gallery-thumb-spinner')) {
-              return;
-            }
-            
-            // Special cases for specific elements
-            if (el.classList.contains('zavady-popup-category')) {
-              el.style.setProperty('color', '#059669', 'important');
-            } else if (el.classList.contains('zavady-popup-date')) {
-              el.style.setProperty('color', '#475569', 'important');
-            } else if (el.classList.contains('zavady-popup-header') && el.tagName === 'STRONG') {
-              el.style.setProperty('color', '#0b1220', 'important');
-            } else {
-              // For all other text elements, always force dark color for visibility on light background
-              const hasText = el.textContent && el.textContent.trim().length > 0;
-              const isTextElement = ['P', 'SPAN', 'DIV', 'STRONG', 'EM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LABEL'].includes(el.tagName);
-              if (hasText || isTextElement) {
-                // Always set dark color for text elements in zavady popup to ensure visibility
-                el.style.setProperty('color', '#0b1220', 'important');
-              }
-            }
-          });
+          // Also set text colors for specific elements only - more efficient
+          const categoryEl = popupElement.querySelector('.zavady-popup-category');
+          if (categoryEl) {
+            categoryEl.style.setProperty('color', '#059669', 'important');
+          }
+          
+          const dateEl = popupElement.querySelector('.zavady-popup-date');
+          if (dateEl) {
+            dateEl.style.setProperty('color', '#475569', 'important');
+          }
+          
+          const headerStrong = popupElement.querySelector('.zavady-popup-header strong');
+          if (headerStrong) {
+            headerStrong.style.setProperty('color', '#0b1220', 'important');
+          }
+          
+          const galleryTitle = popupElement.querySelector('.zavady-popup-gallery-title');
+          if (galleryTitle) {
+            galleryTitle.style.setProperty('color', '#0b1220', 'important');
+          }
+          
+          // Set default text color for popup content wrapper to ensure all text is dark
+          if (contentWrapper) {
+            contentWrapper.style.setProperty('color', '#0b1220', 'important');
+          }
         };
         
-        // Apply immediately and after multiple delays to ensure it sticks
+        // Apply immediately and after a short delay to ensure it sticks
+        // Reduced number of calls to prevent performance issues
         applyLightTheme();
-        setTimeout(applyLightTheme, 0);
-        setTimeout(applyLightTheme, 10);
         setTimeout(applyLightTheme, 50);
-        setTimeout(applyLightTheme, 100);
-        setTimeout(applyLightTheme, 200);
+        setTimeout(applyLightTheme, 150);
         
         // Use MutationObserver to watch for style changes and reapply
+        // But prevent infinite loops by debouncing
+        let isApplying = false;
         const observer = new MutationObserver(() => {
-          applyLightTheme();
+          if (isApplying) return; // Prevent infinite loop
+          isApplying = true;
+          setTimeout(() => {
+            applyLightTheme();
+            isApplying = false;
+          }, 100);
         });
         
         if (popupElement) {
@@ -1584,16 +1585,20 @@ Odkaz do aplikace: ${appUrl}`;
           });
         }
         
-        // Handle gallery thumbnails click
-        const galleryThumbs = popupElement.querySelectorAll('.zavady-popup-gallery-thumb');
-        galleryThumbs.forEach(thumb => {
-          thumb.addEventListener('click', () => {
-            const photos = JSON.parse(thumb.dataset.photos || '[]');
-            if (photos.length > 0) {
-              openZavadyPhotoGallery(photos);
+        // Handle gallery thumbnails click - use event delegation to prevent duplicate listeners
+        const galleryContainer = popupElement.querySelector('.zavady-popup-gallery-thumbnails');
+        if (galleryContainer) {
+          galleryContainer.addEventListener('click', (e) => {
+            const thumb = e.target.closest('.zavady-popup-gallery-thumb');
+            if (thumb) {
+              e.stopPropagation();
+              const photos = JSON.parse(thumb.dataset.photos || '[]');
+              if (photos.length > 0) {
+                openZavadyPhotoGallery(photos);
+              }
             }
           });
-        });
+        }
         
         // Handle "Nahlásit další závadu" button click
         const showFormBtn = popupElement.querySelector('.show-report-form-btn');

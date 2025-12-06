@@ -270,7 +270,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "zavady-mapa", "mapa"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
-  const mapLayersVisibility = { lampy: true, kose: true, zavady: true, zelen: true };
+  const mapLayersVisibility = { lampy: false, kose: true, zavady: true, zelen: false };
   let currentCategory = null;
   const DEFAULT_CATEGORY = "kose";
 

@@ -3389,6 +3389,9 @@ Odkaz do aplikace: ${appUrl}`;
           </div>
           <div class="zavady-photo-gallery-main">
             <button class="zavady-photo-gallery-close" aria-label="Zavřít">&times;</button>
+            <div class="zavady-photo-gallery-loading">
+              <div class="zavady-photo-gallery-spinner"></div>
+            </div>
             <img class="zavady-photo-gallery-image" src="" alt="Fotografie závady" decoding="async">
             <button class="zavady-photo-gallery-prev" aria-label="Předchozí">‹</button>
             <button class="zavady-photo-gallery-next" aria-label="Další">›</button>
@@ -3432,6 +3435,7 @@ Odkaz do aplikace: ${appUrl}`;
     
     // Update gallery with photos
     const galleryImage = galleryModal.querySelector('.zavady-photo-gallery-image');
+    const galleryLoading = galleryModal.querySelector('.zavady-photo-gallery-loading');
     const thumbnailsContainer = galleryModal.querySelector('.zavady-photo-gallery-thumbnails');
     const counter = galleryModal.querySelector('.zavady-photo-gallery-counter');
     const prevBtn = galleryModal.querySelector('.zavady-photo-gallery-prev');
@@ -3469,6 +3473,11 @@ Odkaz do aplikace: ${appUrl}`;
         galleryImage.style.opacity = '0';
       }
       
+      // Show loading spinner
+      if (galleryLoading) {
+        galleryLoading.classList.remove('hidden');
+      }
+      
       // Check if image is already loaded in cache
       if (cachedImage && cachedImage.complete && cachedImage.naturalWidth > 0) {
         // Image is already loaded, switch immediately
@@ -3476,6 +3485,9 @@ Odkaz do aplikace: ${appUrl}`;
         // Use requestAnimationFrame to ensure smooth transition
         requestAnimationFrame(() => {
           galleryImage.style.opacity = '1';
+          if (galleryLoading) {
+            galleryLoading.classList.add('hidden');
+          }
         });
       } else {
         // Image not loaded yet, use fade transition
@@ -3486,16 +3498,25 @@ Odkaz do aplikace: ${appUrl}`;
         if (galleryImage.complete && galleryImage.naturalWidth > 0) {
           requestAnimationFrame(() => {
             galleryImage.style.opacity = '1';
+            if (galleryLoading) {
+              galleryLoading.classList.add('hidden');
+            }
           });
         } else {
           // Wait for image to load
           const onLoad = () => {
             galleryImage.style.opacity = '1';
+            if (galleryLoading) {
+              galleryLoading.classList.add('hidden');
+            }
             galleryImage.removeEventListener('load', onLoad);
             galleryImage.removeEventListener('error', onError);
           };
           const onError = () => {
             galleryImage.style.opacity = '1';
+            if (galleryLoading) {
+              galleryLoading.classList.add('hidden');
+            }
             galleryImage.removeEventListener('load', onLoad);
             galleryImage.removeEventListener('error', onError);
           };
@@ -3551,6 +3572,12 @@ Odkaz do aplikace: ${appUrl}`;
     galleryImage.style.opacity = '0';
     galleryImage.src = ''; // Clear previous image immediately
     currentIndex = 0;
+    
+    // Show loading spinner immediately
+    const galleryLoading = galleryModal.querySelector('.zavady-photo-gallery-loading');
+    if (galleryLoading) {
+      galleryLoading.classList.remove('hidden');
+    }
     
     // Show modal first
     galleryModal.classList.remove('hidden');

@@ -2,6 +2,58 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (typeof loadIncludes === "function") {
     await loadIncludes();
   }
+  
+  // Initialize status indicator
+  function initStatusIndicator() {
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusIcon = statusIndicator?.querySelector('.status-icon');
+    const statusText = statusIndicator?.querySelector('.status-text');
+    
+    if (!statusIndicator || !statusIcon || !statusText) return;
+    
+    function updateStatus(online) {
+      if (online) {
+        statusIndicator.classList.remove('offline');
+        statusText.textContent = 'Online';
+        statusIcon.className = 'fas fa-circle status-icon';
+      } else {
+        statusIndicator.classList.add('offline');
+        statusText.textContent = 'Offline';
+        statusIcon.className = 'fas fa-circle status-icon';
+      }
+    }
+    
+    // Check initial status
+    updateStatus(navigator.onLine);
+    
+    // Listen for online/offline events
+    window.addEventListener('online', () => {
+      updateStatus(true);
+    });
+    
+    window.addEventListener('offline', () => {
+      updateStatus(false);
+    });
+    
+    // Optional: Check connection status periodically
+    setInterval(() => {
+      if (navigator.onLine) {
+        // Try to fetch a small resource to verify actual connectivity
+        fetch('https://www.google.com/favicon.ico', { 
+          mode: 'no-cors',
+          cache: 'no-cache'
+        }).then(() => {
+          updateStatus(true);
+        }).catch(() => {
+          updateStatus(false);
+        });
+      } else {
+        updateStatus(false);
+      }
+    }, 30000); // Check every 30 seconds
+  }
+  
+  initStatusIndicator();
 
   const themePreferenceKey = "appTheme";
   const themeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");

@@ -129,6 +129,48 @@ body {
   gap: 10px;
 }
 
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: all 0.3s ease;
+}
+
+.status-indicator .status-icon {
+  font-size: 8px;
+  color: #10b981;
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+.status-indicator.offline .status-icon {
+  color: #ef4444;
+}
+
+.status-indicator.offline .status-text {
+  color: #ef4444;
+}
+
+.status-indicator .status-text {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+}
+
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .theme-toggle {
   position: relative;
   width: 70px;
@@ -1239,6 +1281,19 @@ body {
 
   .topbar-actions {
     gap: 6px;
+  }
+  
+  .status-indicator {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  
+  .status-indicator .status-text {
+    font-size: 11px;
+  }
+  
+  .status-indicator .status-icon {
+    font-size: 7px;
   }
 
   .theme-toggle {

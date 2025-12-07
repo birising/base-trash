@@ -1474,7 +1474,8 @@ Odkaz do aplikace: ${appUrl}`;
           html: '<div style="background: #f97316; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6);">!</div>',
           iconSize: [32, 32],
           iconAnchor: [16, 16]
-        })
+        }),
+        zavadaId: zavada.id // Store zavada ID for deep linking
       });
       
       // Create popup content
@@ -4004,10 +4005,51 @@ Odkaz do aplikace: ${appUrl}`;
     return false;
   }
 
-  // Handle deep linking from URL hash (e.g., #lampy/1 or #lampy/50.133935,14.222031 or #zelen/50.133935,14.222031)
+  // Handle deep linking from URL hash (e.g., #lampy/1 or #lampy/50.133935,14.222031 or #zelen/50.133935,14.222031 or #zavady-mapa or #zavady/1)
   function handleDeepLink() {
     const hash = window.location.hash.slice(1); // Remove #
     if (!hash) return;
+    
+    // Handle zavady-mapa deep link (map with zavady)
+    if (hash === 'zavady-mapa') {
+      setTimeout(() => {
+        setActiveCategory('zavady-mapa');
+      }, 500);
+      return;
+    }
+    
+    // Handle zavady/{id} deep link (specific zavada)
+    if (hash.startsWith('zavady/')) {
+      const zavadaId = hash.split('/')[1];
+      if (zavadaId) {
+        setTimeout(() => {
+          setActiveCategory('zavady-mapa');
+          // Wait for zavady to load, then find and open the marker
+          setTimeout(() => {
+            if (map && layers.zavadyMapa) {
+              let foundMarker = null;
+              const targetId = parseInt(zavadaId);
+              layers.zavadyMapa.eachLayer((marker) => {
+                // Check if marker has zavadaId in options
+                if (marker.options && marker.options.zavadaId === targetId) {
+                  foundMarker = marker;
+                }
+              });
+              if (foundMarker) {
+                map.setView(foundMarker.getLatLng(), 18);
+                setTimeout(() => {
+                  foundMarker.openPopup();
+                }, 300);
+              } else {
+                // If marker not found, just show the map
+                console.log('Zavada marker not found for ID:', zavadaId);
+              }
+            }
+          }, 800);
+        }, 500);
+      }
+      return;
+    }
     
     // Ignore simple category names (like #zavady, #hasici) - these are handled by setActiveCategory
     if (hash && !hash.includes('/')) return;

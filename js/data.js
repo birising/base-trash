@@ -132,7 +132,7 @@ const fallbackZelene = [
     category: "zelen",
     type: "trava",
     lastMowed: "2024-05-18 10:00",
-    frequency: "1× za 3 týdny",
+    frequency: "N/A",
     coords: [
       [50.132774, 14.22038],
       [50.132656, 14.220131],
@@ -155,7 +155,7 @@ const fallbackZelene = [
     category: "zelen",
     type: "trava",
     lastMowed: "2024-05-22 08:15",
-    frequency: "1× za 3 týdny",
+    frequency: "N/A",
     coords: [
       [50.124089, 14.212089],
       [50.124213, 14.212331],
@@ -179,7 +179,7 @@ const fallbackZelene = [
     category: "zelen",
     type: "trava",
     lastMowed: "2024-05-28 07:50",
-    frequency: "1× za 3 týdny",
+    frequency: "N/A",
     coords: [
       [50.130826, 14.212647],
       [50.130719, 14.212642],
@@ -206,7 +206,7 @@ const fallbackZelene = [
     category: "zelen",
     type: "trava",
     lastMowed: "2024-06-04 08:45",
-    frequency: "1× za 2 týdny",
+    frequency: "N/A",
     coords: [
       [50.132976, 14.224095],
       [50.132941, 14.22418],
@@ -237,7 +237,7 @@ const fallbackZelene = [
     category: "zelen",
     type: "zahony",
     lastMowed: "2024-06-10 09:20",
-    frequency: "1× za 2 týdny",
+    frequency: "N/A",
     coords: [
       [50.132615, 14.222558],
       [50.132711, 14.22247],
@@ -260,7 +260,7 @@ const fallbackZelene = [
     category: "zelen",
     type: "zahony",
     lastMowed: "2024-06-12 07:40",
-    frequency: "1× za 2 týdny",
+    frequency: "N/A",
     coords: [
       [50.132461, 14.22237],
       [50.132433, 14.222372],
@@ -281,7 +281,7 @@ const fallbackZelene = [
     category: "zelen",
     type: "trava",
     lastMowed: "2024-06-14 08:00",
-    frequency: "1× za 2 týdny",
+    frequency: "N/A",
     coords: [
       [50.13326, 14.220331],
       [50.133303, 14.220355],
@@ -319,7 +319,7 @@ const fallbackZelene = [
     category: "zelen",
     type: "trava",
     lastMowed: "2024-06-18 09:15",
-    frequency: "1× za 2 týdny",
+    frequency: "N/A",
     coords: [
       [50.129189, 14.221788],
       [50.128945, 14.221615],
@@ -333,7 +333,7 @@ const fallbackZelene = [
     category: "zelen",
     type: "zahony",
     lastMowed: "2024-06-19 07:30",
-    frequency: "1× týdně péče o záhony",
+    frequency: "N/A",
     coords: [
       [50.13232, 14.22274],
       [50.13229, 14.22263],

@@ -1357,6 +1357,22 @@ Odkaz do aplikace: ${appUrl}`;
   populateLayer("kontejnery");
   populateLayer("hladina");
 
+  // Generate thumbnail path from full image path
+  function getThumbnailPath(originalPath) {
+    if (!originalPath) return originalPath;
+    
+    // If path contains 'assets/', create thumbnail path
+    if (originalPath.includes('assets/')) {
+      // Option 1: Use thumbs/ subdirectory (e.g., assets/image.jpg -> assets/thumbs/image.jpg)
+      const thumbPath = originalPath.replace(/assets\/(.+)/, 'assets/thumbs/$1');
+      return thumbPath;
+    }
+    
+    // For external URLs, try to use thumbnail service if available
+    // For now, just return original path
+    return originalPath;
+  }
+
   // Populate zavady on map
   async function populateZavadyMapLayer(zavady) {
     if (!map || !zavady || !Array.isArray(zavady)) return;
@@ -1430,7 +1446,8 @@ Odkaz do aplikace: ${appUrl}`;
                     <div class="zavady-popup-gallery-thumb-spinner"></div>
                   </div>
                   <img 
-                    src="${photo}" 
+                    src="${getThumbnailPath(photo)}" 
+                    data-full-src="${photo}"
                     alt="Fotografie ${idx + 1}" 
                     class="zavady-popup-gallery-thumb" 
                     data-photo-index="${idx}"
@@ -1438,7 +1455,7 @@ Odkaz do aplikace: ${appUrl}`;
                     loading="lazy"
                     decoding="async"
                     onload="this.parentElement.querySelector('.zavady-popup-gallery-thumb-loading').classList.add('hidden')"
-                    onerror="this.parentElement.querySelector('.zavady-popup-gallery-thumb-loading').classList.add('hidden')"
+                    onerror="this.src = this.dataset.fullSrc || this.src; this.parentElement.querySelector('.zavady-popup-gallery-thumb-loading').classList.add('hidden')"
                   >
                 </div>
               `).join('')}
@@ -3130,9 +3147,10 @@ Odkaz do aplikace: ${appUrl}`;
                 if (hasPhotos) {
                   const firstPhoto = photos[0];
                   const photoCount = photos.length;
+                  const thumbnailPath = getThumbnailPath(firstPhoto);
                   photoPreview = `
                     <div class="zavady-photos-preview" data-zavada-id="${item.id}" data-photos='${JSON.stringify(photos)}'>
-                      <img src="${firstPhoto}" alt="Náhled fotografie" class="zavady-photo-thumb" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <img src="${thumbnailPath}" data-full-src="${firstPhoto}" alt="Náhled fotografie" class="zavady-photo-thumb" loading="lazy" decoding="async" onerror="this.src = this.dataset.fullSrc || this.src; if (this.complete && this.naturalWidth === 0) { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
                       <div class="zavady-photo-placeholder" style="display: none;">
                         <span class="zavady-photo-icon">📷</span>
                       </div>
@@ -3168,7 +3186,8 @@ Odkaz do aplikace: ${appUrl}`;
                               <div class="zavady-gallery-thumb-spinner"></div>
                             </div>
                             <img 
-                              src="${photo}" 
+                              src="${getThumbnailPath(photo)}" 
+                              data-full-src="${photo}"
                               alt="Fotografie ${idx + 1}" 
                               class="zavady-gallery-thumb" 
                               data-photo-index="${idx}"
@@ -3176,7 +3195,7 @@ Odkaz do aplikace: ${appUrl}`;
                               loading="lazy"
                               decoding="async"
                               onload="this.parentElement.querySelector('.zavady-gallery-thumb-loading').classList.add('hidden')"
-                              onerror="this.parentElement.querySelector('.zavady-gallery-thumb-loading').classList.add('hidden')"
+                              onerror="this.src = this.dataset.fullSrc || this.src; this.parentElement.querySelector('.zavady-gallery-thumb-loading').classList.add('hidden')"
                             >
                           </div>
                         `).join('')}
@@ -3481,15 +3500,17 @@ Odkaz do aplikace: ${appUrl}`;
         }, 150);
       }
       
-      // Update thumbnails
+      // Update thumbnails - use thumbnails for faster loading
       thumbnailsContainer.innerHTML = photos.map((photo, index) => `
         <img 
-          src="${photo}" 
+          src="${getThumbnailPath(photo)}" 
+          data-full-src="${photo}"
           alt="Náhled ${index + 1}" 
           class="zavady-photo-thumbnail ${index === currentIndex ? 'active' : ''}"
           data-index="${index}"
           loading="lazy"
           decoding="async"
+          onerror="this.src = this.dataset.fullSrc || this.src"
         >
       `).join('');
       

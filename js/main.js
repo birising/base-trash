@@ -3464,40 +3464,44 @@ Odkaz do aplikace: ${appUrl}`;
       galleryImage.alt = `Fotografie ${currentIndex + 1} z ${photos.length}`;
       counter.textContent = `${currentIndex + 1} / ${photos.length}`;
       
+      // If switching to a different image, hide current one first
+      if (galleryImage.src && galleryImage.src !== newPhotoUrl) {
+        galleryImage.style.opacity = '0';
+      }
+      
       // Check if image is already loaded in cache
       if (cachedImage && cachedImage.complete && cachedImage.naturalWidth > 0) {
-        // Image is already loaded, switch immediately without fade
-        if (galleryImage.src !== newPhotoUrl) {
-          galleryImage.src = newPhotoUrl;
-        }
-        galleryImage.style.opacity = '1';
+        // Image is already loaded, switch immediately
+        galleryImage.src = newPhotoUrl;
+        // Use requestAnimationFrame to ensure smooth transition
+        requestAnimationFrame(() => {
+          galleryImage.style.opacity = '1';
+        });
       } else {
         // Image not loaded yet, use fade transition
-        galleryImage.style.opacity = '0';
+        // Set src immediately (browser will start loading)
+        galleryImage.src = newPhotoUrl;
         
-        // Set src after fade out
-        setTimeout(() => {
-          galleryImage.src = newPhotoUrl;
-          
-          // If image is already in browser cache, show immediately
-          if (galleryImage.complete && galleryImage.naturalWidth > 0) {
+        // If image is already in browser cache, show immediately
+        if (galleryImage.complete && galleryImage.naturalWidth > 0) {
+          requestAnimationFrame(() => {
             galleryImage.style.opacity = '1';
-          } else {
-            // Wait for image to load
-            const onLoad = () => {
-              galleryImage.style.opacity = '1';
-              galleryImage.removeEventListener('load', onLoad);
-              galleryImage.removeEventListener('error', onError);
-            };
-            const onError = () => {
-              galleryImage.style.opacity = '1';
-              galleryImage.removeEventListener('load', onLoad);
-              galleryImage.removeEventListener('error', onError);
-            };
-            galleryImage.addEventListener('load', onLoad);
-            galleryImage.addEventListener('error', onError);
-          }
-        }, 150);
+          });
+        } else {
+          // Wait for image to load
+          const onLoad = () => {
+            galleryImage.style.opacity = '1';
+            galleryImage.removeEventListener('load', onLoad);
+            galleryImage.removeEventListener('error', onError);
+          };
+          const onError = () => {
+            galleryImage.style.opacity = '1';
+            galleryImage.removeEventListener('load', onLoad);
+            galleryImage.removeEventListener('error', onError);
+          };
+          galleryImage.addEventListener('load', onLoad);
+          galleryImage.addEventListener('error', onError);
+        }
       }
       
       // Update thumbnails - use thumbnails for faster loading
@@ -3543,11 +3547,17 @@ Odkaz do aplikace: ${appUrl}`;
       updateGallery();
     });
     
-    // Show gallery
+    // Show gallery - hide previous image first
+    galleryImage.style.opacity = '0';
+    galleryImage.src = ''; // Clear previous image immediately
     currentIndex = 0;
-    updateGallery();
+    
+    // Show modal first
     galleryModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    
+    // Then update gallery (this will load the correct image)
+    updateGallery();
   }
   
   function goToDashboard() {

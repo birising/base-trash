@@ -2459,6 +2459,17 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
   }
 }
 
+@keyframes pulse-marker {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.8);
+  }
+}
+
 .zavady-photo-gallery-prev,
 .zavady-photo-gallery-next {
   position: absolute;

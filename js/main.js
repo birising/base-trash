@@ -327,6 +327,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   let currentCategory = null;
   const DEFAULT_CATEGORY = "kose";
   let mapClickHandler = null;
+  let temporaryReportMarker = null;
 
   const backButton = document.getElementById("backButton");
   const brandLogo = document.getElementById("brandLogo");
@@ -2491,12 +2492,59 @@ Odkaz do aplikace: ${appUrl}`;
         mapClickHandler = null;
       }
       
+      // Remove temporary marker when switching categories
+      if (temporaryReportMarker) {
+        map.removeLayer(temporaryReportMarker);
+        temporaryReportMarker = null;
+      }
+      
       // Add handler for unified map to report zavady
       if (category === "mapa") {
         mapClickHandler = (e) => {
           const lat = e.latlng.lat;
           const lng = e.latlng.lng;
-          openReportZavadaModal(lat, lng);
+          
+          // First, create a temporary marker on the main map
+          if (map) {
+            // Remove previous temporary marker if exists
+            if (temporaryReportMarker) {
+              map.removeLayer(temporaryReportMarker);
+              temporaryReportMarker = null;
+            }
+            
+            // Create new temporary marker
+            temporaryReportMarker = L.marker([lat, lng], {
+              icon: L.divIcon({
+                className: 'zavady-map-marker temporary-report-marker',
+                html: '<div style="background: #f97316; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6); animation: pulse-marker 1.5s ease-in-out infinite;">!</div>',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+              }),
+              draggable: true
+            }).addTo(map);
+            
+            // Update marker position when dragged
+            temporaryReportMarker.on('dragend', function(e) {
+              const marker = e.target;
+              const position = marker.getLatLng();
+              // Update coordinates in modal if it's open
+              if (reportZavadaSelectedLat && reportZavadaSelectedLng) {
+                reportZavadaSelectedLat.value = position.lat.toFixed(6);
+                reportZavadaSelectedLng.value = position.lng.toFixed(6);
+                if (reportZavadaSelectedText) {
+                  reportZavadaSelectedText.textContent = `Ostatní (${position.lat.toFixed(6)}, ${position.lng.toFixed(6)})`;
+                }
+              }
+            });
+            
+            // Pan map to show marker
+            map.panTo([lat, lng]);
+          }
+          
+          // Then open modal after a short delay to show the marker first
+          setTimeout(() => {
+            openReportZavadaModal(lat, lng);
+          }, 300);
         };
         map.on('click', mapClickHandler);
       }
@@ -4347,6 +4395,12 @@ Odkaz do aplikace: ${appUrl}`;
         reportZavadaForm.reset();
       }
     }
+    
+    // Remove temporary marker from main map
+    if (temporaryReportMarker && map) {
+      map.removeLayer(temporaryReportMarker);
+      temporaryReportMarker = null;
+    }
   }
   
   if (reportZavadaBtn) {
@@ -4616,6 +4670,11 @@ Odkaz do aplikace: ${appUrl}`;
   const originalCloseModal = closeReportZavadaModal;
   function closeReportZavadaModalWithMap() {
     clearReportZavadaMap();
+    // Remove temporary marker from main map
+    if (temporaryReportMarker && map) {
+      map.removeLayer(temporaryReportMarker);
+      temporaryReportMarker = null;
+    }
     originalCloseModal();
   }
   
@@ -4753,6 +4812,11 @@ Odkaz do aplikace: ${appUrl}`;
             }
           } else {
             console.log('Form submitted successfully (CORS handled)');
+          }
+          // Remove temporary marker from main map
+          if (temporaryReportMarker && map) {
+            map.removeLayer(temporaryReportMarker);
+            temporaryReportMarker = null;
           }
           closeReportZavadaModalWithMap();
           showToastNotification(

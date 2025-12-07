@@ -54,5 +54,47 @@
     "photos": [
       "assets/image-e4944ae3-0a8d-4e38-a050-17ba716edace.jpeg"
     ]
+  },
+  {
+    "id": 5,
+    "reported_date": "2025-12-07T10:00:00Z",
+    "category": "udrzba zelene",
+    "lat": 50.1330250,
+    "lng": 14.2244083,
+    "description": "Hnijící listí 01",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-4f3abbb2-9a51-4dd4-9937-b7acd6835179.jpeg"
+    ]
+  },
+  {
+    "id": 6,
+    "reported_date": "2025-12-07T10:15:00Z",
+    "category": "udrzba zelene",
+    "lat": 50.1332136,
+    "lng": 14.2246150,
+    "description": "Hnijící listí 02",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-6d228792-1c14-4d77-99f9-aa7d50b3b937.jpeg"
+    ]
+  },
+  {
+    "id": 7,
+    "reported_date": "2025-12-07T10:30:00Z",
+    "category": "udrzba zelene",
+    "lat": 50.1288692,
+    "lng": 14.2215408,
+    "description": "Hnijící tráva 02",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-4fd5782a-0410-4893-99f3-0493c859ca3d.jpeg"
+    ]
   }
 ]

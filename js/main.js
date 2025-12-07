@@ -3625,8 +3625,7 @@ Odkaz do aplikace: ${appUrl}`;
     galleryImage.src = ''; // Clear previous image immediately
     currentIndex = 0;
     
-    // Show loading spinner immediately
-    const galleryLoading = galleryModal.querySelector('.zavady-photo-gallery-loading');
+    // Show loading spinner immediately (galleryLoading is already defined above)
     if (galleryLoading) {
       galleryLoading.classList.remove('hidden');
     }

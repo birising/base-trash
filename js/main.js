@@ -4923,9 +4923,14 @@ Odkaz do aplikace: ${appUrl}`;
           
           // Provide more specific error message for common status codes
           if (response.status === 400) {
-            errorMsg = errorMsg || 'Neplatný požadavek. Zkontrolujte, zda jsou všechna pole vyplněna správně.';
+            // If errorMsg wasn't set from errorDetails above, try to get it from response
+            if (!errorMsg || errorMsg.startsWith('HTTP 400')) {
+              errorMsg = 'Neplatný požadavek. Zkontrolujte, zda jsou všechna pole vyplněna správně a zkuste to znovu.';
+            }
           } else if (response.status === 422) {
-            errorMsg = errorMsg || 'Chyba validace. Zkontrolujte, zda jsou všechna pole vyplněna správně a soubor není příliš velký.';
+            if (!errorMsg || errorMsg.startsWith('HTTP 422')) {
+              errorMsg = 'Chyba validace. Zkontrolujte, zda jsou všechna pole vyplněna správně a soubor není příliš velký.';
+            }
           }
           
           throw new Error(errorMsg);
@@ -4936,9 +4941,16 @@ Odkaz do aplikace: ${appUrl}`;
           submitButton.disabled = false;
           submitButton.textContent = originalText || 'Odeslat';
         }
+        
+        // Better error message for 400 errors
+        let displayMessage = error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.';
+        if (error.message && error.message.includes('400')) {
+          displayMessage = 'Chyba při odesílání: Neplatný požadavek. Zkontrolujte, zda jsou všechna pole vyplněna správně.';
+        }
+        
         showToastNotification(
           'Chyba při odesílání',
-          error.message || 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.',
+          displayMessage,
           'error'
         );
       }

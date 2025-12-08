@@ -2768,22 +2768,64 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
   }
 
   .zavady-table {
-    font-size: 11px;
-    min-width: 600px;
+    font-size: 12px;
+    min-width: 700px;
     width: 100%;
   }
 
   .zavady-table th {
-    padding: 8px 6px;
-    font-size: 10px;
+    padding: 10px 8px;
+    font-size: 11px;
     white-space: nowrap;
   }
 
   .zavady-table td {
-    padding: 8px 6px;
-    font-size: 11px;
+    padding: 10px 8px;
+    font-size: 12px;
     word-break: break-word;
-    max-width: 120px;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.4;
+  }
+  
+  /* Specific widths for columns on mobile */
+  .zavady-table td:first-child {
+    min-width: 110px;
+    max-width: 130px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+  
+  .zavady-table td:nth-child(2) {
+    min-width: 90px;
+    max-width: 110px;
+  }
+  
+  .zavady-table td:nth-child(3) {
+    min-width: 150px;
+    max-width: 220px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .zavady-table td:nth-child(4) {
+    min-width: 90px;
+    max-width: 110px;
+    white-space: nowrap;
+  }
+  
+  .zavady-table td:nth-child(5),
+  .zavady-table td:nth-child(6) {
+    min-width: 70px;
+    max-width: 90px;
+    white-space: nowrap;
+  }
+  
+  .zavady-table td:last-child {
+    min-width: 60px;
+    max-width: 80px;
   }
   
   .zavady-table th:first-child,
@@ -2792,7 +2834,7 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     left: 0;
     background: inherit;
     z-index: 5;
-    min-width: 80px;
+    min-width: 100px;
   }
   
   .zavady-table thead th:first-child {

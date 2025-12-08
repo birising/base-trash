@@ -3231,8 +3231,14 @@ Odkaz do aplikace: ${appUrl}`;
             </thead>
             <tbody>
               ${sortedZavady.map(item => {
-                const reportedDate = formatDate(item.reported_date);
-                const resolvedDate = item.resolved_date ? formatDate(item.resolved_date) : '–';
+                // Use shorter date format on mobile
+                const isMobile = window.innerWidth <= 960;
+                const reportedDate = isMobile 
+                  ? formatDateShort(item.reported_date) 
+                  : formatDate(item.reported_date);
+                const resolvedDate = item.resolved_date 
+                  ? (isMobile ? formatDateShort(item.resolved_date) : formatDate(item.resolved_date))
+                  : '–';
                 const days = calculateDays(item.reported_date, item.resolved_date);
                 const category = item.category || 'unknown';
                 const categoryLabel = getCategoryLabel(category);

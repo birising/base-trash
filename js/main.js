@@ -751,7 +751,7 @@ Odkaz do aplikace: ${appUrl}`;
     } else if (item.category === "kriminalita") {
       const formatDate = (date) => {
         if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '–';
-        return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       };
       
       const getTypeNames = (typeCodes) => {
@@ -1444,7 +1444,7 @@ Odkaz do aplikace: ${appUrl}`;
       try {
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return dateStr;
-        return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       } catch (e) {
         return dateStr;
       }
@@ -2791,7 +2791,7 @@ Odkaz do aplikace: ${appUrl}`;
     
     const formatDate = (date) => {
       if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '–';
-      return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     };
     
     const getTypeNames = (typeCodes) => {
@@ -2912,7 +2912,7 @@ Odkaz do aplikace: ${appUrl}`;
       if (diffHours < 24) return `před ${diffHours} h`;
       if (diffDays < 7) return `před ${diffDays} dny`;
       
-      return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     };
     
     const getStatusColor = (stav) => {
@@ -3058,7 +3058,18 @@ Odkaz do aplikace: ${appUrl}`;
       try {
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return dateStr;
-        return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return dateStr;
+      }
+    };
+    
+    const formatDateShort = (dateStr) => {
+      if (!dateStr) return '–';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
       } catch (e) {
         return dateStr;
       }

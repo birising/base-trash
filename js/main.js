@@ -4767,9 +4767,39 @@ Odkaz do aplikace: ${appUrl}`;
       }
       
       try {
-        const formData = new FormData(reportZavadaForm);
+        // Create FormData manually to ensure proper file handling
+        const formData = new FormData();
         
-        // Ensure file is properly added to FormData
+        // Add all form fields
+        const formFields = reportZavadaForm.querySelectorAll('input, select, textarea');
+        formFields.forEach(field => {
+          // Skip file input - we'll handle it separately
+          if (field.type === 'file') {
+            return;
+          }
+          
+          // Skip submit and button types
+          if (field.type === 'submit' || field.type === 'button') {
+            return;
+          }
+          
+          // Add field to FormData
+          if (field.name) {
+            if (field.type === 'checkbox' || field.type === 'radio') {
+              if (field.checked) {
+                formData.append(field.name, field.value || 'on');
+              }
+            } else if (field.tagName === 'SELECT') {
+              // For select elements, always add the value (even if empty)
+              formData.append(field.name, field.value || '');
+            } else {
+              // For input and textarea, add the value (even if empty for hidden fields)
+              formData.append(field.name, field.value || '');
+            }
+          }
+        });
+        
+        // Handle file upload separately
         const fileInput = reportZavadaForm.querySelector('input[type="file"]');
         if (fileInput && fileInput.files && fileInput.files.length > 0) {
           const file = fileInput.files[0];
@@ -4780,23 +4810,21 @@ Odkaz do aplikace: ${appUrl}`;
             throw new Error('Soubor je příliš velký. Maximální velikost je 25 MB.');
           }
           
-          // Ensure file is in FormData - FormData from form should already include it, but verify
-          const existingFile = formData.get('upload');
-          if (!existingFile || existingFile.size === 0) {
-            // Remove empty entry if exists
-            if (formData.has('upload')) {
-              formData.delete('upload');
-            }
-            formData.append('upload', file);
+          // Add file to FormData
+          formData.append('upload', file);
+        }
+        
+        // Validate required fields before sending
+        const requiredFields = ['form_type', 'category', 'email', 'message'];
+        const missingFields = [];
+        for (const field of requiredFields) {
+          if (!formData.has(field) || !formData.get(field)) {
+            missingFields.push(field);
           }
-        } else {
-          // If no file selected, ensure upload field is not in FormData (or is empty)
-          if (formData.has('upload')) {
-            const uploadValue = formData.get('upload');
-            if (!uploadValue || uploadValue.size === 0) {
-              formData.delete('upload');
-            }
-          }
+        }
+        
+        if (missingFields.length > 0) {
+          throw new Error(`Chybí povinná pole: ${missingFields.join(', ')}`);
         }
         
         // Debug: log all FormData entries
@@ -4922,9 +4950,22 @@ Odkaz do aplikace: ${appUrl}`;
                   errorMsg = errorDetails.message;
                 }
               } catch (e) {
-                // If not JSON, use text response
-                if (errorText && errorText.length < 200) {
-                  errorMsg = errorText;
+                // If not JSON, it might be HTML error page from Formspree
+                // Try to extract error message from HTML if possible
+                if (errorText) {
+                  // Check if it's HTML
+                  if (errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html')) {
+                    // It's an HTML error page - Formspree often returns HTML for 400 errors
+                    // Provide a generic but helpful error message
+                    if (response.status === 400) {
+                      errorMsg = 'Chyba při odesílání formuláře. Zkontrolujte, zda jsou všechna pole vyplněna správně a soubor není příliš velký nebo poškozený.';
+                    } else {
+                      errorMsg = `Chyba serveru (${response.status}). Zkuste to prosím znovu později.`;
+                    }
+                  } else if (errorText.length < 200) {
+                    // Short text response - use it directly
+                    errorMsg = errorText;
+                  }
                 }
               }
             } catch (e) {

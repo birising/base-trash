@@ -4955,9 +4955,59 @@ Odkaz do aplikace: ${appUrl}`;
                 if (errorText) {
                   // Check if it's HTML
                   if (errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html')) {
-                    // It's an HTML error page - Formspree often returns HTML for 400 errors
-                    // Provide a generic but helpful error message
-                    if (response.status === 400) {
+                    // It's an HTML error page - check for specific Formspree errors
+                    if (errorText.includes('File Uploads Not Permitted') || errorText.includes('does not support file uploads')) {
+                      errorMsg = 'Nahrávání souborů není podporováno. Formulář byl odeslán bez přílohy. Pokud potřebujete nahrát obrázek, kontaktujte správce.';
+                      // Try to submit without file
+                      const formDataWithoutFile = new FormData();
+                      const formFields = reportZavadaForm.querySelectorAll('input, select, textarea');
+                      formFields.forEach(field => {
+                        if (field.type === 'file' || field.type === 'submit' || field.type === 'button') {
+                          return;
+                        }
+                        if (field.name) {
+                          if (field.type === 'checkbox' || field.type === 'radio') {
+                            if (field.checked) {
+                              formDataWithoutFile.append(field.name, field.value || 'on');
+                            }
+                          } else if (field.tagName === 'SELECT') {
+                            formDataWithoutFile.append(field.name, field.value || '');
+                          } else {
+                            formDataWithoutFile.append(field.name, field.value || '');
+                          }
+                        }
+                      });
+                      
+                      // Retry submission without file
+                      try {
+                        const retryResponse = await fetch(reportZavadaForm.action, {
+                          method: 'POST',
+                          body: formDataWithoutFile
+                        });
+                        
+                        if (retryResponse.ok) {
+                          // Success - reset button and show success message
+                          if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.textContent = originalText || 'Odeslat';
+                          }
+                          if (temporaryReportMarker && map) {
+                            map.removeLayer(temporaryReportMarker);
+                            temporaryReportMarker = null;
+                          }
+                          closeReportZavadaModalWithMap();
+                          showToastNotification(
+                            'Závada nahlášena!',
+                            'Formulář byl odeslán bez přílohy (nahrávání souborů není podporováno).',
+                            'success'
+                          );
+                          return; // Exit early - submission successful
+                        }
+                      } catch (retryError) {
+                        console.error('Retry submission failed:', retryError);
+                        // Continue with original error message
+                      }
+                    } else if (response.status === 400) {
                       errorMsg = 'Chyba při odesílání formuláře. Zkontrolujte, zda jsou všechna pole vyplněna správně a soubor není příliš velký nebo poškozený.';
                     } else {
                       errorMsg = `Chyba serveru (${response.status}). Zkuste to prosím znovu později.`;

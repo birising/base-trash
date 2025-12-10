@@ -4766,6 +4766,10 @@ Odkaz do aplikace: ${appUrl}`;
         submitButton.textContent = 'Odesílám...';
       }
       
+      // Variables for file handling (needed in catch block for retry)
+      let file = null;
+      let imageDataUrl = null;
+      
       try {
         // Create FormData manually to ensure proper file handling
         const formData = new FormData();
@@ -4799,15 +4803,36 @@ Odkaz do aplikace: ${appUrl}`;
           }
         });
         
-        // Handle file upload separately
+        // Handle file upload - try to send as file first, fallback to base64 if Formspree doesn't support it
         const fileInput = reportZavadaForm.querySelector('input[type="file"]');
         if (fileInput && fileInput.files && fileInput.files.length > 0) {
-          const file = fileInput.files[0];
-          console.log('Odesílám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
+          file = fileInput.files[0];
+          console.log('Zpracovávám soubor:', file.name, 'velikost:', file.size, 'bytes', 'typ:', file.type);
           
-          // Check file size (Formspree limit is 25MB per file)
+          // Check file size (Formspree limit is 25MB per file, but for base64 we limit to 5MB)
           if (file.size > 25 * 1024 * 1024) {
             throw new Error('Soubor je příliš velký. Maximální velikost je 25 MB.');
+          }
+          
+          // Check if it's an image
+          if (!file.type.startsWith('image/')) {
+            throw new Error('Soubor musí být obrázek.');
+          }
+          
+          // Try to add file to FormData first (for paid Formspree accounts)
+          if (file.size <= 5 * 1024 * 1024) {
+            // Also prepare base64 version as fallback (only for smaller files to avoid memory issues)
+            try {
+              const reader = new FileReader();
+              imageDataUrl = await new Promise((resolve, reject) => {
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
+              console.log('Obrázek připraven i jako base64 pro případný fallback');
+            } catch (error) {
+              console.warn('Nepodařilo se připravit base64 verzi, ale pokračujeme s normálním souborem:', error);
+            }
           }
           
           // Add file to FormData
@@ -4957,8 +4982,67 @@ Odkaz do aplikace: ${appUrl}`;
                   if (errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html')) {
                     // It's an HTML error page - check for specific Formspree errors
                     if (errorText.includes('File Uploads Not Permitted') || errorText.includes('does not support file uploads')) {
-                      errorMsg = 'Nahrávání souborů není podporováno. Formulář byl odeslán bez přílohy. Pokud potřebujete nahrát obrázek, kontaktujte správce.';
-                      // Try to submit without file
+                      // Try to submit with base64 image in message if available
+                      if (imageDataUrl && file) {
+                        errorMsg = 'Nahrávání souborů není podporováno. Zkouším odeslat obrázek v textu zprávy...';
+                        // Create new FormData without file but with base64 image in message
+                        const formDataWithBase64 = new FormData();
+                        const formFields = reportZavadaForm.querySelectorAll('input, select, textarea');
+                        formFields.forEach(field => {
+                          if (field.type === 'file' || field.type === 'submit' || field.type === 'button') {
+                            return;
+                          }
+                          if (field.name) {
+                            if (field.type === 'checkbox' || field.type === 'radio') {
+                              if (field.checked) {
+                                formDataWithBase64.append(field.name, field.value || 'on');
+                              }
+                            } else if (field.tagName === 'SELECT') {
+                              formDataWithBase64.append(field.name, field.value || '');
+                            } else {
+                              let value = field.value || '';
+                              // Add base64 image to message
+                              if (field.name === 'message') {
+                                value += '\n\n--- PŘÍLOHA: OBRÁZEK ---\n[Obrázek: ' + file.name + ']\n' + imageDataUrl;
+                              }
+                              formDataWithBase64.append(field.name, value);
+                            }
+                          }
+                        });
+                        
+                        // Retry submission with base64 image in message
+                        try {
+                          const retryResponse = await fetch(reportZavadaForm.action, {
+                            method: 'POST',
+                            body: formDataWithBase64
+                          });
+                          
+                          if (retryResponse.ok) {
+                            // Success - reset button and show success message
+                            if (submitButton) {
+                              submitButton.disabled = false;
+                              submitButton.textContent = originalText || 'Odeslat';
+                            }
+                            if (temporaryReportMarker && map) {
+                              map.removeLayer(temporaryReportMarker);
+                              temporaryReportMarker = null;
+                            }
+                            closeReportZavadaModalWithMap();
+                            showToastNotification(
+                              'Závada nahlášena!',
+                              'Formulář byl odeslán s obrázkem v textu zprávy (nahrávání souborů není podporováno).',
+                              'success'
+                            );
+                            return; // Exit early - submission successful
+                          }
+                        } catch (retryError) {
+                          console.error('Retry submission with base64 failed:', retryError);
+                          // Fall through to try without file
+                        }
+                      }
+                      
+                      // If base64 didn't work or wasn't available, try without file
+                      errorMsg = 'Nahrávání souborů není podporováno. Zkouším odeslat formulář bez přílohy...';
                       const formDataWithoutFile = new FormData();
                       const formFields = reportZavadaForm.querySelectorAll('input, select, textarea');
                       formFields.forEach(field => {

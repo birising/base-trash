@@ -1607,6 +1607,53 @@
   cursor: not-allowed;
 }
 
+/* Resolve zavada details section */
+.resolve-zavada-details {
+  background: rgba(5, 150, 105, 0.1);
+  border: 2px solid rgba(5, 150, 105, 0.3);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.resolve-zavada-details h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.resolve-zavada-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.resolve-zavada-detail-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.resolve-zavada-detail-item strong {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.resolve-zavada-detail-item span {
+  font-size: 14px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
 /* Light theme for report zavada */
 :root[data-theme="light"] .report-zavada-modal-content {
   background: linear-gradient(145deg, #ffffff, #f8fafc);
@@ -2043,6 +2090,34 @@
   text-align: center;
 }
 
+.zavady-detail-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.zavada-resolved-button {
+  background: rgba(34, 197, 94, 0.9) !important;
+  border: 2px solid rgba(34, 197, 94, 1) !important;
+  color: #ffffff !important;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.zavada-resolved-button:hover {
+  background: rgba(34, 197, 94, 1) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
 /* Zavady popup on map - light background with dark text - use very specific selectors to override Leaflet defaults */
 /* Force light background ALWAYS, regardless of theme */
 .leaflet-container .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper,
@@ -2104,6 +2179,17 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
 
 .leaflet-popup.zavady-popup .popup-button:hover {
   background: rgba(249, 115, 22, 1) !important;
+  color: #ffffff !important;
+}
+
+.leaflet-popup.zavady-popup .popup-button-resolved {
+  background: rgba(34, 197, 94, 0.9) !important;
+  border-color: rgba(34, 197, 94, 1) !important;
+  color: #ffffff !important;
+}
+
+.leaflet-popup.zavady-popup .popup-button-resolved:hover {
+  background: rgba(34, 197, 94, 1) !important;
   color: #ffffff !important;
 }
 

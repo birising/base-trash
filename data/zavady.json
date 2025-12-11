@@ -160,5 +160,19 @@
     "resolved_date": null,
     "email": null,
     "photos": []
+  },
+  {
+    "id": 13,
+    "reported_date": "2025-12-08T12:00:00Z",
+    "category": "zelen",
+    "lat": 50.1310522,
+    "lng": 14.2102917,
+    "description": "Suchý strom 02",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-98109fa4-8fe3-4db7-8be9-49595313fe64.jpg"
+    ]
   }
 ]

@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "exif-parser": "^0.1.12",
     "sharp": "^0.34.5"
   }
 }

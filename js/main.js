@@ -1534,6 +1534,7 @@ Odkaz do aplikace: ${appUrl}`;
           </div>
           ${photoGalleryHtml}
           <div class="popup-actions">
+            ${!zavada.resolved ? `<button class="popup-button popup-button-resolved mark-zavada-resolved-btn" data-zavada-id="${zavada.id}" data-zavada-description="${description}" data-zavada-category="${zavada.category || 'unknown'}" data-zavada-lat="${lat}" data-zavada-lng="${lng}" data-zavada-reported-date="${zavada.reported_date}">Závada odstraněna</button>` : ''}
             <button class="popup-button show-report-form-btn" data-category="zavady-mapa" data-item-id="${zavada.id || 'N/A'}" data-item-name="${description}" data-gps="${gpsCoords}" data-app-url="${appUrl}">Nahlásit další závadu</button>
             <form class="lamp-report-form hidden" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
               <input type="hidden" name="form_type" value="zavada_report">
@@ -3347,6 +3348,9 @@ Odkaz do aplikace: ${appUrl}`;
                         ${resolvedInfo}
                         ${mapHtml}
                         ${galleryHtml}
+                        ${!item.resolved ? `<div class="zavady-detail-actions">
+                          <button class="zavada-resolved-button mark-zavada-resolved-btn" data-zavada-id="${item.id}" data-zavada-description="${description}" data-zavada-category="${category}" data-zavada-lat="${item.lat}" data-zavada-lng="${item.lng}" data-zavada-reported-date="${item.reported_date}">Závada odstraněna</button>
+                        </div>` : ''}
                       </div>
                     </td>
                   </tr>
@@ -4836,8 +4840,8 @@ Odkaz do aplikace: ${appUrl}`;
           }
           
           // Add file to FormData
-          formData.append('upload', file);
-        }
+            formData.append('upload', file);
+          }
         
         // Validate required fields before sending
         const requiredFields = ['form_type', 'category', 'email', 'message'];
@@ -5098,7 +5102,7 @@ Odkaz do aplikace: ${appUrl}`;
                     }
                   } else if (errorText.length < 200) {
                     // Short text response - use it directly
-                    errorMsg = errorText;
+                  errorMsg = errorText;
                   }
                 }
               }
@@ -5137,6 +5141,150 @@ Odkaz do aplikace: ${appUrl}`;
         showToastNotification(
           'Chyba při odesílání',
           displayMessage,
+          'error'
+        );
+      }
+    });
+  }
+  
+  // Handle "Závada odstraněna" button clicks
+  function openResolveZavadaModal(zavadaData) {
+    const modal = document.getElementById('resolveZavadaModal');
+    if (!modal) return;
+    
+    // Fill in form fields
+    document.getElementById('resolveZavadaId').value = zavadaData.id || '';
+    document.getElementById('resolveZavadaCategory').value = zavadaData.category || '';
+    document.getElementById('resolveZavadaLat').value = zavadaData.lat || '';
+    document.getElementById('resolveZavadaLng').value = zavadaData.lng || '';
+    document.getElementById('resolveZavadaReportedDate').value = zavadaData.reportedDate || '';
+    
+    // Fill in display fields (read-only)
+    document.getElementById('resolveZavadaDescription').textContent = zavadaData.description || 'Bez popisu';
+    
+    const categoryLabels = {
+      'zelen': 'Zelen',
+      'udrzba zelene': 'Údržba zeleně',
+      'kose': 'Koš',
+      'lampy': 'Lampa',
+      'ostatni': 'Ostatní'
+    };
+    document.getElementById('resolveZavadaCategoryLabel').textContent = categoryLabels[zavadaData.category] || zavadaData.category || 'Neznámá';
+    
+    const gpsText = zavadaData.lat && zavadaData.lng 
+      ? `${zavadaData.lat}, ${zavadaData.lng}`
+      : 'Není k dispozici';
+    document.getElementById('resolveZavadaGPS').textContent = gpsText;
+    
+    let reportedDateLabel = 'Neznámé';
+    if (zavadaData.reportedDate) {
+      try {
+        const date = new Date(zavadaData.reportedDate);
+        if (!isNaN(date.getTime())) {
+          reportedDateLabel = formatDateShort(date);
+        }
+      } catch (e) {
+        reportedDateLabel = zavadaData.reportedDate;
+      }
+    }
+    document.getElementById('resolveZavadaReportedDateLabel').textContent = reportedDateLabel;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+  }
+  
+  function closeResolveZavadaModal() {
+    const modal = document.getElementById('resolveZavadaModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      // Reset form
+      const form = document.getElementById('resolveZavadaForm');
+      if (form) {
+        form.reset();
+      }
+    }
+  }
+  
+  // Add event listeners for "Závada odstraněna" buttons
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('mark-zavada-resolved-btn')) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const button = e.target;
+      const zavadaData = {
+        id: button.dataset.zavadaId,
+        description: button.dataset.zavadaDescription || '',
+        category: button.dataset.zavadaCategory || '',
+        lat: button.dataset.zavadaLat || '',
+        lng: button.dataset.zavadaLng || '',
+        reportedDate: button.dataset.zavadaReportedDate || ''
+      };
+      
+      openResolveZavadaModal(zavadaData);
+    }
+  });
+  
+  // Modal close handlers
+  const resolveZavadaModal = document.getElementById('resolveZavadaModal');
+  const resolveZavadaModalClose = resolveZavadaModal?.querySelector('.report-zavada-modal-close');
+  const resolveZavadaModalCancel = resolveZavadaModal?.querySelector('.report-zavada-form-cancel');
+  const resolveZavadaModalBackdrop = resolveZavadaModal?.querySelector('.report-zavada-modal-backdrop');
+  
+  if (resolveZavadaModalClose) {
+    resolveZavadaModalClose.addEventListener('click', closeResolveZavadaModal);
+  }
+  
+  if (resolveZavadaModalCancel) {
+    resolveZavadaModalCancel.addEventListener('click', closeResolveZavadaModal);
+  }
+  
+  if (resolveZavadaModalBackdrop) {
+    resolveZavadaModalBackdrop.addEventListener('click', closeResolveZavadaModal);
+  }
+  
+  // Handle form submission
+  const resolveZavadaForm = document.getElementById('resolveZavadaForm');
+  if (resolveZavadaForm) {
+    resolveZavadaForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitButton = resolveZavadaForm.querySelector('.report-zavada-form-submit');
+      const originalText = submitButton?.textContent;
+      
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Odesílám...';
+      }
+      
+      try {
+        const formData = new FormData(resolveZavadaForm);
+        
+        const response = await fetch(resolveZavadaForm.action, {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          closeResolveZavadaModal();
+          showToastNotification(
+            'Závada označena jako odstraněna!',
+            'Děkujeme za nahlášení. Informace byla odeslána.',
+            'success'
+          );
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText || 'Chyba'}`);
+        }
+      } catch (error) {
+        console.error('Chyba při odesílání formuláře:', error);
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = originalText || 'Odeslat';
+        }
+        
+        showToastNotification(
+          'Chyba při odesílání',
+          'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.',
           'error'
         );
       }

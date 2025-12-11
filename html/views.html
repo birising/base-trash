@@ -271,6 +271,59 @@
       </form>
     </div>
   </div>
+  
+  <!-- Modal for marking zavada as resolved -->
+  <div id="resolveZavadaModal" class="report-zavada-modal hidden">
+    <div class="report-zavada-modal-backdrop"></div>
+    <div class="report-zavada-modal-content">
+      <div class="report-zavada-modal-header">
+        <h2>Závada odstraněna</h2>
+        <button class="report-zavada-modal-close" aria-label="Zavřít">&times;</button>
+      </div>
+      <form id="resolveZavadaForm" class="report-zavada-form" action="https://formspree.io/f/xkgdbplk" method="POST">
+        <input type="hidden" name="form_type" value="zavada_resolved">
+        <input type="hidden" name="zavada_id" id="resolveZavadaId">
+        <input type="hidden" name="zavada_category" id="resolveZavadaCategory">
+        <input type="hidden" name="zavada_lat" id="resolveZavadaLat">
+        <input type="hidden" name="zavada_lng" id="resolveZavadaLng">
+        <input type="hidden" name="zavada_reported_date" id="resolveZavadaReportedDate">
+        
+        <div class="resolve-zavada-details">
+          <h3>Detaily závady:</h3>
+          <div class="resolve-zavada-detail-item">
+            <strong>Popis:</strong>
+            <span id="resolveZavadaDescription"></span>
+          </div>
+          <div class="resolve-zavada-detail-item">
+            <strong>Kategorie:</strong>
+            <span id="resolveZavadaCategoryLabel"></span>
+          </div>
+          <div class="resolve-zavada-detail-item">
+            <strong>GPS souřadnice:</strong>
+            <span id="resolveZavadaGPS"></span>
+          </div>
+          <div class="resolve-zavada-detail-item">
+            <strong>Datum nahlášení:</strong>
+            <span id="resolveZavadaReportedDateLabel"></span>
+          </div>
+        </div>
+        
+        <label class="report-zavada-form-label">
+          Váš email:
+          <input type="email" name="email" required class="report-zavada-form-input" placeholder="vas@email.cz">
+        </label>
+        <label class="report-zavada-form-label">
+          Poznámka (volitelné):
+          <textarea name="note" rows="3" class="report-zavada-form-textarea" placeholder="Doplňující informace o odstranění závady..."></textarea>
+        </label>
+        <div class="report-zavada-form-actions">
+          <button type="button" class="report-zavada-form-cancel">Zrušit</button>
+          <button type="submit" class="report-zavada-form-submit">Odeslat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
   <section id="wasteView" class="view waste-view hidden" aria-label="Odpad a sběrný dvůr">
     <div class="waste-grid">
         <div class="waste-card hero">

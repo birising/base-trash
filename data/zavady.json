@@ -174,5 +174,19 @@
     "photos": [
       "assets/image-98109fa4-8fe3-4db7-8be9-49595313fe64.jpg"
     ]
+  },
+  {
+    "id": 14,
+    "reported_date": "2025-12-08T12:15:00Z",
+    "category": "udrzba zelene",
+    "lat": 50.1297653,
+    "lng": 14.2220908,
+    "description": "Hnijící tráva 03",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-0708dc98-be61-4977-8043-ac84be652b5a.jpg"
+    ]
   }
 ]

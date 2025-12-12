@@ -204,20 +204,6 @@
     ]
   },
   {
-    "id": 16,
-    "reported_date": "2025-12-12T09:43:34Z",
-    "category": "zelen",
-    "lat": 50.13105,
-    "lng": 14.214491666666666,
-    "description": "Neposekáno",
-    "resolved": false,
-    "resolved_date": null,
-    "email": null,
-    "photos": [
-      "assets/image-298cb1a9-0f1d-47be-9040-95e95a124c20.jpeg"
-    ]
-  },
-  {
     "id": 17,
     "reported_date": "2025-12-12T11:29:08Z",
     "category": "ostatni",

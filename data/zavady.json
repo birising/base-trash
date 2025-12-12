@@ -59,7 +59,7 @@
     "id": 5,
     "reported_date": "2025-12-07T10:00:00Z",
     "category": "udrzba zelene",
-    "lat": 50.1330250,
+    "lat": 50.133025,
     "lng": 14.2244083,
     "description": "Hnijící listí 01",
     "resolved": false,
@@ -74,7 +74,7 @@
     "reported_date": "2025-12-07T10:15:00Z",
     "category": "udrzba zelene",
     "lat": 50.1332136,
-    "lng": 14.2246150,
+    "lng": 14.224615,
     "description": "Hnijící listí 02",
     "resolved": false,
     "resolved_date": null,
@@ -187,6 +187,20 @@
     "email": null,
     "photos": [
       "assets/image-0708dc98-be61-4977-8043-ac84be652b5a.jpg"
+    ]
+  },
+  {
+    "id": 15,
+    "reported_date": "2025-12-12T09:42:14Z",
+    "category": "zelen",
+    "lat": 50.13105,
+    "lng": 14.214491666666666,
+    "description": "Neposekáno",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-9dd53ead-0888-4601-8363-24e7ed5c55a4.jpeg"
     ]
   }
 ]

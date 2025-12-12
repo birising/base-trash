@@ -3667,12 +3667,36 @@ Odkaz do aplikace: ${appUrl}`;
       
       // Wait for tiles to load
       map.whenReady(() => {
+        // Wait for all tiles to load
+        let tilesLoaded = 0;
+        const totalTiles = map.getSize().x * map.getSize().y / (256 * 256) * Math.pow(2, map.getZoom());
+        
+        map.eachLayer((layer) => {
+          if (layer instanceof L.TileLayer) {
+            layer.on('tileload', () => {
+              tilesLoaded++;
+            });
+          }
+        });
+        
         setTimeout(() => {
           // Invalidate size again to ensure everything is rendered
           map.invalidateSize();
           
-          // Wait a bit more for markers to render
+          // Force render all markers
+          printMarkers.forEach(marker => {
+            if (marker._icon) {
+              marker._icon.style.visibility = 'visible';
+              marker._icon.style.display = 'block';
+              marker._icon.style.opacity = '1';
+            }
+          });
+          
+          // Wait a bit more for everything to render
           setTimeout(() => {
+            // Force browser to render before print
+            map.getContainer().offsetHeight; // Force reflow
+            
             window.print();
             
             // Restore original markers and remove print class after printing
@@ -3687,8 +3711,8 @@ Odkaz do aplikace: ${appUrl}`;
               });
               document.body.classList.remove('printing-zavady-map');
             }, 1000);
-          }, 500);
-        }, 500);
+          }, 1000);
+        }, 1000);
       });
     }, 500);
   }

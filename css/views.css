@@ -3353,12 +3353,49 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     width: 100% !important;
     height: 100vh !important;
     visibility: visible !important;
+    display: block !important;
+    position: relative !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  body.printing-zavady-map .leaflet-pane,
+  body.printing-zavady-map .leaflet-map-pane,
+  body.printing-zavady-map .leaflet-tile-pane,
+  body.printing-zavady-map .leaflet-overlay-pane,
+  body.printing-zavady-map .leaflet-marker-pane {
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   body.printing-zavady-map .leaflet-tile-container,
   body.printing-zavady-map .leaflet-tile-container img {
     visibility: visible !important;
     display: block !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  body.printing-zavady-map .leaflet-image-layer,
+  body.printing-zavady-map .leaflet-image-layer img {
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  body.printing-zavady-map .leaflet-div-icon {
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   /* Print marker styles */
@@ -3384,6 +3421,11 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
     background: white !important;
     z-index: 10;
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   body.printing-zavady-map .print-marker-fallback {
@@ -3415,6 +3457,11 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     line-height: 1.2 !important;
     margin-top: 2px !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   body.printing-zavady-map .print-marker-category {

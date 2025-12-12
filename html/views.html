@@ -210,10 +210,16 @@
         <div class="headline">Přehled nahlášených problémů</div>
         <p class="subtitle">Data z AWS S3</p>
       </div>
-      <button id="reportZavadaBtn" class="report-zavada-btn" aria-label="Nahlásit závadu">
-        <span class="report-zavada-icon">+</span>
-        <span class="report-zavada-label">Nahlásit závadu</span>
-      </button>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <button id="printZavadyBtn" class="report-zavada-btn" aria-label="Tisknout mapu závad" style="background: rgba(34, 197, 94, 0.9); border-color: rgba(34, 197, 94, 1);">
+          <span class="report-zavada-icon">🖨️</span>
+          <span class="report-zavada-label">Tisk</span>
+        </button>
+        <button id="reportZavadaBtn" class="report-zavada-btn" aria-label="Nahlásit závadu">
+          <span class="report-zavada-icon">+</span>
+          <span class="report-zavada-label">Nahlásit závadu</span>
+        </button>
+      </div>
     </div>
     <div id="zavadyList" class="zavady-list">
       <div class="loading-state"><div class="loading-spinner"></div><span>Načítám data…</span></div>
@@ -277,7 +283,7 @@
     <div class="report-zavada-modal-backdrop"></div>
     <div class="report-zavada-modal-content">
       <div class="report-zavada-modal-header">
-        <h2>Závada odstraněna</h2>
+        <h2>Nahlášení odstranění závady</h2>
         <button class="report-zavada-modal-close" aria-label="Zavřít">&times;</button>
       </div>
       <form id="resolveZavadaForm" class="report-zavada-form" action="https://formspree.io/f/xkgdbplk" method="POST">

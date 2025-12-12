@@ -3001,3 +3001,240 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
   border-top: 1px solid var(--border);
   font-size: 13px;
 }
+
+/* Print styles for zavady map */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+  
+  body.printing-zavady {
+    background: white;
+  }
+  
+  /* Hide everything except zavady view */
+  body.printing-zavady .app-shell > *:not(.content),
+  body.printing-zavady .sidebar,
+  body.printing-zavada .view-header button,
+  body.printing-zavady .report-zavada-btn,
+  body.printing-zavady .map-overlay,
+  body.printing-zavady .leaflet-control,
+  body.printing-zavady .leaflet-popup,
+  body.printing-zavady .zavady-row::after,
+  body.printing-zavady .zavada-resolved-button {
+    display: none !important;
+  }
+  
+  /* Show only zavady view */
+  body.printing-zavady .zavady-view {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    background: white !important;
+    color: #000 !important;
+  }
+  
+  body.printing-zavady .zavady-view .view-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 20px 0 !important;
+    border-bottom: 2px solid #000 !important;
+    margin-bottom: 20px !important;
+    page-break-after: avoid;
+  }
+  
+  body.printing-zavady .zavady-view .view-header .eyebrow,
+  body.printing-zavady .zavady-view .view-header .subtitle {
+    display: none !important;
+  }
+  
+  body.printing-zavady .zavady-view .view-header .headline {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+    margin: 0 !important;
+  }
+  
+  /* Table styles for print */
+  body.printing-zavady .zavady-table-container {
+    overflow: visible !important;
+    max-height: none !important;
+    margin-top: 0 !important;
+  }
+  
+  body.printing-zavady .zavady-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+  
+  body.printing-zavady .zavady-table thead {
+    background: #f0f0f0 !important;
+    position: static !important;
+  }
+  
+  body.printing-zavady .zavady-table th,
+  body.printing-zavady .zavady-table td {
+    padding: 8px 12px !important;
+    border: 1px solid #ccc !important;
+    color: #000 !important;
+    font-size: 11px !important;
+    page-break-inside: avoid;
+  }
+  
+  body.printing-zavady .zavady-table th {
+    background: #e0e0e0 !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+  }
+  
+  body.printing-zavady .zavady-table tbody tr {
+    page-break-inside: avoid;
+    background: white !important;
+  }
+  
+  body.printing-zavady .zavady-table tbody tr:nth-child(even) {
+    background: #f9f9f9 !important;
+  }
+  
+  /* Photo preview in table */
+  body.printing-zavady .zavady-photos-preview {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  
+  body.printing-zavady .zavady-photo-thumb {
+    width: 60px !important;
+    height: 60px !important;
+    object-fit: cover !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+  }
+  
+  body.printing-zavady .zavady-photo-count {
+    display: none !important;
+  }
+  
+  /* Detail row for print - show expanded */
+  body.printing-zavady .zavady-detail-row {
+    display: table-row !important;
+    background: #f9f9f9 !important;
+  }
+  
+  body.printing-zavady .zavady-detail-row.hidden {
+    display: table-row !important;
+  }
+  
+  body.printing-zavady .zavady-detail-cell {
+    padding: 15px !important;
+    background: #f9f9f9 !important;
+    border: 1px solid #ccc !important;
+  }
+  
+  body.printing-zavady .zavady-detail-content {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 15px !important;
+  }
+  
+  /* Map in detail */
+  body.printing-zavady .zavady-map {
+    width: 100% !important;
+    height: 150px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    page-break-inside: avoid;
+  }
+  
+  /* Gallery in detail */
+  body.printing-zavady .zavady-expanded-gallery {
+    margin-top: 10px !important;
+  }
+  
+  body.printing-zavady .zavady-gallery-thumbnails {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+  
+  body.printing-zavady .zavady-gallery-thumb {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: cover !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+  }
+  
+  /* Resolved info */
+  body.printing-zavady .zavady-resolved-info {
+    background: #e8f5e9 !important;
+    border: 1px solid #4caf50 !important;
+    padding: 10px !important;
+    border-radius: 4px !important;
+  }
+  
+  /* Category links */
+  body.printing-zavady .zavady-category-link {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+  
+  /* Status colors */
+  body.printing-zavady .zavady-status {
+    color: #000 !important;
+    font-weight: 600 !important;
+  }
+  
+  /* Hide loading states */
+  body.printing-zavady .loading-state,
+  body.printing-zavady .error-state {
+    display: none !important;
+  }
+  
+  /* Page breaks */
+  body.printing-zavady .zavady-table tbody tr {
+    page-break-inside: avoid;
+  }
+  
+  /* Print header */
+  body.printing-zavady::before {
+    content: "Údržba obce Běloky - Hlášené závady";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #000;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    z-index: 10000;
+  }
+  
+  body.printing-zavady .zavady-view {
+    padding-top: 40px !important;
+  }
+  
+  /* Print footer */
+  body.printing-zavady::after {
+    content: "Vytištěno: " counter(page) " / " counter(pages);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #000;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-size: 12px;
+    z-index: 10000;
+  }
+}

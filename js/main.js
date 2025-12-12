@@ -1534,7 +1534,7 @@ Odkaz do aplikace: ${appUrl}`;
           </div>
           ${photoGalleryHtml}
           <div class="popup-actions">
-            ${!zavada.resolved ? `<button class="popup-button popup-button-resolved mark-zavada-resolved-btn" data-zavada-id="${zavada.id}" data-zavada-description="${description}" data-zavada-category="${zavada.category || 'unknown'}" data-zavada-lat="${lat}" data-zavada-lng="${lng}" data-zavada-reported-date="${zavada.reported_date}">Závada odstraněna</button>` : ''}
+            ${!zavada.resolved ? `<button class="popup-button popup-button-resolved mark-zavada-resolved-btn" data-zavada-id="${zavada.id}" data-zavada-description="${description}" data-zavada-category="${zavada.category || 'unknown'}" data-zavada-lat="${lat}" data-zavada-lng="${lng}" data-zavada-reported-date="${zavada.reported_date}">Nahlásit odstranění</button>` : ''}
             <button class="popup-button show-report-form-btn" data-category="zavady-mapa" data-item-id="${zavada.id || 'N/A'}" data-item-name="${description}" data-gps="${gpsCoords}" data-app-url="${appUrl}">Nahlásit další závadu</button>
             <form class="lamp-report-form hidden" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
               <input type="hidden" name="form_type" value="zavada_report">
@@ -3349,7 +3349,7 @@ Odkaz do aplikace: ${appUrl}`;
                         ${mapHtml}
                         ${galleryHtml}
                         ${!item.resolved ? `<div class="zavady-detail-actions">
-                          <button class="zavada-resolved-button mark-zavada-resolved-btn" data-zavada-id="${item.id}" data-zavada-description="${description}" data-zavada-category="${category}" data-zavada-lat="${item.lat}" data-zavada-lng="${item.lng}" data-zavada-reported-date="${item.reported_date}">Závada odstraněna</button>
+                          <button class="zavada-resolved-button mark-zavada-resolved-btn" data-zavada-id="${item.id}" data-zavada-description="${description}" data-zavada-category="${category}" data-zavada-lat="${item.lat}" data-zavada-lng="${item.lng}" data-zavada-reported-date="${item.reported_date}">Nahlásit odstranění</button>
                         </div>` : ''}
                       </div>
                     </td>
@@ -3491,6 +3491,39 @@ Odkaz do aplikace: ${appUrl}`;
         </div>
       `;
     }
+  }
+
+  // Print zavady map function
+  function printZavadyMap() {
+    if (!dataZavady || !Array.isArray(dataZavady) || dataZavady.length === 0) {
+      showToastNotification(
+        'Chyba',
+        'Žádné závady k tisku.',
+        'error'
+      );
+      return;
+    }
+    
+    // Add print class to body
+    document.body.classList.add('printing-zavady');
+    
+    // Wait a bit for styles to apply, then print
+    setTimeout(() => {
+      window.print();
+      // Remove print class after printing
+      setTimeout(() => {
+        document.body.classList.remove('printing-zavady');
+      }, 1000);
+    }, 100);
+  }
+  
+  // Add print button handler
+  const printZavadyBtn = document.getElementById('printZavadyBtn');
+  if (printZavadyBtn) {
+    printZavadyBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      printZavadyMap();
+    });
   }
 
   // Photo gallery modal for zavady

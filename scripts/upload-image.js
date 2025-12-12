@@ -35,9 +35,10 @@ try {
   console.warn('   Pro instalaci: npm install exif-parser');
 }
 
-const ASSETS_DIR = path.join(__dirname, '..', 'assets');
+const PROJECT_ROOT = path.join(__dirname, '..');
+const ASSETS_DIR = path.join(PROJECT_ROOT, 'assets');
 const THUMBS_DIR = path.join(ASSETS_DIR, 'thumbs');
-const ZAVADY_FILE = path.join(__dirname, '..', 'data', 'zavady.json');
+const ZAVADY_FILE = path.join(PROJECT_ROOT, 'data', 'zavady.json');
 
 // Kategorie pro výběr
 const CATEGORIES = {
@@ -162,11 +163,20 @@ function addZavadaEntry(category, lat, lng, description, imagePath) {
   }
 }
 
-// Git operations
+// Git operations - always run from project root
 function gitAdd(files) {
   try {
-    execSync(`git add ${files.join(' ')}`, { stdio: 'inherit' });
-    return true;
+    // Change to project root directory
+    const originalCwd = process.cwd();
+    process.chdir(PROJECT_ROOT);
+    
+    try {
+      execSync(`git add ${files.join(' ')}`, { stdio: 'inherit' });
+      return true;
+    } finally {
+      // Restore original directory
+      process.chdir(originalCwd);
+    }
   } catch (error) {
     console.error('❌ Chyba při git add:', error.message);
     return false;
@@ -175,8 +185,17 @@ function gitAdd(files) {
 
 function gitCommit(message) {
   try {
-    execSync(`git commit -m "${message}"`, { stdio: 'inherit' });
-    return true;
+    // Change to project root directory
+    const originalCwd = process.cwd();
+    process.chdir(PROJECT_ROOT);
+    
+    try {
+      execSync(`git commit -m "${message}"`, { stdio: 'inherit' });
+      return true;
+    } finally {
+      // Restore original directory
+      process.chdir(originalCwd);
+    }
   } catch (error) {
     console.error('❌ Chyba při git commit:', error.message);
     return false;
@@ -185,8 +204,17 @@ function gitCommit(message) {
 
 function gitPush() {
   try {
-    execSync('git push', { stdio: 'inherit' });
-    return true;
+    // Change to project root directory
+    const originalCwd = process.cwd();
+    process.chdir(PROJECT_ROOT);
+    
+    try {
+      execSync('git push', { stdio: 'inherit' });
+      return true;
+    } finally {
+      // Restore original directory
+      process.chdir(originalCwd);
+    }
   } catch (error) {
     console.error('❌ Chyba při git push:', error.message);
     return false;
@@ -286,7 +314,22 @@ async function main() {
     
     // Git operations
     console.log('\n🔧 Git operace...');
-    const gitAddSuccess = gitAdd([relativeImagePath, `assets/thumbs/${newFileName}`, 'data/zavady.json']);
+    
+    // Verify files exist before adding to git
+    const filesToAdd = [relativeImagePath, `assets/thumbs/${newFileName}`, 'data/zavady.json'];
+    const missingFiles = filesToAdd.filter(file => {
+      const fullPath = path.join(PROJECT_ROOT, file);
+      return !fs.existsSync(fullPath);
+    });
+    
+    if (missingFiles.length > 0) {
+      console.error('❌ Následující soubory neexistují:');
+      missingFiles.forEach(file => console.error(`   - ${file}`));
+      console.log('\n⚠️  Zkuste commitnout ručně po ověření, že soubory existují.');
+      process.exit(1);
+    }
+    
+    const gitAddSuccess = gitAdd(filesToAdd);
     
     if (gitAddSuccess) {
       const commitMessage = `Přidání závady: ${description.trim()} (${category})`;

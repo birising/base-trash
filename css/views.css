@@ -3293,12 +3293,17 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
   }
   
   /* Print styles for map view */
+  body.printing-zavady-map * {
+    visibility: visible !important;
+  }
+  
   body.printing-zavady-map .app-shell > *:not(.content),
   body.printing-zavady-map .sidebar,
   body.printing-zavady-map .map-overlay,
   body.printing-zavady-map .leaflet-control,
   body.printing-zavady-map .leaflet-popup {
     display: none !important;
+    visibility: hidden !important;
   }
   
   body.printing-zavady-map .content {
@@ -3307,19 +3312,30 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
+    visibility: visible !important;
+  }
+  
+  body.printing-zavady-map .view-container {
+    display: block !important;
+    width: 100% !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   body.printing-zavady-map .map-view {
-    display: block !important;
+    display: flex !important;
     width: 100% !important;
     height: 100vh !important;
     min-height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
+    visibility: visible !important;
   }
   
   body.printing-zavady-map .map-view.hidden {
-    display: block !important;
+    display: flex !important;
+    visibility: visible !important;
   }
   
   body.printing-zavady-map #map {
@@ -3328,6 +3344,21 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     min-height: 100vh !important;
     border: none !important;
     box-shadow: none !important;
+    display: block !important;
+    visibility: visible !important;
+    background: #f5f5f5 !important;
+  }
+  
+  body.printing-zavady-map .leaflet-container {
+    width: 100% !important;
+    height: 100vh !important;
+    visibility: visible !important;
+  }
+  
+  body.printing-zavady-map .leaflet-tile-container,
+  body.printing-zavady-map .leaflet-tile-container img {
+    visibility: visible !important;
+    display: block !important;
   }
   
   /* Print marker styles */

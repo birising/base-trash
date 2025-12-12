@@ -3504,19 +3504,47 @@ Odkaz do aplikace: ${appUrl}`;
       return;
     }
     
-    // Switch to map view
+    // Switch to map view - ensure it's visible
     const mapView = document.getElementById('mapView');
     if (mapView) {
       mapView.classList.remove('hidden');
+      mapView.style.display = 'flex';
     }
     
-    // Hide zavady view
-    if (zavadyView) {
-      zavadyView.classList.add('hidden');
+    // Hide all other views
+    document.querySelectorAll('.view').forEach(view => {
+      if (view.id !== 'mapView') {
+        view.classList.add('hidden');
+      }
+    });
+    
+    // Ensure map container is visible
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+      mapContainer.style.display = 'block';
+      mapContainer.style.visibility = 'visible';
     }
     
     // Get zavady with coordinates and photos
     const zavadyWithCoords = dataZavady.filter(z => z.lat && z.lng);
+    
+    if (zavadyWithCoords.length === 0) {
+      showToastNotification(
+        'Chyba',
+        'Žádné závady s GPS souřadnicemi k tisku.',
+        'error'
+      );
+      return;
+    }
+    
+    // Store original markers
+    const originalMarkers = [];
+    layers.zavadyMapa.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        originalMarkers.push(layer);
+        layers.zavadyMapa.removeLayer(layer);
+      }
+    });
     
     // Replace markers with photo markers for print
     const printMarkers = [];
@@ -3538,7 +3566,7 @@ Odkaz do aplikace: ${appUrl}`;
         const thumbnailPath = getThumbnailPath(firstPhoto);
         const markerHtml = `
           <div class="print-marker-container">
-            <img src="${thumbnailPath}" alt="${description}" class="print-marker-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <img src="${thumbnailPath}" alt="${description}" class="print-marker-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="print-marker-fallback" style="display: none; background: #f97316; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid white;">!</div>
             <div class="print-marker-line"></div>
             <div class="print-marker-label">${description}</div>
@@ -3556,6 +3584,7 @@ Odkaz do aplikace: ${appUrl}`;
         });
         
         printMarkers.push(marker);
+        layers.zavadyMapa.addLayer(marker);
       } else {
         // Fallback marker without photo
         const markerHtml = `
@@ -3577,21 +3606,8 @@ Odkaz do aplikace: ${appUrl}`;
         });
         
         printMarkers.push(marker);
+        layers.zavadyMapa.addLayer(marker);
       }
-    });
-    
-    // Store original markers and replace with print markers
-    const originalMarkers = [];
-    layers.zavadyMapa.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        originalMarkers.push(layer);
-        layers.zavadyMapa.removeLayer(layer);
-      }
-    });
-    
-    // Add print markers
-    printMarkers.forEach(marker => {
-      layers.zavadyMapa.addLayer(marker);
     });
     
     // Fit map to show all markers
@@ -3605,23 +3621,35 @@ Odkaz do aplikace: ${appUrl}`;
     
     // Wait for map to render, then print
     setTimeout(() => {
+      // Force map to update size
       map.invalidateSize();
-      setTimeout(() => {
-        window.print();
-        // Restore original markers and remove print class after printing
+      
+      // Wait for tiles to load
+      map.whenReady(() => {
         setTimeout(() => {
-          // Remove print markers
-          printMarkers.forEach(marker => {
-            layers.zavadyMapa.removeLayer(marker);
-          });
-          // Restore original markers
-          originalMarkers.forEach(marker => {
-            layers.zavadyMapa.addLayer(marker);
-          });
-          document.body.classList.remove('printing-zavady-map');
-        }, 1000);
-      }, 500);
-    }, 300);
+          // Invalidate size again to ensure everything is rendered
+          map.invalidateSize();
+          
+          // Wait a bit more for markers to render
+          setTimeout(() => {
+            window.print();
+            
+            // Restore original markers and remove print class after printing
+            setTimeout(() => {
+              // Remove print markers
+              printMarkers.forEach(marker => {
+                layers.zavadyMapa.removeLayer(marker);
+              });
+              // Restore original markers
+              originalMarkers.forEach(marker => {
+                layers.zavadyMapa.addLayer(marker);
+              });
+              document.body.classList.remove('printing-zavady-map');
+            }, 1000);
+          }, 500);
+        }, 500);
+      });
+    }, 500);
   }
   
   // Add print button handler

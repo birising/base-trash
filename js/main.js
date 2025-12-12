@@ -1474,9 +1474,11 @@ Odkaz do aplikace: ${appUrl}`;
           html: '<div style="background: #f97316; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6);">!</div>',
           iconSize: [32, 32],
           iconAnchor: [16, 16]
-        }),
-        zavadaId: zavada.id // Store zavada ID for deep linking
+        })
       });
+      
+      // Store zavada ID in marker options for deep linking
+      marker.options.zavadaId = zavada.id;
       
       // Create popup content
       const reportedDate = formatDate(zavada.reported_date);
@@ -1520,7 +1522,8 @@ Odkaz do aplikace: ${appUrl}`;
       
       // GPS coordinates
       const gpsCoords = `${lat}, ${lng}`;
-      const appUrl = `${window.location.origin}${window.location.pathname}#zavady/${zavada.id}`;
+      const deepLinkUrl = `${window.location.origin}${window.location.pathname}#zavady/${zavada.id}`;
+      const appUrl = deepLinkUrl;
       
       const popupContent = `
         <div class="zavady-popup-content">
@@ -1534,6 +1537,9 @@ Odkaz do aplikace: ${appUrl}`;
           </div>
           ${photoGalleryHtml}
           <div class="popup-actions">
+            <button class="popup-button popup-button-link copy-deep-link-btn" data-deep-link="${deepLinkUrl}" style="background: rgba(59, 130, 246, 0.9); border-color: rgba(59, 130, 246, 1); font-size: 12px; padding: 8px 12px;">
+              <span style="margin-right: 6px;">🔗</span> Kopírovat odkaz
+            </button>
             ${!zavada.resolved ? `<button class="popup-button popup-button-resolved mark-zavada-resolved-btn" data-zavada-id="${zavada.id}" data-zavada-description="${description}" data-zavada-category="${zavada.category || 'unknown'}" data-zavada-lat="${lat}" data-zavada-lng="${lng}" data-zavada-reported-date="${zavada.reported_date}">Nahlásit odstranění</button>` : ''}
             <button class="popup-button show-report-form-btn" data-category="zavady-mapa" data-item-id="${zavada.id || 'N/A'}" data-item-name="${description}" data-gps="${gpsCoords}" data-app-url="${appUrl}">Nahlásit další závadu</button>
             <form class="lamp-report-form hidden" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
@@ -1613,6 +1619,41 @@ Odkaz do aplikace: ${appUrl}`;
           const headerStrong = popupElement.querySelector('.zavady-popup-header strong');
           if (headerStrong) {
             headerStrong.style.setProperty('color', '#0b1220', 'important');
+          }
+          
+          // Update URL hash when popup opens
+          if (marker.options && marker.options.zavadaId) {
+            const newHash = `#zavady/${marker.options.zavadaId}`;
+            if (window.location.hash !== newHash) {
+              window.history.replaceState(null, '', newHash);
+            }
+          }
+          
+          // Add click handler for copy deep link button
+          const copyLinkBtn = popupElement.querySelector('.copy-deep-link-btn');
+          if (copyLinkBtn) {
+            copyLinkBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const deepLink = copyLinkBtn.dataset.deepLink;
+              if (deepLink) {
+                navigator.clipboard.writeText(deepLink).then(() => {
+                  const originalText = copyLinkBtn.innerHTML;
+                  copyLinkBtn.innerHTML = '<span style="margin-right: 6px;">✓</span> Zkopírováno!';
+                  copyLinkBtn.style.background = 'rgba(34, 197, 94, 0.9)';
+                  copyLinkBtn.style.borderColor = 'rgba(34, 197, 94, 1)';
+                  setTimeout(() => {
+                    copyLinkBtn.innerHTML = originalText;
+                    copyLinkBtn.style.background = 'rgba(59, 130, 246, 0.9)';
+                    copyLinkBtn.style.borderColor = 'rgba(59, 130, 246, 1)';
+                  }, 2000);
+                  showToastNotification('Odkaz zkopírován', 'Deep link byl zkopírován do schránky', 'success');
+                }).catch(err => {
+                  console.error('Chyba při kopírování:', err);
+                  showToastNotification('Chyba', 'Nepodařilo se zkopírovat odkaz', 'error');
+                });
+              }
+            });
           }
           
           const galleryTitle = popupElement.querySelector('.zavady-popup-gallery-title');
@@ -4225,13 +4266,33 @@ Odkaz do aplikace: ${appUrl}`;
                 }
               });
               if (foundMarker) {
-                map.setView(foundMarker.getLatLng(), 18);
+                map.flyTo(foundMarker.getLatLng(), 18, {
+                  duration: 0.8,
+                  easeLinearity: 0.25
+                });
                 setTimeout(() => {
                   foundMarker.openPopup();
-                }, 300);
+                }, 900);
               } else {
-                // If marker not found, just show the map
-                console.log('Zavada marker not found for ID:', zavadaId);
+                // If marker not found, try to load zavady data first
+                console.log('Zavada marker not found for ID:', zavadaId, '- waiting for data to load...');
+                // Wait a bit more and try again
+                setTimeout(() => {
+                  layers.zavadyMapa.eachLayer((marker) => {
+                    if (marker.options && marker.options.zavadaId === targetId) {
+                      foundMarker = marker;
+                    }
+                  });
+                  if (foundMarker) {
+                    map.flyTo(foundMarker.getLatLng(), 18, {
+                      duration: 0.8,
+                      easeLinearity: 0.25
+                    });
+                    setTimeout(() => {
+                      foundMarker.openPopup();
+                    }, 900);
+                  }
+                }, 1500);
               }
             }
           }, 800);

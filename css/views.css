@@ -3006,7 +3006,11 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
 @media print {
   @page {
     size: A4 landscape;
-    margin: 1cm 1cm 2.5cm 1cm; /* Extra bottom margin for footer */
+    margin: 0.5cm;
+  }
+  
+  body.printing-zavady-map {
+    background: white;
   }
   
   body.printing-zavady {
@@ -3286,5 +3290,110 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     text-align: center;
     font-size: 12px;
     z-index: 10000;
+  }
+  
+  /* Print styles for map view */
+  body.printing-zavady-map .app-shell > *:not(.content),
+  body.printing-zavady-map .sidebar,
+  body.printing-zavady-map .map-overlay,
+  body.printing-zavady-map .leaflet-control,
+  body.printing-zavady-map .leaflet-popup {
+    display: none !important;
+  }
+  
+  body.printing-zavady-map .content {
+    display: block !important;
+    width: 100% !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  body.printing-zavady-map .map-view {
+    display: block !important;
+    width: 100% !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  body.printing-zavady-map .map-view.hidden {
+    display: block !important;
+  }
+  
+  body.printing-zavady-map #map {
+    width: 100% !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Print marker styles */
+  body.printing-zavady-map .print-zavady-marker {
+    background: transparent !important;
+    border: none !important;
+  }
+  
+  body.printing-zavady-map .print-marker-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  body.printing-zavady-map .print-marker-photo {
+    width: 50px !important;
+    height: 50px !important;
+    object-fit: cover !important;
+    border: 2px solid #000 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    background: white !important;
+    z-index: 10;
+  }
+  
+  body.printing-zavady-map .print-marker-fallback {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    border: 2px solid white !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    z-index: 10;
+  }
+  
+  body.printing-zavady-map .print-marker-line {
+    width: 2px !important;
+    height: 15px !important;
+    background: #000 !important;
+    margin: 2px 0 !important;
+  }
+  
+  body.printing-zavady-map .print-marker-label {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    border: 1px solid #000 !important;
+    max-width: 100px !important;
+    word-wrap: break-word !important;
+    line-height: 1.2 !important;
+    margin-top: 2px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  body.printing-zavady-map .print-marker-category {
+    font-size: 9px !important;
+    font-weight: 600 !important;
+    color: #059669 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    padding: 1px 4px !important;
+    border-radius: 3px !important;
+    margin-top: 2px !important;
+    border: 1px solid #059669 !important;
   }
 }

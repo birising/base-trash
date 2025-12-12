@@ -3504,63 +3504,124 @@ Odkaz do aplikace: ${appUrl}`;
       return;
     }
     
-    // Ensure zavady view is visible
+    // Switch to map view
+    const mapView = document.getElementById('mapView');
+    if (mapView) {
+      mapView.classList.remove('hidden');
+    }
+    
+    // Hide zavady view
     if (zavadyView) {
-      zavadyView.classList.remove('hidden');
+      zavadyView.classList.add('hidden');
     }
     
-    // Ensure zavady list is visible
-    if (zavadyList) {
-      zavadyList.style.display = 'block';
-    }
+    // Get zavady with coordinates and photos
+    const zavadyWithCoords = dataZavady.filter(z => z.lat && z.lng);
     
-    // First, expand all detail rows and initialize all maps
-    const allDetailRows = zavadyList?.querySelectorAll('.zavady-detail-row') || [];
-    allDetailRows.forEach(detailRow => {
-      detailRow.classList.remove('hidden');
-      const zavadaId = detailRow.dataset.zavadaId;
-      if (zavadaId) {
-        const mapContainer = detailRow.querySelector(`#zavady-map-${zavadaId}`);
-        if (mapContainer && !mapContainer.dataset.initialized) {
-          const lat = parseFloat(mapContainer.dataset.lat);
-          const lng = parseFloat(mapContainer.dataset.lng);
-          if (!isNaN(lat) && !isNaN(lng)) {
-            initializeZavadyMap(mapContainer, lat, lng);
-            mapContainer.dataset.initialized = 'true';
-          }
-        }
+    // Replace markers with photo markers for print
+    const printMarkers = [];
+    zavadyWithCoords.forEach(zavada => {
+      const lat = parseFloat(zavada.lat);
+      const lng = parseFloat(zavada.lng);
+      if (isNaN(lat) || isNaN(lng)) return;
+      
+      const photos = zavada.photos || [];
+      const firstPhoto = photos.length > 0 ? photos[0] : null;
+      const description = zavada.description || 'Bez popisu';
+      const categoryLabel = zavada.category === 'zelen' ? 'Zelen' : 
+                           zavada.category === 'udrzba zelene' ? 'Údržba zeleně' :
+                           zavada.category === 'kose' ? 'Koš' :
+                           zavada.category === 'lampy' ? 'Lampa' : 'Ostatní';
+      
+      // Create print marker with photo
+      if (firstPhoto) {
+        const thumbnailPath = getThumbnailPath(firstPhoto);
+        const markerHtml = `
+          <div class="print-marker-container">
+            <img src="${thumbnailPath}" alt="${description}" class="print-marker-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div class="print-marker-fallback" style="display: none; background: #f97316; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid white;">!</div>
+            <div class="print-marker-line"></div>
+            <div class="print-marker-label">${description}</div>
+            <div class="print-marker-category">${categoryLabel}</div>
+          </div>
+        `;
+        
+        const marker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: 'print-zavady-marker',
+            html: markerHtml,
+            iconSize: [120, 80],
+            iconAnchor: [60, 75]
+          })
+        });
+        
+        printMarkers.push(marker);
+      } else {
+        // Fallback marker without photo
+        const markerHtml = `
+          <div class="print-marker-container">
+            <div class="print-marker-fallback" style="background: #f97316; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid white;">!</div>
+            <div class="print-marker-line"></div>
+            <div class="print-marker-label">${description}</div>
+            <div class="print-marker-category">${categoryLabel}</div>
+          </div>
+        `;
+        
+        const marker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            className: 'print-zavady-marker',
+            html: markerHtml,
+            iconSize: [120, 60],
+            iconAnchor: [60, 55]
+          })
+        });
+        
+        printMarkers.push(marker);
       }
     });
     
-    // Add print class to body
-    document.body.classList.add('printing-zavady');
+    // Store original markers and replace with print markers
+    const originalMarkers = [];
+    layers.zavadyMapa.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        originalMarkers.push(layer);
+        layers.zavadyMapa.removeLayer(layer);
+      }
+    });
     
-    // Wait for maps to initialize, then print
+    // Add print markers
+    printMarkers.forEach(marker => {
+      layers.zavadyMapa.addLayer(marker);
+    });
+    
+    // Fit map to show all markers
+    if (printMarkers.length > 0) {
+      const group = new L.featureGroup(printMarkers);
+      map.fitBounds(group.getBounds().pad(0.1));
+    }
+    
+    // Add print class to body
+    document.body.classList.add('printing-zavady-map');
+    
+    // Wait for map to render, then print
     setTimeout(() => {
-      // Invalidate size of all maps to ensure they render properly
-      allDetailRows.forEach(detailRow => {
-        const zavadaId = detailRow.dataset.zavadaId;
-        if (zavadaId) {
-          const mapContainer = detailRow.querySelector(`#zavady-map-${zavadaId}`);
-          if (mapContainer && mapContainer._mapInstance) {
-            mapContainer._mapInstance.invalidateSize();
-            // Force map to render
-            mapContainer._mapInstance.whenReady(() => {
-              mapContainer._mapInstance.invalidateSize();
-            });
-          }
-        }
-      });
-      
-      // Wait a bit more for maps to render, then print
+      map.invalidateSize();
       setTimeout(() => {
         window.print();
-        // Remove print class after printing
+        // Restore original markers and remove print class after printing
         setTimeout(() => {
-          document.body.classList.remove('printing-zavady');
+          // Remove print markers
+          printMarkers.forEach(marker => {
+            layers.zavadyMapa.removeLayer(marker);
+          });
+          // Restore original markers
+          originalMarkers.forEach(marker => {
+            layers.zavadyMapa.addLayer(marker);
+          });
+          document.body.classList.remove('printing-zavady-map');
         }, 1000);
-      }, 1000);
-    }, 500);
+      }, 500);
+    }, 300);
   }
   
   // Add print button handler

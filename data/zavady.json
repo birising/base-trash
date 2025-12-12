@@ -202,5 +202,33 @@
     "photos": [
       "assets/image-9dd53ead-0888-4601-8363-24e7ed5c55a4.jpeg"
     ]
+  },
+  {
+    "id": 16,
+    "reported_date": "2025-12-12T09:43:34Z",
+    "category": "zelen",
+    "lat": 50.13105,
+    "lng": 14.214491666666666,
+    "description": "Neposekáno",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-298cb1a9-0f1d-47be-9040-95e95a124c20.jpeg"
+    ]
+  },
+  {
+    "id": 17,
+    "reported_date": "2025-12-12T11:29:08Z",
+    "category": "ostatni",
+    "lat": 50.13296016450929,
+    "lng": 14.22418058780697,
+    "description": "Popelnice určena na posypový materiál obsahuje odpadky namísto posypového materiálu.",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-7fcc9357-0035-418d-bf6e-0f7447a473b9.jpg"
+    ]
   }
 ]

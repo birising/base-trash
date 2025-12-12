@@ -3504,6 +3504,16 @@ Odkaz do aplikace: ${appUrl}`;
       return;
     }
     
+    // Ensure zavady view is visible
+    if (zavadyView) {
+      zavadyView.classList.remove('hidden');
+    }
+    
+    // Ensure zavady list is visible
+    if (zavadyList) {
+      zavadyList.style.display = 'block';
+    }
+    
     // First, expand all detail rows and initialize all maps
     const allDetailRows = zavadyList?.querySelectorAll('.zavady-detail-row') || [];
     allDetailRows.forEach(detailRow => {
@@ -3534,6 +3544,10 @@ Odkaz do aplikace: ${appUrl}`;
           const mapContainer = detailRow.querySelector(`#zavady-map-${zavadaId}`);
           if (mapContainer && mapContainer._mapInstance) {
             mapContainer._mapInstance.invalidateSize();
+            // Force map to render
+            mapContainer._mapInstance.whenReady(() => {
+              mapContainer._mapInstance.invalidateSize();
+            });
           }
         }
       });
@@ -3545,8 +3559,8 @@ Odkaz do aplikace: ${appUrl}`;
         setTimeout(() => {
           document.body.classList.remove('printing-zavady');
         }, 1000);
-      }, 500);
-    }, 300);
+      }, 1000);
+    }, 500);
   }
   
   // Add print button handler

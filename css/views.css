@@ -3016,7 +3016,7 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
   /* Hide everything except zavady view */
   body.printing-zavady .app-shell > *:not(.content),
   body.printing-zavady .sidebar,
-  body.printing-zavada .view-header button,
+  body.printing-zavady .view-header button,
   body.printing-zavady .report-zavada-btn,
   body.printing-zavady .map-overlay,
   body.printing-zavady .leaflet-control,
@@ -3026,7 +3026,13 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     display: none !important;
   }
   
-  /* Show only zavady view */
+  /* Show content and zavady view */
+  body.printing-zavady .content {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
   body.printing-zavady .zavady-view {
     display: block !important;
     position: static !important;
@@ -3035,6 +3041,15 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     min-height: auto !important;
     background: white !important;
     color: #000 !important;
+  }
+  
+  body.printing-zavady .zavady-view.hidden {
+    display: block !important;
+  }
+  
+  body.printing-zavady .zavady-list {
+    display: block !important;
+    width: 100% !important;
   }
   
   body.printing-zavady .zavady-view .view-header {
@@ -3108,6 +3123,7 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
+    visibility: visible !important;
   }
   
   body.printing-zavady .zavady-photo-thumb {
@@ -3116,10 +3132,27 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     object-fit: cover !important;
     border: 1px solid #ccc !important;
     border-radius: 4px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  body.printing-zavady .zavady-photo-placeholder {
+    display: none !important;
   }
   
   body.printing-zavady .zavady-photo-count {
-    display: none !important;
+    display: inline-block !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+  }
+  
+  body.printing-zavady .zavady-photos-cell {
+    display: table-cell !important;
   }
   
   /* Detail row for print - show expanded */
@@ -3151,6 +3184,23 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     border: 1px solid #ccc !important;
     border-radius: 4px !important;
     page-break-inside: avoid;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Ensure Leaflet map tiles are visible */
+  body.printing-zavady .zavady-map .leaflet-container,
+  body.printing-zavady .zavady-map .leaflet-tile-container,
+  body.printing-zavady .zavady-map .leaflet-tile-container img {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  body.printing-zavady .zavady-map-container {
+    display: block !important;
+    width: 100% !important;
   }
   
   /* Gallery in detail */

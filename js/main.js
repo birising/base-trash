@@ -3504,17 +3504,49 @@ Odkaz do aplikace: ${appUrl}`;
       return;
     }
     
+    // First, expand all detail rows and initialize all maps
+    const allDetailRows = zavadyList?.querySelectorAll('.zavady-detail-row') || [];
+    allDetailRows.forEach(detailRow => {
+      detailRow.classList.remove('hidden');
+      const zavadaId = detailRow.dataset.zavadaId;
+      if (zavadaId) {
+        const mapContainer = detailRow.querySelector(`#zavady-map-${zavadaId}`);
+        if (mapContainer && !mapContainer.dataset.initialized) {
+          const lat = parseFloat(mapContainer.dataset.lat);
+          const lng = parseFloat(mapContainer.dataset.lng);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            initializeZavadyMap(mapContainer, lat, lng);
+            mapContainer.dataset.initialized = 'true';
+          }
+        }
+      }
+    });
+    
     // Add print class to body
     document.body.classList.add('printing-zavady');
     
-    // Wait a bit for styles to apply, then print
+    // Wait for maps to initialize, then print
     setTimeout(() => {
-      window.print();
-      // Remove print class after printing
+      // Invalidate size of all maps to ensure they render properly
+      allDetailRows.forEach(detailRow => {
+        const zavadaId = detailRow.dataset.zavadaId;
+        if (zavadaId) {
+          const mapContainer = detailRow.querySelector(`#zavady-map-${zavadaId}`);
+          if (mapContainer && mapContainer._mapInstance) {
+            mapContainer._mapInstance.invalidateSize();
+          }
+        }
+      });
+      
+      // Wait a bit more for maps to render, then print
       setTimeout(() => {
-        document.body.classList.remove('printing-zavady');
-      }, 1000);
-    }, 100);
+        window.print();
+        // Remove print class after printing
+        setTimeout(() => {
+          document.body.classList.remove('printing-zavady');
+        }, 1000);
+      }, 500);
+    }, 300);
   }
   
   // Add print button handler

@@ -3006,7 +3006,7 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
 @media print {
   @page {
     size: A4 landscape;
-    margin: 1cm;
+    margin: 1cm 1cm 2.5cm 1cm; /* Extra bottom margin for footer */
   }
   
   body.printing-zavady {
@@ -3203,7 +3203,7 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     page-break-inside: avoid;
   }
   
-  /* Print header */
+  /* Print header - using fixed position as fallback */
   body.printing-zavady::before {
     content: "Údržba obce Běloky - Hlášené závady";
     position: fixed;
@@ -3223,9 +3223,9 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
     padding-top: 40px !important;
   }
   
-  /* Print footer */
+  /* Print footer - using fixed position as fallback */
   body.printing-zavady::after {
-    content: "Vytištěno: " counter(page) " / " counter(pages);
+    content: "Stránka " counter(page) " ze " counter(pages) " | Vytištěno: " counter(page) " / " counter(pages);
     position: fixed;
     bottom: 0;
     left: 0;

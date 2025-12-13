@@ -2645,19 +2645,29 @@ Odkaz do aplikace: ${appUrl}`;
     }
     // Count active (unresolved) zavady
     if (counters.zavady) {
-      const activeZavady = (dataZavady && Array.isArray(dataZavady)) 
-        ? dataZavady.filter(z => !z.resolved).length 
-        : 0;
-      counters.zavady.textContent = activeZavady;
+      try {
+        const activeZavady = (typeof dataZavady !== 'undefined' && dataZavady && Array.isArray(dataZavady)) 
+          ? dataZavady.filter(z => !z.resolved).length 
+          : 0;
+        counters.zavady.textContent = activeZavady;
+      } catch (error) {
+        console.warn('Chyba při aktualizaci počítadla závad:', error);
+        counters.zavady.textContent = 0;
+      }
     }
     if (zavadySummary) {
-      const totalZavady = (dataZavady && Array.isArray(dataZavady)) ? dataZavady.length : 0;
-      const activeZavady = (dataZavady && Array.isArray(dataZavady)) 
-        ? dataZavady.filter(z => !z.resolved).length 
-        : 0;
-      if (totalZavady > 0) {
-        zavadySummary.textContent = `${activeZavady} z ${totalZavady} nevyřešených`;
-      } else {
+      try {
+        const totalZavady = (typeof dataZavady !== 'undefined' && dataZavady && Array.isArray(dataZavady)) ? dataZavady.length : 0;
+        const activeZavady = (typeof dataZavady !== 'undefined' && dataZavady && Array.isArray(dataZavady)) 
+          ? dataZavady.filter(z => !z.resolved).length 
+          : 0;
+        if (totalZavady > 0) {
+          zavadySummary.textContent = `${activeZavady} z ${totalZavady} nevyřešených`;
+        } else {
+          zavadySummary.textContent = "Nevyřešené problémy";
+        }
+      } catch (error) {
+        console.warn('Chyba při aktualizaci souhrnu závad:', error);
         zavadySummary.textContent = "Nevyřešené problémy";
       }
     }

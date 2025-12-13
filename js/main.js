@@ -1898,21 +1898,44 @@ Odkaz do aplikace: ${appUrl}`;
       marker.addTo(layers.zavadyMapa);
     });
     
-  // Populate udrzba map layer (all zavady with photos as mini photos)
+  // Populate udrzba map layer - copy from zavady map but with mini photos instead of orange markers
   async function populateUdrzbaMapLayer(zavady) {
     if (!map || !zavady || !Array.isArray(zavady)) return;
     
     // Clear existing udrzba markers
     layers.udrzbaMapa.clearLayers();
     
-    // Filter all zavady that have coordinates and photos
-    const udrzbaZavady = zavady.filter(z => {
+    // Filter zavady that have coordinates and photos
+    const zavadyWithCoords = zavady.filter(z => {
       const hasCoords = z.lat && z.lng;
       const hasPhotos = z.photos && Array.isArray(z.photos) && z.photos.length > 0;
       return hasCoords && hasPhotos;
     });
     
-    if (udrzbaZavady.length === 0) return;
+    if (zavadyWithCoords.length === 0) return;
+    
+    // Helper functions
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '–';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return dateStr;
+      }
+    };
+    
+    const getCategoryLabel = (category) => {
+      const labels = {
+        'zelen': 'Údržba zeleně',
+        'udrzba zelene': 'Údržba zeleně',
+        'kose': 'Koš',
+        'lampy': 'Lampa',
+        'ostatni': 'Ostatní'
+      };
+      return labels[category] || category;
+    };
     
     // Helper function to calculate distance between two points in pixels at current zoom
     const getPixelDistance = (lat1, lng1, lat2, lng2) => {
@@ -1924,42 +1947,29 @@ Odkaz do aplikace: ${appUrl}`;
     // Threshold for when to use line (in pixels)
     const MIN_DISTANCE_PX = 60;
     
-    // First, create all markers without lines
-    const markers = [];
-    udrzbaZavady.forEach(zavada => {
+    // First, collect all marker data
+    const markersData = [];
+    zavadyWithCoords.forEach(zavada => {
       const lat = parseFloat(zavada.lat);
       const lng = parseFloat(zavada.lng);
       
       if (isNaN(lat) || isNaN(lng)) return;
       
       const photos = zavada.photos || [];
-      // Since we filtered for zavady with photos, firstPhoto should always exist
       const firstPhoto = photos[0];
       const description = zavada.description || 'Bez popisu';
-      
-      // Get category label
-      const getCategoryLabel = (category) => {
-        const labels = {
-          'zelen': 'Údržba zeleně',
-          'udrzba zelene': 'Údržba zeleně',
-          'kose': 'Koš',
-          'lampy': 'Lampa',
-          'ostatni': 'Ostatní'
-        };
-        return labels[category] || category;
-      };
       const categoryLabel = getCategoryLabel(zavada.category || 'unknown');
       
-      markers.push({ lat, lng, firstPhoto, description, categoryLabel, zavada, photos });
+      markersData.push({ lat, lng, firstPhoto, description, categoryLabel, zavada, photos });
     });
     
-    // After all markers are added, check for nearby markers and add lines
-    markers.forEach((markerData, index) => {
+    // Check for nearby markers and create markers with photos
+    markersData.forEach((markerData, index) => {
       const { lat, lng, firstPhoto, description, categoryLabel, zavada, photos } = markerData;
       
       // Check if there are nearby markers
       let hasNearby = false;
-      markers.forEach((otherMarker, otherIndex) => {
+      markersData.forEach((otherMarker, otherIndex) => {
         if (index !== otherIndex) {
           const distance = getPixelDistance(lat, lng, otherMarker.lat, otherMarker.lng);
           if (distance < MIN_DISTANCE_PX && distance > 0) {
@@ -1971,7 +1981,7 @@ Odkaz do aplikace: ${appUrl}`;
       // Use line if there are nearby markers
       const useLine = hasNearby;
       
-      // Create marker with photo (all zavady have photos since we filtered)
+      // Create marker with mini photo instead of orange icon
       const thumbnailPath = getThumbnailPath(firstPhoto);
       const markerHtml = `
         <div class="udrzba-marker-container">
@@ -1992,22 +2002,11 @@ Odkaz do aplikace: ${appUrl}`;
         })
       });
       
-      // Store zavada ID for popup
+      // Store zavada ID in marker options for deep linking
       marker.options.zavadaId = zavada.id;
-        
-        // Create popup content (same as zavady map)
-        const formatDate = (dateStr) => {
-          if (!dateStr) return '–';
-          try {
-            const date = new Date(dateStr);
-            if (isNaN(date.getTime())) return dateStr;
-            return date.toLocaleString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-          } catch (e) {
-            return dateStr;
-          }
-        };
-        
-        const reportedDate = formatDate(zavada.reported_date);
+      
+      // Create popup content (same as zavady map)
+      const reportedDate = formatDate(zavada.reported_date);
         const statusText = zavada.resolved ? 'Vyřešeno' : 'Nahlášeno';
         const statusColor = zavada.resolved ? '#22c55e' : '#f59e0b';
         
@@ -2091,13 +2090,13 @@ Odkaz do aplikace: ${appUrl}`;
           className: 'zavady-popup'
         });
         
-        // Add popup handlers (same as zavady map)
+        // Add event listeners for popup (same as zavady map)
         marker.on('popupopen', () => {
           const popup = marker.getPopup();
           const popupElement = popup.getElement();
           if (!popupElement) return;
           
-          // Apply light theme
+          // Force light background with dark text for zavady popup - use setTimeout to ensure Leaflet has finished rendering
           const applyLightTheme = () => {
             const contentWrapper = popupElement.querySelector('.leaflet-popup-content-wrapper');
             const content = popupElement.querySelector('.leaflet-popup-content');
@@ -2106,6 +2105,7 @@ Odkaz do aplikace: ${appUrl}`;
             if (contentWrapper) {
               contentWrapper.style.setProperty('background', 'linear-gradient(145deg, #ffffff, #f8fafc)', 'important');
               contentWrapper.style.setProperty('background-color', '#ffffff', 'important');
+              contentWrapper.style.setProperty('background-image', 'none', 'important');
               contentWrapper.style.setProperty('color', '#0b1220', 'important');
               contentWrapper.style.setProperty('border', '1px solid rgba(15, 23, 42, 0.15)', 'important');
             }
@@ -2113,73 +2113,138 @@ Odkaz do aplikace: ${appUrl}`;
             if (content) {
               content.style.setProperty('color', '#0b1220', 'important');
               content.style.setProperty('background', 'transparent', 'important');
+              content.style.setProperty('background-color', 'transparent', 'important');
+              content.style.setProperty('background-image', 'none', 'important');
             }
             
             if (tip) {
               tip.style.setProperty('background', '#ffffff', 'important');
+              tip.style.setProperty('background-color', '#ffffff', 'important');
+              tip.style.setProperty('background-image', 'none', 'important');
               tip.style.setProperty('border', '1px solid rgba(15, 23, 42, 0.15)', 'important');
+            }
+            
+            // Also set text colors for specific elements only - more efficient
+            const categoryEl = popupElement.querySelector('.zavady-popup-category');
+            if (categoryEl) {
+              categoryEl.style.setProperty('color', '#059669', 'important');
+            }
+            
+            const dateEl = popupElement.querySelector('.zavady-popup-date');
+            if (dateEl) {
+              dateEl.style.setProperty('color', '#475569', 'important');
+            }
+            
+            const headerStrong = popupElement.querySelector('.zavady-popup-header strong');
+            if (headerStrong) {
+              headerStrong.style.setProperty('color', '#0b1220', 'important');
+            }
+            
+            // Update URL hash when popup opens
+            if (marker.options && marker.options.zavadaId) {
+              const newHash = `#zavady/${marker.options.zavadaId}`;
+              if (window.location.hash !== newHash) {
+                window.history.replaceState(null, '', newHash);
+              }
+            }
+            
+            // Add click handler for copy deep link button
+            const copyLinkBtn = popupElement.querySelector('.copy-deep-link-btn');
+            if (copyLinkBtn) {
+              copyLinkBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const deepLink = copyLinkBtn.dataset.deepLink;
+                if (deepLink) {
+                  navigator.clipboard.writeText(deepLink).then(() => {
+                    const originalText = copyLinkBtn.innerHTML;
+                    copyLinkBtn.innerHTML = '✓';
+                    copyLinkBtn.style.background = 'rgba(34, 197, 94, 0.2)';
+                    copyLinkBtn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                    copyLinkBtn.style.color = '#22c55e';
+                    setTimeout(() => {
+                      copyLinkBtn.innerHTML = originalText;
+                      copyLinkBtn.style.background = '';
+                      copyLinkBtn.style.borderColor = '';
+                      copyLinkBtn.style.color = '';
+                    }, 2000);
+                    showToastNotification('Odkaz zkopírován', 'Deep link byl zkopírován do schránky', 'success');
+                  }).catch(err => {
+                    console.error('Chyba při kopírování:', err);
+                    showToastNotification('Chyba', 'Nepodařilo se zkopírovat odkaz', 'error');
+                  });
+                }
+              });
+            }
+            
+            const galleryTitle = popupElement.querySelector('.zavady-popup-gallery-title');
+            if (galleryTitle) {
+              galleryTitle.style.setProperty('color', '#0b1220', 'important');
+            }
+            
+            // Set default text color for popup content wrapper to ensure all text is dark
+            if (contentWrapper) {
+              contentWrapper.style.setProperty('color', '#0b1220', 'important');
             }
           };
           
-          setTimeout(applyLightTheme, 0);
+          // Apply immediately and after a short delay to ensure it sticks
+          // Reduced number of calls to prevent performance issues
+          applyLightTheme();
+          setTimeout(applyLightTheme, 50);
+          setTimeout(applyLightTheme, 150);
           
-          // Copy link handler
-          const copyLinkBtn = popupElement.querySelector('.copy-deep-link-btn');
-          if (copyLinkBtn) {
-            copyLinkBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const deepLink = copyLinkBtn.dataset.deepLink;
-              if (deepLink) {
-                navigator.clipboard.writeText(deepLink).then(() => {
-                  const originalText = copyLinkBtn.innerHTML;
-                  copyLinkBtn.innerHTML = '✓';
-                  copyLinkBtn.style.background = 'rgba(34, 197, 94, 0.2)';
-                  copyLinkBtn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
-                  copyLinkBtn.style.color = '#22c55e';
-                  setTimeout(() => {
-                    copyLinkBtn.innerHTML = originalText;
-                    copyLinkBtn.style.background = '';
-                    copyLinkBtn.style.borderColor = '';
-                    copyLinkBtn.style.color = '';
-                  }, 2000);
-                  showToastNotification('Odkaz zkopírován', 'Deep link byl zkopírován do schránky', 'success');
-                }).catch(err => {
-                  console.error('Chyba při kopírování:', err);
-                  showToastNotification('Chyba', 'Nepodařilo se zkopírovat odkaz', 'error');
-                });
+          // Use MutationObserver to watch for style changes and reapply
+          // But prevent infinite loops by debouncing
+          let isApplying = false;
+          const observer = new MutationObserver(() => {
+            if (isApplying) return; // Prevent infinite loop
+            isApplying = true;
+            setTimeout(() => {
+              applyLightTheme();
+              isApplying = false;
+            }, 100);
+          });
+          
+          if (popupElement) {
+            observer.observe(popupElement, {
+              attributes: true,
+              attributeFilter: ['style', 'class'],
+              subtree: true
+            });
+            
+            // Clean up observer when popup closes
+            marker.once('popupclose', () => {
+              observer.disconnect();
+            });
+          }
+          
+          // Handle gallery thumbnails click - use event delegation to prevent duplicate listeners
+          const galleryContainer = popupElement.querySelector('.zavady-popup-gallery-thumbnails');
+          if (galleryContainer) {
+            galleryContainer.addEventListener('click', (e) => {
+              const thumb = e.target.closest('.zavady-popup-gallery-thumb');
+              if (thumb) {
+                e.stopPropagation();
+                const photos = JSON.parse(thumb.dataset.photos || '[]');
+                if (photos.length > 0) {
+                  openZavadyPhotoGallery(photos);
+                }
               }
             });
           }
           
-          // Photo gallery handlers (same as zavady)
-          const thumbnails = popupElement.querySelectorAll('.zavady-popup-gallery-thumb');
-          thumbnails.forEach(thumb => {
-            thumb.addEventListener('click', () => {
-              const photos = JSON.parse(thumb.dataset.photos || '[]');
-              const photoIndex = parseInt(thumb.dataset.photoIndex || '0');
-              openPhotoGallery(photos, photoIndex);
-            });
-          });
-          
-          // Mark resolved handler
-          const markResolvedBtn = popupElement.querySelector('.mark-zavada-resolved-btn');
-          if (markResolvedBtn) {
-            markResolvedBtn.addEventListener('click', async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              // Same handler as in zavady map
-            });
-          }
-          
-          // Report form handler
+          // Handle "Nahlásit další závadu" button click
           const showFormBtn = popupElement.querySelector('.show-report-form-btn');
           const form = popupElement.querySelector('.lamp-report-form');
+          
           if (showFormBtn && form) {
+            // Reset form visibility when popup opens
             showFormBtn.classList.remove('hidden');
             form.classList.add('hidden');
             form.reset();
             
+            // Remove existing listeners to prevent duplicates
             const newShowBtn = showFormBtn.cloneNode(true);
             const newForm = form.cloneNode(true);
             showFormBtn.parentNode?.replaceChild(newShowBtn, showFormBtn);
@@ -2193,6 +2258,38 @@ Odkaz do aplikace: ${appUrl}`;
               if (popupWrapper) {
                 popupWrapper.classList.add('popup-expanded');
               }
+              setTimeout(() => {
+                if (popup && popup.isOpen() && map) {
+                  const mapContainer = map.getContainer();
+                  const mapId = mapContainer?.id;
+                  const isReportMap = mapId === 'reportZavadaMap' || 
+                                      mapContainer?.closest('#reportZavadaMapContainer') !== null ||
+                                      mapContainer?.closest('.report-zavada-map') !== null ||
+                                      mapContainer?.parentElement?.id === 'reportZavadaMap';
+                  if (isReportMap) return;
+                  
+                  const popupEl = popup.getElement();
+                  if (popupEl) {
+                    const popupRect = popupEl.getBoundingClientRect();
+                    const mapRect = mapContainer.getBoundingClientRect();
+                    
+                    let panY = 0;
+                    if (popupRect.bottom > mapRect.bottom) {
+                      panY = popupRect.bottom - mapRect.bottom + 20;
+                    } else if (popupRect.top < mapRect.top) {
+                      panY = popupRect.top - mapRect.top - 20;
+                    }
+                    
+                    if (Math.abs(panY) > 5) {
+                      const center = map.getCenter();
+                      const point = map.latLngToContainerPoint(center);
+                      const newPoint = L.point(point.x, point.y + panY);
+                      const newCenter = map.containerPointToLatLng(newPoint);
+                      map.panTo(newCenter, { animate: true, duration: 0.4 });
+                    }
+                  }
+                }
+              }, 150);
             });
             
             // Store category for use in form submit handler

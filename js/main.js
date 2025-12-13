@@ -1919,10 +1919,13 @@ Odkaz do aplikace: ${appUrl}`;
       polygon.addTo(layers.udrzbaMapa);
     });
     
-    // Filter zavady that have coordinates and are related to zelen or udrzba zelene
-    const udrzbaZavady = zavady.filter(z => 
-      z.lat && z.lng && (z.category === "zelen" || z.category === "udrzba zelene")
-    );
+    // Filter zavady that have coordinates, are related to zelen or udrzba zelene, and have photos
+    const udrzbaZavady = zavady.filter(z => {
+      const hasCoords = z.lat && z.lng;
+      const isZelenCategory = z.category === "zelen" || z.category === "udrzba zelene";
+      const hasPhotos = z.photos && Array.isArray(z.photos) && z.photos.length > 0;
+      return hasCoords && isZelenCategory && hasPhotos;
+    });
     
     if (udrzbaZavady.length === 0) return;
     
@@ -1945,16 +1948,17 @@ Odkaz do aplikace: ${appUrl}`;
       if (isNaN(lat) || isNaN(lng)) return;
       
       const photos = zavada.photos || [];
-      const firstPhoto = photos.length > 0 ? photos[0] : null;
+      // Since we filtered for zavady with photos, firstPhoto should always exist
+      const firstPhoto = photos[0];
       const description = zavada.description || 'Bez popisu';
       const categoryLabel = 'Údržba zeleně';
       
-      markers.push({ lat, lng, firstPhoto, description, categoryLabel, zavada });
+      markers.push({ lat, lng, firstPhoto, description, categoryLabel, zavada, photos });
     });
     
     // After all markers are added, check for nearby markers and add lines
     markers.forEach((markerData, index) => {
-      const { lat, lng, firstPhoto, description, categoryLabel, zavada } = markerData;
+      const { lat, lng, firstPhoto, description, categoryLabel, zavada, photos } = markerData;
       
       // Check if there are nearby markers
       let hasNearby = false;
@@ -2316,34 +2320,9 @@ Odkaz do aplikace: ${appUrl}`;
             });
           }
         });
-      } else {
-        // Fallback marker without photo
-        const markerHtml = `
-          <div class="udrzba-marker-container">
-            <div class="udrzba-marker-fallback" style="background: #10b981; color: white; width: 50px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 3px solid white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(16, 185, 129, 0.3); font-size: 24px;">🌿</div>
-            ${useLine ? '<div class="udrzba-marker-line"></div>' : ''}
-            <div class="udrzba-marker-label">${description}</div>
-            <div class="udrzba-marker-category">${categoryLabel}</div>
-          </div>
-        `;
         
-        marker = L.marker([lat, lng], {
-          icon: L.divIcon({
-            className: 'udrzba-marker',
-            html: markerHtml,
-            iconSize: useLine ? [120, 80] : [80, 50],
-            iconAnchor: useLine ? [60, 75] : [40, 45]
-          })
-        });
-        
-        // Store zavada ID for popup
-        marker.options.zavadaId = zavada.id;
-      }
-      
-      // Add marker to map
-      if (marker) {
+        // Add marker to map
         marker.addTo(layers.udrzbaMapa);
-      }
     });
     
     // Fit map to bounds if we have markers

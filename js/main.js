@@ -2771,7 +2771,7 @@ Odkaz do aplikace: ${appUrl}`;
           } else if (category === "zavady-mapa") {
             shouldShow = isZavadyMapaLayer;
           } else if (category === "udrzba-mapa") {
-            shouldShow = isUdrzbaMapaLayer || isTravaLayer || isZahonyLayer;
+            shouldShow = isUdrzbaMapaLayer;
           } else {
             shouldShow = key === category;
           }

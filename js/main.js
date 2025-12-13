@@ -1898,6 +1898,44 @@ Odkaz do aplikace: ${appUrl}`;
       marker.addTo(layers.zavadyMapa);
     });
     
+    // Fit map to bounds if we have markers and we're in zavady-mapa view (not unified mapa)
+    if (zavadyWithCoords.length > 0 && currentCategory === "zavady-mapa") {
+      const bounds = L.latLngBounds(zavadyWithCoords.map(z => [parseFloat(z.lat), parseFloat(z.lng)]));
+      setTimeout(() => {
+        if (map) {
+          map.invalidateSize();
+          map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+        }
+      }, 100);
+    } else if (zavadyWithCoords.length > 0 && currentCategory === "mapa" && mapLayersVisibility.zavady) {
+      // For unified map, update bounds to include zavady
+      setTimeout(() => {
+        if (map) {
+          const allCoords = [];
+          if (mapLayersVisibility.lampy && dataLampy) {
+            allCoords.push(...dataLampy.map(item => [item.lat, item.lng]));
+          }
+          if (mapLayersVisibility.kose && dataKose) {
+            allCoords.push(...dataKose.map(item => [item.lat, item.lng]));
+          }
+          if (mapLayersVisibility.zavady) {
+            allCoords.push(...zavadyWithCoords.map(z => [parseFloat(z.lat), parseFloat(z.lng)]));
+          }
+          if (mapLayersVisibility.zelen) {
+            const gsData = visibleGreenspaceData();
+            allCoords.push(...gsData.flatMap((area) => area.coords));
+          }
+          
+          if (allCoords.length > 0) {
+            const bounds = L.latLngBounds(allCoords);
+            map.invalidateSize();
+            map.flyToBounds(bounds, { padding: [28, 28], duration: 0.4, easeLinearity: 0.25 });
+          }
+        }
+      }, 200);
+    }
+  }
+
   // Populate udrzba map layer - copy from zavady map but with mini photos instead of orange markers
   async function populateUdrzbaMapLayer(zavady) {
     if (!map || !zavady || !Array.isArray(zavady)) return;
@@ -2436,44 +2474,6 @@ Odkaz do aplikace: ${appUrl}`;
           }
         });
       }
-    }
-  }
-
-    // Fit map to bounds if we have markers and we're in zavady-mapa view (not unified mapa)
-    if (zavadyWithCoords.length > 0 && currentCategory === "zavady-mapa") {
-      const bounds = L.latLngBounds(zavadyWithCoords.map(z => [parseFloat(z.lat), parseFloat(z.lng)]));
-      setTimeout(() => {
-        if (map) {
-          map.invalidateSize();
-          map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
-        }
-      }, 100);
-    } else if (zavadyWithCoords.length > 0 && currentCategory === "mapa" && mapLayersVisibility.zavady) {
-      // For unified map, update bounds to include zavady
-      setTimeout(() => {
-        if (map) {
-          const allCoords = [];
-          if (mapLayersVisibility.lampy && dataLampy) {
-            allCoords.push(...dataLampy.map(item => [item.lat, item.lng]));
-          }
-          if (mapLayersVisibility.kose && dataKose) {
-            allCoords.push(...dataKose.map(item => [item.lat, item.lng]));
-          }
-          if (mapLayersVisibility.zavady) {
-            allCoords.push(...zavadyWithCoords.map(z => [parseFloat(z.lat), parseFloat(z.lng)]));
-          }
-          if (mapLayersVisibility.zelen) {
-            const gsData = visibleGreenspaceData();
-            allCoords.push(...gsData.flatMap((area) => area.coords));
-          }
-          
-          if (allCoords.length > 0) {
-            const bounds = L.latLngBounds(allCoords);
-            map.invalidateSize();
-            map.flyToBounds(bounds, { padding: [28, 28], duration: 0.4, easeLinearity: 0.25 });
-          }
-        }
-      }, 200);
     }
   }
 

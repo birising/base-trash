@@ -1951,17 +1951,16 @@ Odkaz do aplikace: ${appUrl}`;
       window.udrzbaPointMarkers.clear();
     }
     
-    // Filter zavady that have coordinates and photos
+    // Filter zavady that have coordinates (show all zavady, not just those with photos)
     const zavadyWithCoords = zavady.filter(z => {
       const hasCoords = z.lat && z.lng;
-      const hasPhotos = z.photos && Array.isArray(z.photos) && z.photos.length > 0;
-      return hasCoords && hasPhotos;
+      return hasCoords;
     });
     
-    console.log('populateUdrzbaMapLayer: závady s koordináty a fotografiemi:', zavadyWithCoords.length);
+    console.log('populateUdrzbaMapLayer: závady s koordináty:', zavadyWithCoords.length);
     
     if (zavadyWithCoords.length === 0) {
-      console.warn('populateUdrzbaMapLayer: žádné závady s koordináty a fotografiemi');
+      console.warn('populateUdrzbaMapLayer: žádné závady s koordináty');
       return;
     }
     
@@ -2009,7 +2008,7 @@ Odkaz do aplikace: ${appUrl}`;
       if (isNaN(lat) || isNaN(lng)) return;
       
       const photos = zavada.photos || [];
-      const firstPhoto = photos[0];
+      const firstPhoto = photos.length > 0 ? photos[0] : null;
       const description = zavada.description || 'Bez popisu';
       const categoryLabel = getCategoryLabel(zavada.category || 'unknown');
       
@@ -2050,15 +2049,22 @@ Odkaz do aplikace: ${appUrl}`;
       // Check if should use line (has nearby markers)
       const useLine = shouldUseLine(markerData, index, markersData);
       
-      // Create marker with mini photo instead of orange icon
-      const thumbnailPath = getThumbnailPath(firstPhoto);
-      const markerHtml = `
-        <div class="udrzba-marker-container">
-          <img src="${thumbnailPath}" alt="${description}" class="udrzba-marker-photo" onerror="this.style.display='none';">
-          <div class="udrzba-marker-label">${description}</div>
-          <div class="udrzba-marker-category">${categoryLabel}</div>
-        </div>
-      `;
+      // Create marker with mini photo (or fallback icon if no photo)
+      const markerHtml = firstPhoto 
+        ? `
+          <div class="udrzba-marker-container">
+            <img src="${getThumbnailPath(firstPhoto)}" alt="${description}" class="udrzba-marker-photo" onerror="this.style.display='none';">
+            <div class="udrzba-marker-label">${description}</div>
+            <div class="udrzba-marker-category">${categoryLabel}</div>
+          </div>
+        `
+        : `
+          <div class="udrzba-marker-container">
+            <div class="udrzba-marker-no-photo" style="width: 50px; height: 50px; background: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px; border: 3px solid white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);">!</div>
+            <div class="udrzba-marker-label">${description}</div>
+            <div class="udrzba-marker-category">${categoryLabel}</div>
+          </div>
+        `;
       
       const marker = L.marker([lat, lng], {
         icon: L.divIcon({

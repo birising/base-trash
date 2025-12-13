@@ -1945,8 +1945,11 @@ Odkaz do aplikace: ${appUrl}`;
     
     console.log('populateUdrzbaMapLayer: načteno závad:', zavady.length);
     
-    // Clear existing udrzba markers
+    // Clear existing udrzba markers and point markers
     layers.udrzbaMapa.clearLayers();
+    if (window.udrzbaPointMarkers) {
+      window.udrzbaPointMarkers.clear();
+    }
     
     // Filter zavady that have coordinates and photos
     const zavadyWithCoords = zavady.filter(z => {
@@ -1995,8 +1998,10 @@ Odkaz do aplikace: ${appUrl}`;
     // Threshold for when to use line (in pixels)
     const MIN_DISTANCE_PX = 60;
     
-    // First, collect all marker data
+    // First, collect all marker data and group by position
     const markersData = [];
+    const positionGroups = new Map(); // key: "lat,lng", value: array of zavady
+    
     zavadyWithCoords.forEach(zavada => {
       const lat = parseFloat(zavada.lat);
       const lng = parseFloat(zavada.lng);
@@ -2008,7 +2013,17 @@ Odkaz do aplikace: ${appUrl}`;
       const description = zavada.description || 'Bez popisu';
       const categoryLabel = getCategoryLabel(zavada.category || 'unknown');
       
-      markersData.push({ lat, lng, firstPhoto, description, categoryLabel, zavada, photos });
+      // Round coordinates to group nearby positions (within ~1 meter)
+      const roundedLat = Math.round(lat * 100000) / 100000;
+      const roundedLng = Math.round(lng * 100000) / 100000;
+      const positionKey = `${roundedLat},${roundedLng}`;
+      
+      if (!positionGroups.has(positionKey)) {
+        positionGroups.set(positionKey, []);
+      }
+      positionGroups.get(positionKey).push({ lat, lng, firstPhoto, description, categoryLabel, zavada, photos });
+      
+      markersData.push({ lat, lng, firstPhoto, description, categoryLabel, zavada, photos, positionKey });
     });
     
     // Calculate if marker should use line (has nearby markers)
@@ -2060,9 +2075,61 @@ Odkaz do aplikace: ${appUrl}`;
       marker.options.originalLat = originalLat;
       marker.options.originalLng = originalLng;
       
-      // Create polyline for connection to original position
+      // Create polyline for connection to original position and point marker at end
       let polyline = null;
+      let pointMarker = null;
       if (useLine) {
+        // Get all zavady at this position
+        const roundedLat = Math.round(originalLat * 100000) / 100000;
+        const roundedLng = Math.round(originalLng * 100000) / 100000;
+        const positionKey = `${roundedLat},${roundedLng}`;
+        const zavadyAtPosition = positionGroups.get(positionKey) || [];
+        
+        // Create point marker at original position (only once per position)
+        const pointMarkerKey = `point-${positionKey}`;
+        if (!window.udrzbaPointMarkers) {
+          window.udrzbaPointMarkers = new Map();
+        }
+        
+        if (!window.udrzbaPointMarkers.has(pointMarkerKey)) {
+          const pointHtml = '<div style="width: 12px; height: 12px; background: #10b981; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>';
+          pointMarker = L.marker([originalLat, originalLng], {
+            icon: L.divIcon({
+              className: 'udrzba-point-marker',
+              html: pointHtml,
+              iconSize: [12, 12],
+              iconAnchor: [6, 6]
+            }),
+            interactive: true
+          });
+          
+          // Create popup with all zavady at this position
+          if (zavadyAtPosition.length > 0) {
+            const popupContent = `
+              <div style="max-width: 300px;">
+                <div style="font-weight: 700; margin-bottom: 12px; color: #0b1220;">Závady na této pozici (${zavadyAtPosition.length}):</div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                  ${zavadyAtPosition.map((z, idx) => `
+                    <div style="padding: 8px; margin-bottom: 8px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #10b981;">
+                      <div style="font-weight: 600; color: #0b1220; margin-bottom: 4px;">${z.description}</div>
+                      <div style="font-size: 12px; color: #64748b;">${z.categoryLabel}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+            pointMarker.bindPopup(popupContent, {
+              maxWidth: 320,
+              className: 'udrzba-point-popup'
+            });
+          }
+          
+          pointMarker.addTo(layers.udrzbaMapa);
+          window.udrzbaPointMarkers.set(pointMarkerKey, pointMarker);
+        } else {
+          pointMarker = window.udrzbaPointMarkers.get(pointMarkerKey);
+        }
+        
         const updateLine = () => {
           const markerPos = marker.getLatLng();
           const originalPos = [originalLat, originalLng];

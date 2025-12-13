@@ -3553,6 +3553,13 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+.udrzba-marker-line-svg {
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+  overflow: visible;
+}
+
 .udrzba-marker-label {
   font-size: 11px;
   font-weight: 700;

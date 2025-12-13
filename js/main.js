@@ -2028,6 +2028,10 @@ Odkaz do aplikace: ${appUrl}`;
     markersData.forEach((markerData, index) => {
       const { lat, lng, firstPhoto, description, categoryLabel, zavada, photos } = markerData;
       
+      // Store original position for line calculation
+      const originalLat = lat;
+      const originalLng = lng;
+      
       // Check if should use line (has nearby markers)
       const useLine = shouldUseLine(markerData, index, markersData);
       
@@ -2036,7 +2040,6 @@ Odkaz do aplikace: ${appUrl}`;
       const markerHtml = `
         <div class="udrzba-marker-container">
           <img src="${thumbnailPath}" alt="${description}" class="udrzba-marker-photo" onerror="this.style.display='none';">
-          ${useLine ? '<div class="udrzba-marker-line"></div>' : ''}
           <div class="udrzba-marker-label">${description}</div>
           <div class="udrzba-marker-category">${categoryLabel}</div>
         </div>
@@ -2048,11 +2051,50 @@ Odkaz do aplikace: ${appUrl}`;
           html: markerHtml,
           iconSize: useLine ? [120, 100] : [80, 60],
           iconAnchor: useLine ? [60, 95] : [40, 55]
-        })
+        }),
+        draggable: true
       });
       
-      // Store zavada ID in marker options for deep linking
+      // Store original position in marker options
       marker.options.zavadaId = zavada.id;
+      marker.options.originalLat = originalLat;
+      marker.options.originalLng = originalLng;
+      
+      // Create polyline for connection to original position
+      let polyline = null;
+      if (useLine) {
+        const updateLine = () => {
+          const markerPos = marker.getLatLng();
+          const originalPos = [originalLat, originalLng];
+          
+          if (polyline) {
+            polyline.setLatLngs([markerPos, originalPos]);
+          } else {
+            polyline = L.polyline([markerPos, originalPos], {
+              color: '#10b981',
+              weight: 2,
+              dashArray: '4, 2',
+              opacity: 0.8,
+              interactive: false
+            }).addTo(layers.udrzbaMapa);
+          }
+        };
+        
+        marker.on('drag', updateLine);
+        marker.on('dragend', updateLine);
+        
+        // Update line on zoom and move
+        const updateLineOnMapChange = () => {
+          if (map.hasLayer(marker) && polyline) {
+            updateLine();
+          }
+        };
+        map.on('zoom', updateLineOnMapChange);
+        map.on('move', updateLineOnMapChange);
+        
+        // Initial line creation
+        setTimeout(updateLine, 100);
+      }
       
       // Create popup content (same as zavady map)
       const reportedDate = formatDate(zavada.reported_date);

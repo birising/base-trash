@@ -799,7 +799,7 @@ Odkaz do aplikace: ${appUrl}`;
           ${item.mp ? '<div><span>Místní působnost:</span><strong>Ano</strong></div>' : ''}
         </div>
         <div class="popup-actions">
-          <a class="popup-button" href="https://kriminalita.policie.gov.cz" target="_blank" rel="noopener">Zdroj dat →</a>
+          <a class="popup-link-icon" href="https://kriminalita.policie.gov.cz" target="_blank" rel="noopener" title="Zdroj dat">🔗</a>
         </div>`;
     }
 
@@ -1537,8 +1537,8 @@ Odkaz do aplikace: ${appUrl}`;
           </div>
           ${photoGalleryHtml}
           <div class="popup-actions">
-            <button class="popup-button popup-button-link copy-deep-link-btn" data-deep-link="${deepLinkUrl}" style="background: rgba(59, 130, 246, 0.9); border-color: rgba(59, 130, 246, 1); font-size: 12px; padding: 8px 12px;">
-              <span style="margin-right: 6px;">🔗</span> Kopírovat odkaz
+            <button class="popup-link-icon copy-deep-link-btn" data-deep-link="${deepLinkUrl}" title="Kopírovat odkaz">
+              🔗
             </button>
             ${!zavada.resolved ? `<button class="popup-button popup-button-resolved mark-zavada-resolved-btn" data-zavada-id="${zavada.id}" data-zavada-description="${description}" data-zavada-category="${zavada.category || 'unknown'}" data-zavada-lat="${lat}" data-zavada-lng="${lng}" data-zavada-reported-date="${zavada.reported_date}">Nahlásit odstranění</button>` : ''}
             <button class="popup-button show-report-form-btn" data-category="zavady-mapa" data-item-id="${zavada.id || 'N/A'}" data-item-name="${description}" data-gps="${gpsCoords}" data-app-url="${appUrl}">Nahlásit další závadu</button>
@@ -1639,13 +1639,15 @@ Odkaz do aplikace: ${appUrl}`;
               if (deepLink) {
                 navigator.clipboard.writeText(deepLink).then(() => {
                   const originalText = copyLinkBtn.innerHTML;
-                  copyLinkBtn.innerHTML = '<span style="margin-right: 6px;">✓</span> Zkopírováno!';
-                  copyLinkBtn.style.background = 'rgba(34, 197, 94, 0.9)';
-                  copyLinkBtn.style.borderColor = 'rgba(34, 197, 94, 1)';
+                  copyLinkBtn.innerHTML = '✓';
+                  copyLinkBtn.style.background = 'rgba(34, 197, 94, 0.2)';
+                  copyLinkBtn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+                  copyLinkBtn.style.color = '#22c55e';
                   setTimeout(() => {
                     copyLinkBtn.innerHTML = originalText;
-                    copyLinkBtn.style.background = 'rgba(59, 130, 246, 0.9)';
-                    copyLinkBtn.style.borderColor = 'rgba(59, 130, 246, 1)';
+                    copyLinkBtn.style.background = '';
+                    copyLinkBtn.style.borderColor = '';
+                    copyLinkBtn.style.color = '';
                   }, 2000);
                   showToastNotification('Odkaz zkopírován', 'Deep link byl zkopírován do schránky', 'success');
                 }).catch(err => {

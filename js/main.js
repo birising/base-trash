@@ -2320,9 +2320,12 @@ Odkaz do aplikace: ${appUrl}`;
             });
           }
         });
-        
-        // Add marker to map
+      }
+      
+      // Add marker to map
+      if (marker) {
         marker.addTo(layers.udrzbaMapa);
+      }
     });
     
     // Fit map to bounds if we have markers

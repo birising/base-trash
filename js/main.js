@@ -1919,9 +1919,9 @@ Odkaz do aplikace: ${appUrl}`;
       polygon.addTo(layers.udrzbaMapa);
     });
     
-    // Filter zavady that have coordinates and are related to zelen only
+    // Filter zavady that have coordinates and are related to zelen or udrzba zelene
     const udrzbaZavady = zavady.filter(z => 
-      z.lat && z.lng && z.category === "zelen"
+      z.lat && z.lng && (z.category === "zelen" || z.category === "udrzba zelene")
     );
     
     if (udrzbaZavady.length === 0) return;

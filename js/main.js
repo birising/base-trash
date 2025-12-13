@@ -1938,7 +1938,12 @@ Odkaz do aplikace: ${appUrl}`;
 
   // Populate udrzba map layer - copy from zavady map but with mini photos instead of orange markers
   async function populateUdrzbaMapLayer(zavady) {
-    if (!map || !zavady || !Array.isArray(zavady)) return;
+    if (!map || !zavady || !Array.isArray(zavady)) {
+      console.warn('populateUdrzbaMapLayer: map nebo zavady není dostupné', { map: !!map, zavady: Array.isArray(zavady) });
+      return;
+    }
+    
+    console.log('populateUdrzbaMapLayer: načteno závad:', zavady.length);
     
     // Clear existing udrzba markers
     layers.udrzbaMapa.clearLayers();
@@ -1950,7 +1955,12 @@ Odkaz do aplikace: ${appUrl}`;
       return hasCoords && hasPhotos;
     });
     
-    if (zavadyWithCoords.length === 0) return;
+    console.log('populateUdrzbaMapLayer: závady s koordináty a fotografiemi:', zavadyWithCoords.length);
+    
+    if (zavadyWithCoords.length === 0) {
+      console.warn('populateUdrzbaMapLayer: žádné závady s koordináty a fotografiemi');
+      return;
+    }
     
     // Helper functions
     const formatDate = (dateStr) => {
@@ -2455,6 +2465,8 @@ Odkaz do aplikace: ${appUrl}`;
       marker.addTo(layers.udrzbaMapa);
     });
     
+    console.log('populateUdrzbaMapLayer: přidáno markerů:', markersData.length);
+    
     // Fit map to bounds if we have markers
     const allMarkers = [];
     layers.udrzbaMapa.eachLayer((layer) => {
@@ -2463,10 +2475,15 @@ Odkaz do aplikace: ${appUrl}`;
       }
     });
     
+    console.log('populateUdrzbaMapLayer: počet markerů ve vrstvě:', allMarkers.length);
+    console.log('populateUdrzbaMapLayer: aktuální kategorie:', currentCategory);
+    console.log('populateUdrzbaMapLayer: vrstva je na mapě:', map.hasLayer(layers.udrzbaMapa));
+    
     if (allMarkers.length > 0 && currentCategory === "udrzba-mapa") {
       const group = new L.featureGroup(allMarkers);
       const bounds = group.getBounds();
       if (bounds.isValid()) {
+        console.log('populateUdrzbaMapLayer: fitování mapy na bounds:', bounds);
         requestAnimationFrame(() => {
           if (map) {
             map.invalidateSize();
@@ -2772,6 +2789,9 @@ Odkaz do aplikace: ${appUrl}`;
             shouldShow = isZavadyMapaLayer;
           } else if (category === "udrzba-mapa") {
             shouldShow = isUdrzbaMapaLayer;
+            if (isUdrzbaMapaLayer && shouldShow) {
+              console.log('setActiveCategory: přidávám vrstvu udrzbaMapa na mapu, key:', key);
+            }
           } else {
             shouldShow = key === category;
           }
@@ -2781,10 +2801,14 @@ Odkaz do aplikace: ${appUrl}`;
           
           if (shouldShow) {
             if (!isOnMap) {
+              console.log('setActiveCategory: přidávám vrstvu na mapu:', key);
               map.addLayer(layer);
+            } else {
+              console.log('setActiveCategory: vrstva už je na mapě:', key);
             }
           } else {
             if (isOnMap) {
+              console.log('setActiveCategory: odstraňuji vrstvu z mapy:', key);
               map.removeLayer(layer);
             }
           }
@@ -2894,7 +2918,9 @@ Odkaz do aplikace: ${appUrl}`;
         activeData = [];
       } else if (category === "udrzba-mapa") {
         // Load and display udrzba zelene on map
+        console.log('setActiveCategory: načítám závady pro mapu údržby');
         loadZavadyData().then(zavady => {
+          console.log('setActiveCategory: závady načteny, volám populateUdrzbaMapLayer s', zavady.length, 'závadami');
           populateUdrzbaMapLayer(zavady);
         }).catch(error => {
           console.error('Chyba při načítání závad pro mapu údržby:', error);

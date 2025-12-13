@@ -2011,30 +2011,31 @@ Odkaz do aplikace: ${appUrl}`;
       markersData.push({ lat, lng, firstPhoto, description, categoryLabel, zavada, photos });
     });
     
+    // Calculate if marker should use line (has nearby markers)
+    const shouldUseLine = (markerData, index, allMarkers) => {
+      for (let otherIndex = 0; otherIndex < allMarkers.length; otherIndex++) {
+        if (index !== otherIndex) {
+          const distance = getPixelDistance(markerData.lat, markerData.lng, allMarkers[otherIndex].lat, allMarkers[otherIndex].lng);
+          if (distance < MIN_DISTANCE_PX && distance > 0) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
     // Check for nearby markers and create markers with photos
     markersData.forEach((markerData, index) => {
       const { lat, lng, firstPhoto, description, categoryLabel, zavada, photos } = markerData;
       
-      // Check if there are nearby markers
-      let hasNearby = false;
-      markersData.forEach((otherMarker, otherIndex) => {
-        if (index !== otherIndex) {
-          const distance = getPixelDistance(lat, lng, otherMarker.lat, otherMarker.lng);
-          if (distance < MIN_DISTANCE_PX && distance > 0) {
-            hasNearby = true;
-          }
-        }
-      });
-      
-      // Use line if there are nearby markers
-      const useLine = hasNearby;
+      // Check if should use line (has nearby markers)
+      const useLine = shouldUseLine(markerData, index, markersData);
       
       // Create marker with mini photo instead of orange icon
       const thumbnailPath = getThumbnailPath(firstPhoto);
       const markerHtml = `
         <div class="udrzba-marker-container">
-          <img src="${thumbnailPath}" alt="${description}" class="udrzba-marker-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="udrzba-marker-fallback" style="display: none; background: #10b981; color: white; width: 50px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 3px solid white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(16, 185, 129, 0.3); font-size: 24px;">🌿</div>
+          <img src="${thumbnailPath}" alt="${description}" class="udrzba-marker-photo" onerror="this.style.display='none';">
           ${useLine ? '<div class="udrzba-marker-line"></div>' : ''}
           <div class="udrzba-marker-label">${description}</div>
           <div class="udrzba-marker-category">${categoryLabel}</div>

@@ -1974,31 +1974,29 @@ Odkaz do aplikace: ${appUrl}`;
       // Use line if there are nearby markers
       const useLine = hasNearby;
       
-      // Create marker
-      let marker;
-      if (firstPhoto) {
-        const thumbnailPath = getThumbnailPath(firstPhoto);
-        const markerHtml = `
-          <div class="udrzba-marker-container">
-            <img src="${thumbnailPath}" alt="${description}" class="udrzba-marker-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="udrzba-marker-fallback" style="display: none; background: #10b981; color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid white; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">🌿</div>
-            ${useLine ? '<div class="udrzba-marker-line"></div>' : ''}
-            <div class="udrzba-marker-label">${description}</div>
-            <div class="udrzba-marker-category">${categoryLabel}</div>
-          </div>
-        `;
-        
-        marker = L.marker([lat, lng], {
-          icon: L.divIcon({
-            className: 'udrzba-marker',
-            html: markerHtml,
-            iconSize: useLine ? [120, 100] : [80, 60],
-            iconAnchor: useLine ? [60, 95] : [40, 55]
-          })
-        });
-        
-        // Store zavada ID for popup
-        marker.options.zavadaId = zavada.id;
+      // Create marker with photo (all zavady have photos since we filtered)
+      const thumbnailPath = getThumbnailPath(firstPhoto);
+      const markerHtml = `
+        <div class="udrzba-marker-container">
+          <img src="${thumbnailPath}" alt="${description}" class="udrzba-marker-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="udrzba-marker-fallback" style="display: none; background: #10b981; color: white; width: 50px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 3px solid white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(16, 185, 129, 0.3); font-size: 24px;">🌿</div>
+          ${useLine ? '<div class="udrzba-marker-line"></div>' : ''}
+          <div class="udrzba-marker-label">${description}</div>
+          <div class="udrzba-marker-category">${categoryLabel}</div>
+        </div>
+      `;
+      
+      const marker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: 'udrzba-marker',
+          html: markerHtml,
+          iconSize: useLine ? [120, 100] : [80, 60],
+          iconAnchor: useLine ? [60, 95] : [40, 55]
+        })
+      });
+      
+      // Store zavada ID for popup
+      marker.options.zavadaId = zavada.id;
         
         // Create popup content (same as zavady map)
         const formatDate = (dateStr) => {
@@ -2320,12 +2318,9 @@ Odkaz do aplikace: ${appUrl}`;
             });
           }
         });
-      }
       
       // Add marker to map
-      if (marker) {
-        marker.addTo(layers.udrzbaMapa);
-      }
+      marker.addTo(layers.udrzbaMapa);
     });
     
     // Fit map to bounds if we have markers

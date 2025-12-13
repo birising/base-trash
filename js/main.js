@@ -1898,33 +1898,18 @@ Odkaz do aplikace: ${appUrl}`;
       marker.addTo(layers.zavadyMapa);
     });
     
-  // Populate udrzba map layer (zelen areas + zavady with photos)
+  // Populate udrzba map layer (all zavady with photos as mini photos)
   async function populateUdrzbaMapLayer(zavady) {
     if (!map || !zavady || !Array.isArray(zavady)) return;
     
     // Clear existing udrzba markers
     layers.udrzbaMapa.clearLayers();
     
-    // Add greenspace polygons to udrzba map
-    const travaAreas = greenspaceByType("trava");
-    const zahonyAreas = greenspaceByType("zahony");
-    
-    travaAreas.forEach((area) => {
-      const polygon = createPolygon(area, iconColors.zelenTrava, greenspaceStyles.trava);
-      polygon.addTo(layers.udrzbaMapa);
-    });
-    
-    zahonyAreas.forEach((area) => {
-      const polygon = createPolygon(area, iconColors.zelenZahony, greenspaceStyles.zahony);
-      polygon.addTo(layers.udrzbaMapa);
-    });
-    
-    // Filter zavady that have coordinates, are related to zelen or udrzba zelene, and have photos
+    // Filter all zavady that have coordinates and photos
     const udrzbaZavady = zavady.filter(z => {
       const hasCoords = z.lat && z.lng;
-      const isZelenCategory = z.category === "zelen" || z.category === "udrzba zelene";
       const hasPhotos = z.photos && Array.isArray(z.photos) && z.photos.length > 0;
-      return hasCoords && isZelenCategory && hasPhotos;
+      return hasCoords && hasPhotos;
     });
     
     if (udrzbaZavady.length === 0) return;
@@ -1951,7 +1936,19 @@ Odkaz do aplikace: ${appUrl}`;
       // Since we filtered for zavady with photos, firstPhoto should always exist
       const firstPhoto = photos[0];
       const description = zavada.description || 'Bez popisu';
-      const categoryLabel = 'Údržba zeleně';
+      
+      // Get category label
+      const getCategoryLabel = (category) => {
+        const labels = {
+          'zelen': 'Údržba zeleně',
+          'udrzba zelene': 'Údržba zeleně',
+          'kose': 'Koš',
+          'lampy': 'Lampa',
+          'ostatni': 'Ostatní'
+        };
+        return labels[category] || category;
+      };
+      const categoryLabel = getCategoryLabel(zavada.category || 'unknown');
       
       markers.push({ lat, lng, firstPhoto, description, categoryLabel, zavada, photos });
     });

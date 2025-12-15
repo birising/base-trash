@@ -2601,26 +2601,40 @@ Odkaz do aplikace: ${appUrl}`;
     const distributeLabels = () => {
       if (allMarkers.length === 0) return;
       
-      const PADDING = 12; // Minimum padding between labels in pixels
-      const MAX_OFFSET_PX = 200; // Maximum offset from original position in pixels
-      const MAX_ITERATIONS = 3; // Maximum iterations for iterative improvement
+      const PADDING = 20; // Minimum padding between labels in pixels
+      const MAX_OFFSET_PX = 300; // Maximum offset from original position in pixels
+      const MAX_ITERATIONS = 8; // Maximum iterations for iterative improvement
       
-      // Helper function to get marker bounding box
-      const getMarkerBox = (marker, latlng) => {
+      // Helper function to get marker bounding box from DOM element
+      const getMarkerBoxFromDOM = (marker, latlng) => {
         const point = map.latLngToContainerPoint(latlng);
-        const icon = marker.options.icon;
-        const iconSize = icon.options.iconSize || [80, 60];
-        const iconAnchor = icon.options.iconAnchor || [40, 55];
-        const width = iconSize[0];
-        const height = iconSize[1];
-        return {
-          left: point.x - iconAnchor[0],
-          top: point.y - iconAnchor[1],
-          right: point.x - iconAnchor[0] + width,
-          bottom: point.y - iconAnchor[1] + height,
-          width,
-          height
-        };
+        const iconElement = marker._icon;
+        
+        if (iconElement) {
+          const rect = iconElement.getBoundingClientRect();
+          const mapRect = map.getContainer().getBoundingClientRect();
+          return {
+            left: rect.left - mapRect.left,
+            top: rect.top - mapRect.top,
+            right: rect.right - mapRect.left,
+            bottom: rect.bottom - mapRect.top,
+            width: rect.width,
+            height: rect.height
+          };
+        } else {
+          // Fallback to calculated size
+          const icon = marker.options.icon;
+          const iconSize = icon.options.iconSize || [80, 60];
+          const iconAnchor = icon.options.iconAnchor || [40, 55];
+          return {
+            left: point.x - iconAnchor[0],
+            top: point.y - iconAnchor[1],
+            right: point.x - iconAnchor[0] + iconSize[0],
+            bottom: point.y - iconAnchor[1] + iconSize[1],
+            width: iconSize[0],
+            height: iconSize[1]
+          };
+        }
       };
       
       // Helper function to check if two boxes overlap
@@ -2634,12 +2648,17 @@ Odkaz do aplikace: ${appUrl}`;
       // Helper function to check if position is valid (no overlaps, within bounds)
       const isValidPosition = (newBox, markerBoxes, excludeIndex) => {
         const mapBounds = map.getBounds();
-        const newLatLng = map.containerPointToLatLng(L.point(
-          newBox.left + (newBox.width / 2),
-          newBox.top + (newBox.height / 2)
-        ));
+        const centerPoint = L.point(newBox.left + (newBox.width / 2), newBox.top + (newBox.height / 2));
+        const newLatLng = map.containerPointToLatLng(centerPoint);
         
         if (!mapBounds.contains(newLatLng)) return false;
+        
+        // Check bounds - ensure box is within map container
+        const mapSize = map.getSize();
+        if (newBox.left < 0 || newBox.top < 0 || 
+            newBox.right > mapSize.x || newBox.bottom > mapSize.y) {
+          return false;
+        }
         
         for (let k = 0; k < markerBoxes.length; k++) {
           if (k === excludeIndex) continue;
@@ -2650,21 +2669,24 @@ Odkaz do aplikace: ${appUrl}`;
         return true;
       };
       
-      // Preferred directions: right, left, up, down, then diagonals
+      // Preferred directions with priority: right, left, up, down, then diagonals
       const preferredDirections = [
-        { angle: 0, name: 'right' },      // 0°
-        { angle: 180, name: 'left' },      // 180°
-        { angle: 270, name: 'up' },       // 270° (up)
-        { angle: 90, name: 'down' },     // 90° (down)
-        { angle: 45, name: 'top-right' }, // 45°
-        { angle: 135, name: 'top-left' }, // 135°
-        { angle: 225, name: 'bottom-left' }, // 225°
-        { angle: 315, name: 'bottom-right' }  // 315°
+        { angle: 0, priority: 1 },      // right
+        { angle: 180, priority: 2 },   // left
+        { angle: 270, priority: 3 },   // up
+        { angle: 90, priority: 4 },    // down
+        { angle: 45, priority: 5 },    // top-right
+        { angle: 315, priority: 6 },   // bottom-right
+        { angle: 135, priority: 7 },   // top-left
+        { angle: 225, priority: 8 }    // bottom-left
       ];
       
       // Iterative improvement: run multiple passes for better results
       for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
-        // Get current marker positions and boxes
+        // Force map to update before getting positions
+        map.invalidateSize();
+        
+        // Get current marker positions and boxes from DOM
         const markerBoxes = allMarkers.map(marker => {
           const latlng = marker.getLatLng();
           const originalLat = marker.options.originalLat || latlng.lat;
@@ -2672,7 +2694,7 @@ Odkaz do aplikace: ${appUrl}`;
           return {
             marker: marker,
             latlng: latlng,
-            box: getMarkerBox(marker, latlng),
+            box: getMarkerBoxFromDOM(marker, latlng),
             originalLat,
             originalLng,
             originalPoint: map.latLngToContainerPoint([originalLat, originalLng])
@@ -2686,24 +2708,23 @@ Odkaz do aplikace: ${appUrl}`;
           const current = markerBoxes[i];
           
           // Check for overlaps with other markers
-          let hasOverlap = false;
+          let overlappingMarkers = [];
           for (let j = 0; j < markerBoxes.length; j++) {
             if (i === j) continue;
             if (boxesOverlap(current.box, markerBoxes[j].box)) {
-              hasOverlap = true;
-              break;
+              overlappingMarkers.push(j);
             }
           }
           
-          if (!hasOverlap) continue;
+          if (overlappingMarkers.length === 0) continue;
           
           // Try to find a free position
           let bestPosition = null;
           let bestScore = Infinity;
           
-          // First, try preferred directions
+          // First, try preferred directions with smaller steps for precision
           for (const dir of preferredDirections) {
-            for (let distance = 60; distance <= MAX_OFFSET_PX; distance += 30) {
+            for (let distance = 50; distance <= MAX_OFFSET_PX; distance += 20) {
               const rad = (dir.angle * Math.PI) / 180;
               const newX = current.originalPoint.x + Math.cos(rad) * distance;
               const newY = current.originalPoint.y + Math.sin(rad) * distance;
@@ -2726,9 +2747,8 @@ Odkaz do aplikace: ${appUrl}`;
                   Math.pow(newX - current.originalPoint.x, 2) + 
                   Math.pow(newY - current.originalPoint.y, 2)
                 );
-                // Score: prefer closer positions and preferred directions
-                const directionBonus = dir.angle < 90 || dir.angle > 270 ? 0 : 20; // Prefer right side
-                const score = dist + directionBonus;
+                // Score: prefer closer positions and higher priority directions
+                const score = dist + (dir.priority * 10);
                 
                 if (score < bestScore) {
                   bestScore = score;
@@ -2739,10 +2759,10 @@ Odkaz do aplikace: ${appUrl}`;
             }
           }
           
-          // If no preferred direction worked, try all angles (but with larger steps)
+          // If no preferred direction worked, try all angles with finer steps
           if (!bestPosition) {
-            for (let angle = 0; angle < 360; angle += 30) {
-              for (let distance = 80; distance <= MAX_OFFSET_PX; distance += 40) {
+            for (let angle = 0; angle < 360; angle += 10) {
+              for (let distance = 70; distance <= MAX_OFFSET_PX; distance += 25) {
                 const rad = (angle * Math.PI) / 180;
                 const newX = current.originalPoint.x + Math.cos(rad) * distance;
                 const newY = current.originalPoint.y + Math.sin(rad) * distance;
@@ -2790,9 +2810,10 @@ Odkaz do aplikace: ${appUrl}`;
         // If no markers were moved in this iteration, we're done
         if (!movedAny) break;
         
-        // Small delay to allow map to update
+        // Wait a bit for map to update before next iteration
         if (iteration < MAX_ITERATIONS - 1) {
-          // Force a reflow by reading offsetHeight
+          // Force a reflow
+          map.invalidateSize();
           map.getContainer().offsetHeight;
         }
       }
@@ -2825,21 +2846,30 @@ Odkaz do aplikace: ${appUrl}`;
       
       setTimeout(() => {
         map.whenReady(() => {
+          // Wait for all markers to be rendered
           setTimeout(() => {
-            distributeLabels();
-            // Update lines after distribution
-            allMarkers.forEach(marker => {
-              if (marker._polyline && marker.options.originalLat && marker.options.originalLng) {
-                const currentPos = marker.getLatLng();
-                const originalPos = [marker.options.originalLat, marker.options.originalLng];
-                marker._polyline.setLatLngs([currentPos, originalPos]);
-              }
-            });
+            // Force map to update
+            map.invalidateSize();
             
-            // Redistribute on zoom and move
-            map.on('zoomend', redistributeOnMapChange);
-            map.on('moveend', redistributeOnMapChange);
-          }, 500);
+            // Wait a bit more for DOM to update
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                distributeLabels();
+                // Update lines after distribution
+                allMarkers.forEach(marker => {
+                  if (marker._polyline && marker.options.originalLat && marker.options.originalLng) {
+                    const currentPos = marker.getLatLng();
+                    const originalPos = [marker.options.originalLat, marker.options.originalLng];
+                    marker._polyline.setLatLngs([currentPos, originalPos]);
+                  }
+                });
+                
+                // Redistribute on zoom and move
+                map.on('zoomend', redistributeOnMapChange);
+                map.on('moveend', redistributeOnMapChange);
+              }, 300);
+            });
+          }, 800);
         });
       }, 500);
     }

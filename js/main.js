@@ -4262,6 +4262,16 @@ Odkaz do aplikace: ${appUrl}`;
       return;
     }
     
+    // Check if html2canvas is available
+    if (typeof html2canvas === 'undefined') {
+      showToastNotification(
+        'Chyba',
+        'Knihovna pro tisk není k dispozici.',
+        'error'
+      );
+      return;
+    }
+    
     // Switch to map view - ensure it's visible
     const mapView = document.getElementById('mapView');
     if (mapView) {
@@ -4374,28 +4384,14 @@ Odkaz do aplikace: ${appUrl}`;
       map.fitBounds(group.getBounds().pad(0.1));
     }
     
-    // Add print class to body
-    document.body.classList.add('printing-zavady-map');
-    
-    // Wait for map to render, then print
+    // Wait for map to render, then capture
     setTimeout(() => {
       // Force map to update size
       map.invalidateSize();
       
       // Wait for tiles to load
       map.whenReady(() => {
-        // Wait for all tiles to load
-        let tilesLoaded = 0;
-        const totalTiles = map.getSize().x * map.getSize().y / (256 * 256) * Math.pow(2, map.getZoom());
-        
-        map.eachLayer((layer) => {
-          if (layer instanceof L.TileLayer) {
-            layer.on('tileload', () => {
-              tilesLoaded++;
-            });
-          }
-        });
-        
+        // Wait a bit for all tiles and markers to render
         setTimeout(() => {
           // Invalidate size again to ensure everything is rendered
           map.invalidateSize();
@@ -4411,23 +4407,119 @@ Odkaz do aplikace: ${appUrl}`;
           
           // Wait a bit more for everything to render
           setTimeout(() => {
-            // Force browser to render before print
-            map.getContainer().offsetHeight; // Force reflow
-            
-            window.print();
-            
-            // Restore original markers and remove print class after printing
-            setTimeout(() => {
-              // Remove print markers
+            // Capture map as image using html2canvas
+            html2canvas(mapContainer, {
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: '#f5f5f5',
+              scale: 2, // Higher quality
+              logging: false,
+              width: mapContainer.offsetWidth,
+              height: mapContainer.offsetHeight
+            }).then(canvas => {
+              // Create a new window with the map image for printing
+              const printWindow = window.open('', '_blank');
+              if (!printWindow) {
+                showToastNotification(
+                  'Chyba',
+                  'Nepodařilo se otevřít okno pro tisk. Zkontrolujte blokování pop-up oken.',
+                  'error'
+                );
+                // Restore original markers
+                printMarkers.forEach(marker => {
+                  layers.zavadyMapa.removeLayer(marker);
+                });
+                originalMarkers.forEach(marker => {
+                  layers.zavadyMapa.addLayer(marker);
+                });
+                return;
+              }
+              
+              // Get image data
+              const imgData = canvas.toDataURL('image/png');
+              
+              // Create print HTML
+              printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <title>Mapa závad - Tisk</title>
+                  <style>
+                    @page {
+                      size: A4 landscape;
+                      margin: 0.5cm;
+                    }
+                    body {
+                      margin: 0;
+                      padding: 0;
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      min-height: 100vh;
+                      background: white;
+                    }
+                    img {
+                      max-width: 100%;
+                      max-height: 100vh;
+                      width: auto;
+                      height: auto;
+                      object-fit: contain;
+                    }
+                    @media print {
+                      body {
+                        margin: 0;
+                        padding: 0;
+                      }
+                      img {
+                        width: 100%;
+                        height: 100vh;
+                        object-fit: contain;
+                      }
+                    }
+                  </style>
+                </head>
+                <body>
+                  <img src="${imgData}" alt="Mapa závad" />
+                </body>
+                </html>
+              `);
+              
+              printWindow.document.close();
+              
+              // Wait for image to load, then print
+              printWindow.onload = () => {
+                setTimeout(() => {
+                  printWindow.print();
+                  
+                  // Restore original markers after printing
+                  setTimeout(() => {
+                    printWindow.close();
+                    // Remove print markers
+                    printMarkers.forEach(marker => {
+                      layers.zavadyMapa.removeLayer(marker);
+                    });
+                    // Restore original markers
+                    originalMarkers.forEach(marker => {
+                      layers.zavadyMapa.addLayer(marker);
+                    });
+                  }, 1000);
+                }, 500);
+              };
+            }).catch(error => {
+              console.error('Chyba při zachycení mapy:', error);
+              showToastNotification(
+                'Chyba',
+                'Nepodařilo se zachytit mapu pro tisk.',
+                'error'
+              );
+              // Restore original markers
               printMarkers.forEach(marker => {
                 layers.zavadyMapa.removeLayer(marker);
               });
-              // Restore original markers
               originalMarkers.forEach(marker => {
                 layers.zavadyMapa.addLayer(marker);
               });
-              document.body.classList.remove('printing-zavady-map');
-            }, 1000);
+            });
           }, 1000);
         }, 1000);
       });

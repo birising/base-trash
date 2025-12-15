@@ -230,5 +230,19 @@
     "photos": [
       "assets/image-333fd5ad-3575-4f74-8248-ffc018a06a53.jpeg"
     ]
+  },
+  {
+    "id": 19,
+    "reported_date": "2025-12-15T20:59:43Z",
+    "category": "udrzba zelene",
+    "lat": 50.13221388888889,
+    "lng": 14.223088888888888,
+    "description": "Hnijicí trava",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-21836797-7808-4976-a6d0-539c3af4e98d.jpeg"
+    ]
   }
 ]

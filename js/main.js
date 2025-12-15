@@ -2597,13 +2597,14 @@ Odkaz do aplikace: ${appUrl}`;
     console.log('populateUdrzbaMapLayer: aktuální kategorie:', currentCategory);
     console.log('populateUdrzbaMapLayer: vrstva je na mapě:', map.hasLayer(layers.udrzbaMapa));
     
-    // Function to automatically distribute labels in star pattern
+    // Function to automatically distribute labels to avoid overlaps
     const distributeLabels = () => {
       if (allMarkers.length === 0) return;
       
-      const PADDING = 20; // Minimum padding between labels in pixels
-      const BASE_DISTANCE = 120; // Base distance from center in pixels
-      const MAX_DISTANCE = 250; // Maximum distance from center in pixels
+      const PADDING = 25; // Minimum padding between labels in pixels
+      const BASE_DISTANCE = 100; // Base distance from center in pixels
+      const MAX_DISTANCE = 350; // Maximum distance from center in pixels
+      const DISTANCE_STEP = 15; // Step size for distance search
       
       // Helper function to get marker bounding box from DOM element
       const getMarkerBoxFromDOM = (marker, latlng) => {
@@ -2672,186 +2673,149 @@ Odkaz do aplikace: ${appUrl}`;
       // Force map to update before getting positions
       map.invalidateSize();
       
-      // Group markers by their original position (within a small radius)
-      const GROUP_RADIUS_PX = 100; // Group markers within 100px
-      const markerGroups = [];
-      const processedMarkers = new Set();
+      // Get all marker data with original positions
+      const markerData = allMarkers.map((marker, index) => {
+        const latlng = marker.getLatLng();
+        const originalLat = marker.options.originalLat || latlng.lat;
+        const originalLng = marker.options.originalLng || latlng.lng;
+        const originalPoint = map.latLngToContainerPoint([originalLat, originalLng]);
+        return {
+          marker,
+          index,
+          originalLat,
+          originalLng,
+          originalPoint,
+          currentLatLng: latlng,
+          currentPoint: map.latLngToContainerPoint(latlng)
+        };
+      });
       
-      for (let i = 0; i < allMarkers.length; i++) {
-        if (processedMarkers.has(i)) continue;
+      // Group markers by proximity to their original positions
+      const GROUP_RADIUS_PX = 80;
+      const groups = [];
+      const processed = new Set();
+      
+      markerData.forEach((data, i) => {
+        if (processed.has(i)) return;
         
-        const marker = allMarkers[i];
-        const originalLat = marker.options.originalLat;
-        const originalLng = marker.options.originalLng;
-        
-        if (!originalLat || !originalLng) {
-          // Marker without original position - treat as single marker group
-          markerGroups.push({
-            center: { lat: marker.getLatLng().lat, lng: marker.getLatLng().lng },
-            markers: [i]
-          });
-          processedMarkers.add(i);
-          continue;
-        }
-        
-        const centerPoint = map.latLngToContainerPoint([originalLat, originalLng]);
         const group = {
-          center: { lat: originalLat, lng: originalLng },
-          centerPoint: centerPoint,
+          center: { lat: data.originalLat, lng: data.originalLng },
+          centerPoint: data.originalPoint,
           markers: [i]
         };
-        processedMarkers.add(i);
+        processed.add(i);
         
-        // Find other markers near this position
-        for (let j = i + 1; j < allMarkers.length; j++) {
-          if (processedMarkers.has(j)) continue;
-          
-          const otherMarker = allMarkers[j];
-          const otherOriginalLat = otherMarker.options.originalLat;
-          const otherOriginalLng = otherMarker.options.originalLng;
-          
-          if (!otherOriginalLat || !otherOriginalLng) continue;
-          
-          const otherPoint = map.latLngToContainerPoint([otherOriginalLat, otherOriginalLng]);
-          const distance = Math.sqrt(
-            Math.pow(otherPoint.x - centerPoint.x, 2) + 
-            Math.pow(otherPoint.y - centerPoint.y, 2)
+        // Find nearby markers
+        markerData.forEach((other, j) => {
+          if (i === j || processed.has(j)) return;
+          const dist = Math.sqrt(
+            Math.pow(other.originalPoint.x - data.originalPoint.x, 2) +
+            Math.pow(other.originalPoint.y - data.originalPoint.y, 2)
           );
-          
-          if (distance < GROUP_RADIUS_PX) {
+          if (dist < GROUP_RADIUS_PX) {
             group.markers.push(j);
-            processedMarkers.add(j);
+            processed.add(j);
           }
-        }
+        });
         
-        markerGroups.push(group);
-      }
+        groups.push(group);
+      });
       
-      // Distribute markers in each group in star pattern
-      markerGroups.forEach(group => {
-        if (group.markers.length === 1) {
-          // Single marker - check if it overlaps with others and move if needed
-          const markerIndex = group.markers[0];
-          const marker = allMarkers[markerIndex];
-          const latlng = marker.getLatLng();
-          const originalLat = marker.options.originalLat || latlng.lat;
-          const originalLng = marker.options.originalLng || latlng.lng;
-          const originalPoint = map.latLngToContainerPoint([originalLat, originalLng]);
+      // Distribute markers in star pattern for each group
+      groups.forEach(group => {
+        const numMarkers = group.markers.length;
+        if (numMarkers === 0) return;
+        
+        // Calculate angles for star pattern
+        const angleStep = 360 / numMarkers;
+        const startAngle = 0; // Start from right
+        
+        // Get all current boxes for collision detection
+        const allBoxes = markerData.map((data, idx) => ({
+          marker: data.marker,
+          box: getMarkerBoxFromDOM(data.marker, data.currentLatLng),
+          index: idx
+        }));
+        
+        // Sort markers by distance from center (closest first) for better distribution
+        const sortedMarkers = [...group.markers].sort((a, b) => {
+          const distA = Math.sqrt(
+            Math.pow(markerData[a].currentPoint.x - group.centerPoint.x, 2) +
+            Math.pow(markerData[a].currentPoint.y - group.centerPoint.y, 2)
+          );
+          const distB = Math.sqrt(
+            Math.pow(markerData[b].currentPoint.x - group.centerPoint.x, 2) +
+            Math.pow(markerData[b].currentPoint.y - group.centerPoint.y, 2)
+          );
+          return distA - distB;
+        });
+        
+        sortedMarkers.forEach((markerIndex, groupIndex) => {
+          const data = markerData[markerIndex];
+          const marker = data.marker;
           
-          // Get all marker boxes
-          const allMarkerBoxes = allMarkers.map((m, idx) => ({
-            marker: m,
-            box: getMarkerBoxFromDOM(m, m.getLatLng())
-          }));
+          // Calculate angle for this marker in star
+          const angle = (startAngle + groupIndex * angleStep) % 360;
+          const rad = (angle * Math.PI) / 180;
           
-          const currentBox = allMarkerBoxes[markerIndex].box;
-          
-          // Check for overlaps
-          let hasOverlap = false;
-          for (let k = 0; k < allMarkerBoxes.length; k++) {
-            if (k === markerIndex) continue;
-            if (boxesOverlap(currentBox, allMarkerBoxes[k].box)) {
-              hasOverlap = true;
-              break;
-            }
-          }
-          
-          if (hasOverlap) {
-            // Try to move to a star position (prefer right)
+          // Try to place marker at increasing distances
+          let placed = false;
+          for (let distance = BASE_DISTANCE; distance <= MAX_DISTANCE && !placed; distance += DISTANCE_STEP) {
+            const newX = group.centerPoint.x + Math.cos(rad) * distance;
+            const newY = group.centerPoint.y + Math.sin(rad) * distance;
+            
             const icon = marker.options.icon;
             const iconSize = icon.options.iconSize || [80, 60];
             const iconAnchor = icon.options.iconAnchor || [40, 55];
+            const newBox = {
+              left: newX - iconAnchor[0],
+              top: newY - iconAnchor[1],
+              right: newX - iconAnchor[0] + iconSize[0],
+              bottom: newY - iconAnchor[1] + iconSize[1],
+              width: iconSize[0],
+              height: iconSize[1]
+            };
             
-            for (let distance = BASE_DISTANCE; distance <= MAX_DISTANCE; distance += 30) {
-              const newX = originalPoint.x + distance;
-              const newY = originalPoint.y;
-              const newBox = {
-                left: newX - iconAnchor[0],
-                top: newY - iconAnchor[1],
-                right: newX - iconAnchor[0] + iconSize[0],
-                bottom: newY - iconAnchor[1] + iconSize[1],
-                width: iconSize[0],
-                height: iconSize[1]
-              };
+            // Check collision with all other markers (use current positions)
+            let hasCollision = false;
+            for (let k = 0; k < allMarkers.length; k++) {
+              if (k === markerIndex) continue;
               
-              if (isValidPosition(newBox, allMarkerBoxes, [markerIndex])) {
-                const newLatLng = map.containerPointToLatLng(L.point(newX, newY));
-                marker.setLatLng(newLatLng);
-                if (marker._polyline) {
-                  marker._polyline.setLatLngs([newLatLng, [originalLat, originalLng]]);
-                }
+              // Get current box of other marker
+              const otherMarker = allMarkers[k];
+              const otherLatLng = otherMarker.getLatLng();
+              const otherBox = getMarkerBoxFromDOM(otherMarker, otherLatLng);
+              
+              if (boxesOverlap(newBox, otherBox)) {
+                hasCollision = true;
                 break;
               }
             }
-          }
-        } else {
-          // Multiple markers - distribute in star pattern
-          const numMarkers = group.markers.length;
-          const angleStep = 360 / numMarkers; // Evenly distribute around circle
-          const startAngle = 0; // Start from right (0°)
-          
-          group.markers.forEach((markerIndex, index) => {
-            const marker = allMarkers[markerIndex];
-            const originalLat = marker.options.originalLat;
-            const originalLng = marker.options.originalLng;
-            const centerPoint = map.latLngToContainerPoint([originalLat, originalLng]);
             
-            // Calculate angle for this marker in star pattern
-            const angle = (startAngle + index * angleStep) % 360;
-            const rad = (angle * Math.PI) / 180;
+            // Also check bounds
+            const mapBounds = map.getBounds();
+            const centerPoint = L.point(newBox.left + (newBox.width / 2), newBox.top + (newBox.height / 2));
+            const newLatLng = map.containerPointToLatLng(centerPoint);
+            const mapSize = map.getSize();
             
-            // Try different distances to find valid position
-            let placed = false;
-            for (let distance = BASE_DISTANCE; distance <= MAX_DISTANCE && !placed; distance += 20) {
-              const newX = centerPoint.x + Math.cos(rad) * distance;
-              const newY = centerPoint.y + Math.sin(rad) * distance;
+            if (!hasCollision && 
+                mapBounds.contains(newLatLng) &&
+                newBox.left >= 0 && newBox.top >= 0 &&
+                newBox.right <= mapSize.x && newBox.bottom <= mapSize.y) {
+              // Valid position found
+              marker.setLatLng(newLatLng);
+              data.currentLatLng = newLatLng;
+              data.currentPoint = map.latLngToContainerPoint(newLatLng);
               
-              const icon = marker.options.icon;
-              const iconSize = icon.options.iconSize || [80, 60];
-              const iconAnchor = icon.options.iconAnchor || [40, 55];
-              const newBox = {
-                left: newX - iconAnchor[0],
-                top: newY - iconAnchor[1],
-                right: newX - iconAnchor[0] + iconSize[0],
-                bottom: newY - iconAnchor[1] + iconSize[1],
-                width: iconSize[0],
-                height: iconSize[1]
-              };
-              
-              // Get all marker boxes (excluding markers in this group that we haven't placed yet)
-              const allMarkerBoxes = allMarkers.map((m, idx) => {
-                if (group.markers.includes(idx) && idx !== markerIndex) {
-                  // For other markers in this group, use their current position
-                  return {
-                    marker: m,
-                    box: getMarkerBoxFromDOM(m, m.getLatLng())
-                  };
-                } else if (idx === markerIndex) {
-                  // This marker - use new position
-                  return {
-                    marker: m,
-                    box: newBox
-                  };
-                } else {
-                  // Other markers - use their current position
-                  return {
-                    marker: m,
-                    box: getMarkerBoxFromDOM(m, m.getLatLng())
-                  };
-                }
-              });
-              
-              if (isValidPosition(newBox, allMarkerBoxes, [markerIndex])) {
-                const newLatLng = map.containerPointToLatLng(L.point(newX, newY));
-                marker.setLatLng(newLatLng);
-                if (marker._polyline) {
-                  marker._polyline.setLatLngs([newLatLng, [originalLat, originalLng]]);
-                }
-                placed = true;
+              // Update line
+              if (marker._polyline) {
+                marker._polyline.setLatLngs([newLatLng, [data.originalLat, data.originalLng]]);
               }
+              
+              placed = true;
             }
-          });
-        }
+          }
+        });
       });
       
       // Final update of all lines

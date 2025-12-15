@@ -371,6 +371,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   map.setView(defaultView, 16);
 
   map.whenReady(() => {
+    // Initialize layer control visibility after map is ready
+    setTimeout(() => {
+      if (currentCategory === "mapa") {
+        updateLayerControlVisibility();
+      }
+    }, 100);
     refreshMapSize(0);
     // Ensure map is properly initialized even if hidden
     if (map) {
@@ -3299,13 +3305,14 @@ Odkaz do aplikace: ${appUrl}`;
   // Object.values(layers).forEach((layer) => layer.addTo(map));
 
   function setActiveCategory(category) {
-    // Update layer control visibility
-    updateLayerControlVisibility();
     if (!category) {
       showDashboard();
       return;
     }
     currentCategory = category;
+    
+    // Update layer control visibility after category is set
+    updateLayerControlVisibility();
 
     const isStreamView = category === "hladina";
     const isWasteView = category === "odpad";

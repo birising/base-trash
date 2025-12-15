@@ -216,5 +216,19 @@
     "photos": [
       "assets/image-7fcc9357-0035-418d-bf6e-0f7447a473b9.jpg"
     ]
+  },
+  {
+    "id": 18,
+    "reported_date": "2025-12-15T20:40:46Z",
+    "category": "udrzba zelene",
+    "lat": 50.13330833333333,
+    "lng": 14.220255555555555,
+    "description": "Listí",
+    "resolved": false,
+    "resolved_date": null,
+    "email": null,
+    "photos": [
+      "assets/image-333fd5ad-3575-4f74-8248-ffc018a06a53.jpeg"
+    ]
   }
 ]

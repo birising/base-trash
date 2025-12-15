@@ -320,20 +320,25 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Add layer control to map (only show in unified map view)
   const layerControl = new LayerControl({ position: 'bottomright' });
+  let layerControlAdded = false;
   
   // Function to show/hide layer control based on current category
   const updateLayerControlVisibility = () => {
+    if (!map) return; // Ensure map exists
+    
     if (currentCategory === "mapa") {
-      if (!map.hasControl(layerControl)) {
+      if (!layerControlAdded) {
         layerControl.addTo(map);
+        layerControlAdded = true;
       }
       // Hide original HTML overlay when Leaflet control is active
       if (mapaLayersControl) {
         mapaLayersControl.classList.add("hidden");
       }
     } else {
-      if (map.hasControl(layerControl)) {
+      if (layerControlAdded) {
         map.removeControl(layerControl);
+        layerControlAdded = false;
       }
       // Show original HTML overlay when Leaflet control is not active
       if (mapaLayersControl && mapCategories.includes(currentCategory)) {

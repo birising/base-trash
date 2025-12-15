@@ -2150,6 +2150,8 @@ Odkaz do aplikace: ${appUrl}`;
               opacity: 0.8,
               interactive: false
             }).addTo(layers.udrzbaMapa);
+            // Store polyline in marker for later access
+            marker._polyline = polyline;
           }
         };
         
@@ -2586,7 +2588,7 @@ Odkaz do aplikace: ${appUrl}`;
     // Fit map to bounds if we have markers
     const allMarkers = [];
     layers.udrzbaMapa.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
+      if (layer instanceof L.Marker && layer.options && layer.options.zavadaId) {
         allMarkers.push(layer);
       }
     });
@@ -2594,6 +2596,186 @@ Odkaz do aplikace: ${appUrl}`;
     console.log('populateUdrzbaMapLayer: počet markerů ve vrstvě:', allMarkers.length);
     console.log('populateUdrzbaMapLayer: aktuální kategorie:', currentCategory);
     console.log('populateUdrzbaMapLayer: vrstva je na mapě:', map.hasLayer(layers.udrzbaMapa));
+    
+    // Function to automatically distribute labels to avoid overlaps
+    const distributeLabels = () => {
+      if (allMarkers.length === 0) return;
+      
+      // Get marker bounding boxes in pixels
+      const markerBoxes = allMarkers.map(marker => {
+        const latlng = marker.getLatLng();
+        const point = map.latLngToContainerPoint(latlng);
+        const icon = marker.options.icon;
+        const iconSize = icon.options.iconSize || [80, 60];
+        const iconAnchor = icon.options.iconAnchor || [40, 55];
+        
+        // Calculate bounding box
+        const width = iconSize[0];
+        const height = iconSize[1];
+        const left = point.x - iconAnchor[0];
+        const top = point.y - iconAnchor[1];
+        const right = left + width;
+        const bottom = top + height;
+        
+        return {
+          marker: marker,
+          latlng: latlng,
+          point: point,
+          box: { left, top, right, bottom, width, height },
+          originalLat: marker.options.originalLat || latlng.lat,
+          originalLng: marker.options.originalLng || latlng.lng,
+          moved: false
+        };
+      });
+      
+      // Check for overlaps and resolve them
+      const PADDING = 10; // Minimum padding between labels in pixels
+      const MAX_OFFSET_PX = 150; // Maximum offset from original position in pixels
+      const MAX_ITERATIONS = 20; // Maximum iterations to find free space
+      
+      for (let i = 0; i < markerBoxes.length; i++) {
+        const current = markerBoxes[i];
+        if (current.moved) continue; // Skip if already moved
+        
+        // Check for overlaps with other markers
+        let hasOverlap = false;
+        for (let j = 0; j < markerBoxes.length; j++) {
+          if (i === j) continue;
+          const other = markerBoxes[j];
+          
+          // Check if boxes overlap
+          if (current.box.left < other.box.right + PADDING &&
+              current.box.right + PADDING > other.box.left &&
+              current.box.top < other.box.bottom + PADDING &&
+              current.box.bottom + PADDING > other.box.top) {
+            hasOverlap = true;
+            break;
+          }
+        }
+        
+        if (!hasOverlap) continue;
+        
+        // Try to find a free position around the original location
+        const originalPoint = map.latLngToContainerPoint([current.originalLat, current.originalLng]);
+        let bestPosition = null;
+        let bestDistance = Infinity;
+        
+        // Try different angles and distances
+        for (let angle = 0; angle < 360; angle += 15) {
+          for (let distance = 50; distance <= MAX_OFFSET_PX; distance += 25) {
+            const rad = (angle * Math.PI) / 180;
+            const newX = originalPoint.x + Math.cos(rad) * distance;
+            const newY = originalPoint.y + Math.sin(rad) * distance;
+            
+            // Convert back to lat/lng
+            const newPoint = L.point(newX, newY);
+            const newLatLng = map.containerPointToLatLng(newPoint);
+            
+            // Calculate new bounding box
+            const icon = current.marker.options.icon;
+            const iconSize = icon.options.iconSize || [80, 60];
+            const iconAnchor = icon.options.iconAnchor || [40, 55];
+            const width = iconSize[0];
+            const height = iconSize[1];
+            const left = newX - iconAnchor[0];
+            const top = newY - iconAnchor[1];
+            const right = left + width;
+            const bottom = top + height;
+            
+            // Check if this position overlaps with any other marker
+            let overlaps = false;
+            for (let k = 0; k < markerBoxes.length; k++) {
+              if (k === i) continue;
+              const other = markerBoxes[k];
+              
+              if (left < other.box.right + PADDING &&
+                  right + PADDING > other.box.left &&
+                  top < other.box.bottom + PADDING &&
+                  bottom + PADDING > other.box.top) {
+                overlaps = true;
+                break;
+              }
+            }
+            
+            // Check if position is within map bounds
+            const mapBounds = map.getBounds();
+            if (!mapBounds.contains(newLatLng)) {
+              overlaps = true;
+            }
+            
+            if (!overlaps) {
+              const dist = Math.sqrt(Math.pow(newX - originalPoint.x, 2) + Math.pow(newY - originalPoint.y, 2));
+              if (dist < bestDistance) {
+                bestDistance = dist;
+                bestPosition = newLatLng;
+              }
+            }
+          }
+        }
+        
+        // Move marker to best position if found
+        if (bestPosition) {
+          current.marker.setLatLng(bestPosition);
+          current.latlng = bestPosition;
+          current.point = map.latLngToContainerPoint(bestPosition);
+          const icon = current.marker.options.icon;
+          const iconSize = icon.options.iconSize || [80, 60];
+          const iconAnchor = icon.options.iconAnchor || [40, 55];
+          current.box = {
+            left: current.point.x - iconAnchor[0],
+            top: current.point.y - iconAnchor[1],
+            right: current.point.x - iconAnchor[0] + iconSize[0],
+            bottom: current.point.y - iconAnchor[1] + iconSize[1],
+            width: iconSize[0],
+            height: iconSize[1]
+          };
+          current.moved = true;
+          
+          // Update line if marker uses line
+          if (current.marker._polyline) {
+            const originalPos = [current.originalLat, current.originalLng];
+            current.marker._polyline.setLatLngs([bestPosition, originalPos]);
+          }
+        }
+      }
+    };
+    
+    // Distribute labels after a short delay to ensure map is rendered
+    if (allMarkers.length > 0 && currentCategory === "udrzba-mapa") {
+      const redistributeOnMapChange = () => {
+        setTimeout(() => {
+          distributeLabels();
+          // Update lines after distribution
+          allMarkers.forEach(marker => {
+            if (marker._polyline && marker.options.originalLat && marker.options.originalLng) {
+              const currentPos = marker.getLatLng();
+              const originalPos = [marker.options.originalLat, marker.options.originalLng];
+              marker._polyline.setLatLngs([currentPos, originalPos]);
+            }
+          });
+        }, 100);
+      };
+      
+      setTimeout(() => {
+        map.whenReady(() => {
+          setTimeout(() => {
+            distributeLabels();
+            // Update lines after distribution
+            allMarkers.forEach(marker => {
+              if (marker._polyline && marker.options.originalLat && marker.options.originalLng) {
+                const currentPos = marker.getLatLng();
+                const originalPos = [marker.options.originalLat, marker.options.originalLng];
+                marker._polyline.setLatLngs([currentPos, originalPos]);
+              }
+            });
+            
+            // Redistribute on zoom and move
+            map.on('zoomend', redistributeOnMapChange);
+            map.on('moveend', redistributeOnMapChange);
+          }, 500);
+        });
+      }, 500);
+    }
     
     if (allMarkers.length > 0 && currentCategory === "udrzba-mapa") {
       const group = new L.featureGroup(allMarkers);

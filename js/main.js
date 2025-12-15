@@ -178,6 +178,170 @@ window.addEventListener("DOMContentLoaded", async () => {
     attributionControl: false,
   });
 
+  // Create custom layer control (inspired by Google Maps)
+  const LayerControl = L.Control.extend({
+    onAdd: function(map) {
+      const container = L.DomUtil.create('div', 'leaflet-layer-control');
+      container.innerHTML = `
+        <div class="layer-control-panel">
+          <button class="layer-control-toggle" aria-label="Vrstvy mapy" title="Vrstvy mapy">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </button>
+          <div class="layer-control-menu hidden">
+            <div class="layer-control-header">Vrstvy mapy</div>
+            <label class="layer-control-item">
+              <input type="checkbox" data-map-layer="lampy" ${mapLayersVisibility.lampy ? 'checked' : ''}>
+              <span class="layer-control-icon">💡</span>
+              <span>Lampy</span>
+            </label>
+            <label class="layer-control-item">
+              <input type="checkbox" data-map-layer="kose" ${mapLayersVisibility.kose ? 'checked' : ''}>
+              <span class="layer-control-icon">🗑️</span>
+              <span>Koše</span>
+            </label>
+            <label class="layer-control-item">
+              <input type="checkbox" data-map-layer="zavady" ${mapLayersVisibility.zavady ? 'checked' : ''}>
+              <span class="layer-control-icon">📍</span>
+              <span>Závady</span>
+            </label>
+            <label class="layer-control-item">
+              <input type="checkbox" data-map-layer="zelen" ${mapLayersVisibility.zelen ? 'checked' : ''}>
+              <span class="layer-control-icon">🌿</span>
+              <span>Zeleň</span>
+            </label>
+          </div>
+        </div>
+      `;
+      
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.disableScrollPropagation(container);
+      
+      const toggle = container.querySelector('.layer-control-toggle');
+      const menu = container.querySelector('.layer-control-menu');
+      
+      L.DomEvent.on(toggle, 'click', function(e) {
+        L.DomEvent.stopPropagation(e);
+        menu.classList.toggle('hidden');
+      });
+      
+      // Close menu when clicking outside
+      L.DomEvent.on(map, 'click', function() {
+        menu.classList.add('hidden');
+      });
+      
+      // Handle layer toggles
+      const layerInputs = container.querySelectorAll('[data-map-layer]');
+      layerInputs.forEach(input => {
+        L.DomEvent.on(input, 'change', function(e) {
+          L.DomEvent.stopPropagation(e);
+          const key = input.dataset.mapLayer;
+          if (!key || !mapLayersVisibility.hasOwnProperty(key)) return;
+          
+          const enabled = input.checked;
+          mapLayersVisibility[key] = enabled;
+          
+          // Update layers on map if we're in unified map view
+          if (currentCategory === "mapa" && map) {
+            requestAnimationFrame(() => {
+              Object.entries(layers).forEach(([layerKey, layer]) => {
+                const isTravaLayer = layerKey === "zelenTrava";
+                const isZahonyLayer = layerKey === "zelenZahony";
+                const isZavadyMapaLayer = layerKey === "zavadyMapa";
+                let shouldShow = false;
+                
+                if (layerKey === "lampy") {
+                  shouldShow = mapLayersVisibility.lampy;
+                } else if (layerKey === "kose") {
+                  shouldShow = mapLayersVisibility.kose;
+                } else if (isZavadyMapaLayer) {
+                  shouldShow = mapLayersVisibility.zavady;
+                } else if (isTravaLayer) {
+                  shouldShow = mapLayersVisibility.zelen && greenspaceVisibility.trava;
+                } else if (isZahonyLayer) {
+                  shouldShow = mapLayersVisibility.zelen && greenspaceVisibility.zahony;
+                }
+                
+                const isOnMap = map.hasLayer(layer);
+                if (shouldShow && !isOnMap) {
+                  map.addLayer(layer);
+                } else if (!shouldShow && isOnMap) {
+                  map.removeLayer(layer);
+                }
+              });
+              
+              // Update bounds to show all visible layers
+              const updateBounds = () => {
+                const visibleLayers = [];
+                Object.entries(layers).forEach(([layerKey, layer]) => {
+                  if (map.hasLayer(layer)) {
+                    if (layerKey === "lampy" || layerKey === "kose" || layerKey === "zavadyMapa") {
+                      layer.eachLayer((marker) => {
+                        if (marker.getLatLng) {
+                          visibleLayers.push(marker);
+                        }
+                      });
+                    } else if (layerKey === "zelenTrava" || layerKey === "zelenZahony") {
+                      layer.eachLayer((polygon) => {
+                        if (polygon.getBounds) {
+                          visibleLayers.push(polygon);
+                        }
+                      });
+                    }
+                  }
+                });
+                
+                if (visibleLayers.length > 0) {
+                  const group = new L.featureGroup(visibleLayers);
+                  const bounds = group.getBounds();
+                  if (bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [28, 28] });
+                  }
+                }
+              };
+              
+              setTimeout(updateBounds, 100);
+            });
+          }
+        });
+      });
+      
+      return container;
+    },
+    
+    onRemove: function(map) {
+      // Cleanup if needed
+    }
+  });
+  
+  // Add layer control to map (only show in unified map view)
+  const layerControl = new LayerControl({ position: 'bottomright' });
+  
+  // Function to show/hide layer control based on current category
+  const updateLayerControlVisibility = () => {
+    if (currentCategory === "mapa") {
+      if (!map.hasControl(layerControl)) {
+        layerControl.addTo(map);
+      }
+      // Hide original HTML overlay when Leaflet control is active
+      if (mapaLayersControl) {
+        mapaLayersControl.classList.add("hidden");
+      }
+    } else {
+      if (map.hasControl(layerControl)) {
+        map.removeControl(layerControl);
+      }
+      // Show original HTML overlay when Leaflet control is not active
+      if (mapaLayersControl && mapCategories.includes(currentCategory)) {
+        mapaLayersControl.classList.remove("hidden");
+      }
+    }
+  };
+
   let baseLayer;
   try {
     // Use CartoDB Positron for a clean, light, modern map style
@@ -3130,6 +3294,8 @@ Odkaz do aplikace: ${appUrl}`;
   // Object.values(layers).forEach((layer) => layer.addTo(map));
 
   function setActiveCategory(category) {
+    // Update layer control visibility
+    updateLayerControlVisibility();
     if (!category) {
       showDashboard();
       return;
@@ -3430,8 +3596,8 @@ Odkaz do aplikace: ${appUrl}`;
     }
     if (mapaLayersControl) {
       if (category === "mapa") {
-        mapaLayersControl.classList.remove("hidden");
-        syncMapaLayerInputs();
+        // Hide HTML overlay - use Leaflet control instead
+        mapaLayersControl.classList.add("hidden");
       } else {
         mapaLayersControl.classList.add("hidden");
       }

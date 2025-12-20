@@ -8,7 +8,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     const banner = document.getElementById('firstAccessBanner');
     const acceptBtn = document.getElementById('firstAccessAcceptBtn');
     
-    if (!banner || !acceptBtn) return;
+    if (!banner || !acceptBtn) {
+      console.warn('First access banner elements not found');
+      return;
+    }
     
     // Check if user has already accepted
     const hasAccepted = localStorage.getItem('firstAccessAccepted');
@@ -16,18 +19,30 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (!hasAccepted) {
       // Show banner after a short delay
       setTimeout(() => {
-        banner.classList.remove('hidden');
+        if (banner) {
+          banner.classList.remove('hidden');
+        }
       }, 500);
+    } else {
+      // Ensure banner is hidden if already accepted
+      banner.classList.add('hidden');
     }
     
     // Handle accept button click
     acceptBtn.addEventListener('click', () => {
       localStorage.setItem('firstAccessAccepted', 'true');
-      banner.classList.add('hidden');
+      if (banner) {
+        banner.classList.add('hidden');
+      }
     });
   }
   
-  initFirstAccessBanner();
+  // Initialize banner when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFirstAccessBanner);
+  } else {
+    initFirstAccessBanner();
+  }
   
   // Initialize status indicator
   function initStatusIndicator() {

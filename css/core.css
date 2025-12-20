@@ -677,31 +677,51 @@ body {
 }
 
 .greenspace-banner {
-  min-width: 200px;
-  padding: 10px 14px;
+  min-width: 280px;
+  max-width: 400px;
+  padding: 16px 20px;
   background: linear-gradient(145deg, rgba(251, 191, 36, 0.95), rgba(245, 158, 11, 0.9));
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  border: 2px solid rgba(251, 191, 36, 0.4);
   border-radius: 12px;
   color: #78350f;
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 700;
+  font-size: 15px;
 }
 
 .greenspace-banner-content {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .greenspace-banner-icon {
-  font-size: 16px;
+  font-size: 24px;
   line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.greenspace-banner-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
 }
 
 .greenspace-banner-text {
   line-height: 1.4;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+}
+
+.greenspace-banner-subtext {
+  line-height: 1.4;
+  font-weight: 600;
+  font-size: 13px;
+  opacity: 0.9;
 }
 
 .layer-switcher {

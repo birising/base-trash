@@ -1598,57 +1598,63 @@ body {
   }
 }
 
-/* First access consent banner */
+/* First access consent banner - centered modal */
 .first-access-banner {
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(145deg, rgba(17, 30, 51, 0.98), rgba(12, 23, 41, 0.95));
-  border-top: 2px solid rgba(34, 197, 94, 0.3);
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
-  backdrop-filter: blur(16px);
-  transform: translateY(0);
-  transition: transform 0.3s ease-in-out;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
 }
 
 .first-access-banner.hidden {
-  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
   display: none;
 }
 
 .first-access-banner-content {
-  max-width: 1200px;
-  margin: 0 auto;
+  background: linear-gradient(145deg, rgba(17, 30, 51, 0.98), rgba(12, 23, 41, 0.95));
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 24px;
-  flex-wrap: wrap;
+  backdrop-filter: blur(16px);
 }
 
 .first-access-banner-text {
-  flex: 1;
-  min-width: 300px;
   color: var(--text-main);
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.7;
   font-weight: 500;
+  text-align: center;
 }
 
 .first-access-banner-button {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #0b1220;
   border: none;
-  padding: 12px 24px;
+  padding: 14px 32px;
   border-radius: 8px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   transition: all 0.2s ease;
-  white-space: nowrap;
+  width: 100%;
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
@@ -1669,18 +1675,17 @@ body {
   }
   
   .first-access-banner-content {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
+    padding: 24px;
+    max-width: 100%;
   }
   
   .first-access-banner-text {
-    min-width: auto;
-    text-align: center;
+    font-size: 14px;
   }
   
   .first-access-banner-button {
-    width: 100%;
+    padding: 12px 24px;
+    font-size: 14px;
   }
 }
 

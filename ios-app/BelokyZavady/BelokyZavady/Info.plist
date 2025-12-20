@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aplikace potřebuje přístup k vaší poloze pro určení místa závady.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikace potřebuje přístup k fotkám pro nahrání fotografie závady.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikace potřebuje přístup k fotoaparátu pro pořízení fotografie závady.</string>
+</dict>
+</plist>
+
+
+
+

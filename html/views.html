@@ -213,73 +213,12 @@
         <div class="headline">Přehled nahlášených problémů</div>
         <p class="subtitle">Data z AWS S3</p>
       </div>
-      <div style="display: flex; gap: 12px; align-items: center;">
-        <button id="printZavadyBtn" class="report-zavada-btn" aria-label="Tisknout mapu závad" style="background: rgba(34, 197, 94, 0.9); border-color: rgba(34, 197, 94, 1);">
-          <span class="report-zavada-icon">🖨️</span>
-          <span class="report-zavada-label">Tisk</span>
-        </button>
-        <button id="reportZavadaBtn" class="report-zavada-btn" aria-label="Nahlásit závadu">
-          <span class="report-zavada-icon">+</span>
-          <span class="report-zavada-label">Nahlásit závadu</span>
-        </button>
-      </div>
     </div>
     <div id="zavadyList" class="zavady-list">
       <div class="loading-state"><div class="loading-spinner"></div><span>Načítám data…</span></div>
     </div>
   </section>
   
-  <!-- Modal for reporting zavada -->
-  <div id="reportZavadaModal" class="report-zavada-modal hidden">
-    <div class="report-zavada-modal-backdrop"></div>
-    <div class="report-zavada-modal-content">
-      <div class="report-zavada-modal-header">
-        <h2>Nahlásit závadu</h2>
-        <button class="report-zavada-modal-close" aria-label="Zavřít">&times;</button>
-      </div>
-      <form id="reportZavadaForm" class="report-zavada-form" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="form_type" value="zavada_report">
-        <label class="report-zavada-form-label">
-          Kategorie:
-          <select name="category" id="reportZavadaCategory" required class="report-zavada-form-select">
-            <option value="">Vyberte kategorii</option>
-            <option value="kose">Koš</option>
-            <option value="lampy">Lampa</option>
-            <option value="zelen">Údržba zeleně</option>
-            <option value="ostatni">Ostatní</option>
-          </select>
-        </label>
-        <div id="reportZavadaMapContainer" class="report-zavada-map-container hidden">
-          <div class="report-zavada-map-label">Vyberte objekt na mapě:</div>
-          <div id="reportZavadaMap" class="report-zavada-map"></div>
-          <div id="reportZavadaSelected" class="report-zavada-selected hidden">
-            <span class="report-zavada-selected-icon">✓</span>
-            <span class="report-zavada-selected-text"></span>
-          </div>
-          <input type="hidden" name="selected_id" id="reportZavadaSelectedId">
-          <input type="hidden" name="selected_lat" id="reportZavadaSelectedLat">
-          <input type="hidden" name="selected_lng" id="reportZavadaSelectedLng">
-          <input type="hidden" name="selected_name" id="reportZavadaSelectedName">
-        </div>
-        <label class="report-zavada-form-label">
-          Váš email:
-          <input type="email" name="email" required class="report-zavada-form-input" placeholder="vas@email.cz">
-        </label>
-        <label class="report-zavada-form-label">
-          Popis závady:
-          <textarea name="message" rows="4" required class="report-zavada-form-textarea" placeholder="Popište prosím závadu..."></textarea>
-        </label>
-        <label class="report-zavada-form-label">
-          Fotografie (volitelné):
-          <input type="file" name="upload" accept="image/*" class="report-zavada-form-input">
-        </label>
-        <div class="report-zavada-form-actions">
-          <button type="button" class="report-zavada-form-cancel">Zrušit</button>
-          <button type="submit" class="report-zavada-form-submit">Odeslat</button>
-        </div>
-      </form>
-    </div>
-  </div>
   
   <!-- Modal for marking zavada as resolved -->
   <div id="resolveZavadaModal" class="report-zavada-modal hidden">

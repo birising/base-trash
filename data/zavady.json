@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "reported_date": "2025-12-01T09:23:00Z",
+    "reported_date": "2025-12-18T12:00:00Z",
     "category": "ostatni",
     "lat": 50.1340525,
     "lng": 14.2189911,
@@ -15,7 +15,7 @@
   },
   {
     "id": 2,
-    "reported_date": "2025-12-02T19:23:00Z",
+    "reported_date": "2025-12-18T12:00:00Z",
     "category": "zelen",
     "lat": 50.1308778,
     "lng": 14.2129056,
@@ -29,7 +29,7 @@
   },
   {
     "id": 3,
-    "reported_date": "2025-12-06T10:00:00Z",
+    "reported_date": "2025-12-18T12:00:00Z",
     "category": "udrzba zelene",
     "lat": 50.1310111,
     "lng": 14.2111556,
@@ -43,7 +43,7 @@
   },
   {
     "id": 13,
-    "reported_date": "2025-12-08T12:00:00Z",
+    "reported_date": "2025-12-18T12:00:00Z",
     "category": "zelen",
     "lat": 50.1310522,
     "lng": 14.2102917,

@@ -537,7 +537,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const zavadyView = document.getElementById("zavadyView");
   const zavadyList = document.getElementById("zavadyList");
 
-  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "zavady-mapa", "udrzba-mapa", "mapa"];
+  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "zavady-mapa", "mapa"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
   const mapLayersVisibility = { lampy: false, kose: true, zavady: true, zelen: false };

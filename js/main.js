@@ -2126,10 +2126,11 @@ Odkaz do aplikace: ${appUrl}`;
       window.udrzbaPointMarkers.clear();
     }
     
-    // Filter zavady that have coordinates (show all zavady, not just those with photos)
+    // Filter zavady that have coordinates and are not resolved (show only unresolved zavady)
     const zavadyWithCoords = zavady.filter(z => {
       const hasCoords = z.lat && z.lng;
-      return hasCoords;
+      const isUnresolved = !z.resolved || z.resolved === false;
+      return hasCoords && isUnresolved;
     });
     
     console.log('populateUdrzbaMapLayer: závady s koordináty:', zavadyWithCoords.length);
@@ -3217,9 +3218,9 @@ Odkaz do aplikace: ${appUrl}`;
     if (counters.zavady) {
       try {
         const activeZavady = (typeof dataZavady !== 'undefined' && dataZavady && Array.isArray(dataZavady)) 
-          ? dataZavady.filter(z => !z.resolved).length 
-          : 0;
-        counters.zavady.textContent = activeZavady;
+        ? dataZavady.filter(z => !z.resolved).length 
+        : 0;
+      counters.zavady.textContent = activeZavady;
       } catch (error) {
         console.warn('Chyba při aktualizaci počítadla závad:', error);
         counters.zavady.textContent = 0;
@@ -3229,11 +3230,11 @@ Odkaz do aplikace: ${appUrl}`;
       try {
         const totalZavady = (typeof dataZavady !== 'undefined' && dataZavady && Array.isArray(dataZavady)) ? dataZavady.length : 0;
         const activeZavady = (typeof dataZavady !== 'undefined' && dataZavady && Array.isArray(dataZavady)) 
-          ? dataZavady.filter(z => !z.resolved).length 
-          : 0;
-        if (totalZavady > 0) {
-          zavadySummary.textContent = `${activeZavady} z ${totalZavady} nevyřešených`;
-        } else {
+        ? dataZavady.filter(z => !z.resolved).length 
+        : 0;
+      if (totalZavady > 0) {
+        zavadySummary.textContent = `${activeZavady} z ${totalZavady} nevyřešených`;
+      } else {
           zavadySummary.textContent = "Nevyřešené problémy";
         }
       } catch (error) {

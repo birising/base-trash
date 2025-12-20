@@ -3,6 +3,32 @@ window.addEventListener("DOMContentLoaded", async () => {
     await loadIncludes();
   }
   
+  // Initialize first access banner
+  function initFirstAccessBanner() {
+    const banner = document.getElementById('firstAccessBanner');
+    const acceptBtn = document.getElementById('firstAccessAcceptBtn');
+    
+    if (!banner || !acceptBtn) return;
+    
+    // Check if user has already accepted
+    const hasAccepted = localStorage.getItem('firstAccessAccepted');
+    
+    if (!hasAccepted) {
+      // Show banner after a short delay
+      setTimeout(() => {
+        banner.classList.remove('hidden');
+      }, 500);
+    }
+    
+    // Handle accept button click
+    acceptBtn.addEventListener('click', () => {
+      localStorage.setItem('firstAccessAccepted', 'true');
+      banner.classList.add('hidden');
+    });
+  }
+  
+  initFirstAccessBanner();
+  
   // Initialize status indicator
   function initStatusIndicator() {
     const statusIndicator = document.getElementById('statusIndicator');

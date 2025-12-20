@@ -48,8 +48,8 @@
     "lat": 50.1327278,
     "lng": 14.2213167,
     "description": "Poničené zábradlí",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-e4944ae3-0a8d-4e38-a050-17ba716edace.jpeg"
@@ -62,8 +62,8 @@
     "lat": 50.133025,
     "lng": 14.2244083,
     "description": "Hnijící listí 01",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-4f3abbb2-9a51-4dd4-9937-b7acd6835179.jpeg"
@@ -76,8 +76,8 @@
     "lat": 50.1332136,
     "lng": 14.224615,
     "description": "Hnijící listí 02",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-6d228792-1c14-4d77-99f9-aa7d50b3b937.jpeg"
@@ -90,8 +90,8 @@
     "lat": 50.1288692,
     "lng": 14.2215408,
     "description": "Hnijící tráva 02",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-4fd5782a-0410-4893-99f3-0493c859ca3d.jpeg"
@@ -104,8 +104,8 @@
     "lat": 50.1321089,
     "lng": 14.2225483,
     "description": "Listí 01",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-467a3b28-38d4-4fa1-b25a-dd8b15ff83d2.jpeg"
@@ -118,8 +118,8 @@
     "lat": 50.1324181,
     "lng": 14.2239442,
     "description": "Listí 02",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": []
   },
@@ -130,8 +130,8 @@
     "lat": 50.1330217,
     "lng": 14.2237189,
     "description": "Listí 03",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": []
   },
@@ -142,8 +142,8 @@
     "lat": 50.1292219,
     "lng": 14.2217822,
     "description": "Listí 04",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-b06a9fb6-1e74-408b-a0c6-7ea45a8216df.jpg"
@@ -156,8 +156,8 @@
     "lat": 50.1329769,
     "lng": 14.2241347,
     "description": "Listí 05",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": []
   },
@@ -182,8 +182,8 @@
     "lat": 50.1297653,
     "lng": 14.2220908,
     "description": "Hnijící tráva 03",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-0708dc98-be61-4977-8043-ac84be652b5a.jpg"
@@ -196,8 +196,8 @@
     "lat": 50.13105,
     "lng": 14.214491666666666,
     "description": "Neposekáno",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-9dd53ead-0888-4601-8363-24e7ed5c55a4.jpeg"
@@ -224,8 +224,8 @@
     "lat": 50.13330833333333,
     "lng": 14.220255555555555,
     "description": "Listí",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-333fd5ad-3575-4f74-8248-ffc018a06a53.jpeg"
@@ -238,8 +238,8 @@
     "lat": 50.13221388888889,
     "lng": 14.223088888888888,
     "description": "Hnijicí trava",
-    "resolved": false,
-    "resolved_date": null,
+    "resolved": true,
+    "resolved_date": "2025-12-17T12:00:00Z",
     "email": null,
     "photos": [
       "assets/image-21836797-7808-4976-a6d0-539c3af4e98d.jpeg"

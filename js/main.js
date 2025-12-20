@@ -537,12 +537,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   const zavadyView = document.getElementById("zavadyView");
   const zavadyList = document.getElementById("zavadyList");
 
-  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "zavady-mapa", "mapa"];
+  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "mapa"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
   const mapLayersVisibility = { lampy: false, kose: true, zavady: true, zelen: false };
   let currentCategory = null;
-  const DEFAULT_CATEGORY = "kose";
+  const DEFAULT_CATEGORY = "hladina";
   let mapClickHandler = null;
 
   const backButton = document.getElementById("backButton");
@@ -4855,14 +4855,14 @@ Odkaz do aplikace: ${appUrl}`;
   // Handle URL parameters for map layers first
   const hasLayerParams = handleLayerParams();
   
-  // Start with "Hlášené závady" (zavady) as default category, unless deep link or layer params are present
+  // Start with "Hladina potoka" (hladina) as default category, unless deep link or layer params are present
   // Wait a bit to ensure data is loaded and markers are populated
   setTimeout(() => {
     if (hasLayerParams) {
       // If layer params are present, switch to unified map
       setActiveCategory("mapa");
     } else if (!window.location.hash || !window.location.hash.match(/^#\w+\//)) {
-      setActiveCategory("zavady");
+      setActiveCategory("hladina");
     }
   }, 200);
   setupSidebarToggle();

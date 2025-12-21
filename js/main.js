@@ -1,8 +1,4 @@
 window.addEventListener("DOMContentLoaded", async () => {
-  if (typeof loadIncludes === "function") {
-    await loadIncludes();
-  }
-  
   // Initialize first access banner
   function initFirstAccessBanner() {
     const banner = document.getElementById('firstAccessBanner');
@@ -37,11 +33,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
   
-  // Initialize banner when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initFirstAccessBanner);
-  } else {
-    initFirstAccessBanner();
+  // Initialize banner immediately - banner is in index.html, not in includes
+  initFirstAccessBanner();
+  
+  if (typeof loadIncludes === "function") {
+    await loadIncludes();
   }
   
   // Initialize status indicator

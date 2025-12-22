@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", async () => {
-  // Initialize first access banner
+  // Initialize first access banner - show on every page load
   function initFirstAccessBanner() {
     const banner = document.getElementById('firstAccessBanner');
     const acceptBtn = document.getElementById('firstAccessAcceptBtn');
@@ -9,24 +9,15 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
     
-    // Check if user has already accepted
-    const hasAccepted = localStorage.getItem('firstAccessAccepted');
+    // Show banner on every page load after a short delay
+    setTimeout(() => {
+      if (banner) {
+        banner.classList.remove('hidden');
+      }
+    }, 500);
     
-    if (!hasAccepted) {
-      // Show banner after a short delay
-      setTimeout(() => {
-        if (banner) {
-          banner.classList.remove('hidden');
-        }
-      }, 500);
-    } else {
-      // Ensure banner is hidden if already accepted
-      banner.classList.add('hidden');
-    }
-    
-    // Handle accept button click
+    // Handle accept button click - just hide banner, don't save to localStorage
     acceptBtn.addEventListener('click', () => {
-      localStorage.setItem('firstAccessAccepted', 'true');
       if (banner) {
         banner.classList.add('hidden');
       }

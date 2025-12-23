@@ -1210,6 +1210,19 @@ Odkaz do aplikace: ${appUrl}`;
       return labels[category] || category;
     };
     
+    const getStatusText = (status) => {
+      if (status === 'new') {
+        return 'Oznameno';
+      }
+      return status || 'Nahlášeno';
+    };
+    
+    const getStatusColor = (status, resolved) => {
+      if (resolved) return '#22c55e';
+      if (status === 'new') return '#f59e0b';
+      return '#f59e0b';
+    };
+    
     zavadyWithCoords.forEach(zavada => {
       const lat = parseFloat(zavada.lat);
       const lng = parseFloat(zavada.lng);
@@ -1232,8 +1245,8 @@ Odkaz do aplikace: ${appUrl}`;
       // Create popup content
       const reportedDate = formatDate(zavada.reported_date);
       const description = zavada.description || 'Bez popisu';
-      const statusText = zavada.resolved ? 'Vyřešeno' : 'Nahlášeno';
-      const statusColor = zavada.resolved ? '#22c55e' : '#f59e0b';
+      const statusText = getStatusText(zavada.status);
+      const statusColor = getStatusColor(zavada.status, zavada.resolved);
       const categoryLabel = getCategoryLabel(zavada.category || 'unknown');
       const photos = zavada.photos || [];
       const hasPhotos = Array.isArray(photos) && photos.length > 0;
@@ -1559,6 +1572,19 @@ Odkaz do aplikace: ${appUrl}`;
       return labels[category] || category;
     };
     
+    const getStatusText = (status) => {
+      if (status === 'new') {
+        return 'Oznameno';
+      }
+      return status || 'Nahlášeno';
+    };
+    
+    const getStatusColor = (status, resolved) => {
+      if (resolved) return '#22c55e';
+      if (status === 'new') return '#f59e0b';
+      return '#f59e0b';
+    };
+    
     // Helper function to calculate distance between two points in pixels at current zoom
     const getPixelDistance = (lat1, lng1, lat2, lng2) => {
       const point1 = map.latLngToContainerPoint([lat1, lng1]);
@@ -1745,8 +1771,8 @@ Odkaz do aplikace: ${appUrl}`;
       
       // Create popup content (same as zavady map)
       const reportedDate = formatDate(zavada.reported_date);
-        const statusText = zavada.resolved ? 'Vyřešeno' : 'Nahlášeno';
-        const statusColor = zavada.resolved ? '#22c55e' : '#f59e0b';
+        const statusText = getStatusText(zavada.status);
+        const statusColor = getStatusColor(zavada.status, zavada.resolved);
         
         let photoGalleryHtml = '';
         if (photos.length > 0) {
@@ -3502,12 +3528,17 @@ Odkaz do aplikace: ${appUrl}`;
       return `#${category}`;
     };
     
-    const getStatusColor = (resolved) => {
-      return resolved ? '#22c55e' : '#f59e0b';
+    const getStatusColor = (status, resolved) => {
+      if (resolved) return '#22c55e';
+      if (status === 'new') return '#f59e0b';
+      return '#f59e0b';
     };
     
-    const getStatusText = (resolved) => {
-      return resolved ? 'Vyřešeno' : 'Nahlášeno';
+    const getStatusText = (status) => {
+      if (status === 'new') {
+        return 'Oznameno';
+      }
+      return status || 'Nahlášeno';
     };
     
     // Sort function
@@ -3635,8 +3666,8 @@ Odkaz do aplikace: ${appUrl}`;
                 const category = item.category || 'unknown';
                 const categoryLabel = getCategoryLabel(category);
                 const categoryLink = getCategoryLink(category, item);
-                const statusColor = getStatusColor(item.resolved);
-                const statusText = getStatusText(item.resolved);
+                const statusColor = getStatusColor(item.status, item.resolved);
+                const statusText = getStatusText(item.status);
                 const description = item.description || item.message || 'Bez popisu';
                 const photos = item.photos || [];
                 const hasPhotos = Array.isArray(photos) && photos.length > 0;

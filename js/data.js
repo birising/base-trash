@@ -1054,6 +1054,7 @@ function transformIssueToZavada(issue) {
     reported_date: convertDate(issue.created_at),
     description: issue.description || 'Bez popisu',
     category: category,
+    status: issue.status || 'new', // Store original status from API
     resolved: resolved,
     resolved_date: resolvedDate,
     email: null,

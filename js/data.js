@@ -1027,14 +1027,56 @@ async function loadKriminalitaDataAsync() {
   }
 }
 
+// Transform API issue format to application format
+function transformIssueToZavada(issue) {
+  // Map category names to application categories
+  const categoryMap = {
+    'Veřejná prostranství, parky': 'udrzba zelene',
+    'Odpady, nepořádek': 'ostatni',
+    'Zeleň': 'zelen',
+    'Údržba zeleně': 'udrzba zelene'
+  };
+  
+  const categoryName = issue.issueCategory?.name || '';
+  const category = categoryMap[categoryName] || 'ostatni';
+  
+  // Convert date from "2025-12-22 11:46:27" to ISO format
+  const convertDate = (dateStr) => {
+    if (!dateStr) return new Date().toISOString();
+    // Format: "2025-12-22 11:46:27" -> "2025-12-22T11:46:27Z"
+    const isoStr = dateStr.replace(' ', 'T') + 'Z';
+    return isoStr;
+  };
+  
+  // Extract photos from files array
+  const photos = (issue.files || []).map(file => file.url || file.thumbnail_url).filter(Boolean);
+  
+  // Determine resolved status
+  const resolved = issue.status !== 'new' && issue.status !== 'open';
+  const resolvedDate = resolved ? convertDate(issue.updated_at) : null;
+  
+  return {
+    id: issue.id,
+    lat: parseFloat(issue.gps_lat) || null,
+    lng: parseFloat(issue.gps_lng) || null,
+    reported_date: convertDate(issue.created_at),
+    description: issue.description || 'Bez popisu',
+    category: category,
+    resolved: resolved,
+    resolved_date: resolvedDate,
+    email: null,
+    photos: photos
+  };
+}
+
 async function loadZavadyData() {
   try {
-    // For development: use local file first, then fallback to S3
-    const zavadyUrl = `${dataBaseUrl}/zavady.json`;
-    const zavadyFallbackUrl = "https://trash-beloky.s3.eu-central-1.amazonaws.com/public/zavady.json";
+    // Load from new API endpoint
+    const zavadyUrl = "https://trash-beloky.s3.eu-central-1.amazonaws.com/sensors/issues.json";
+    const fallbackUrl = `${dataBaseUrl}/zavady.json`; // Fallback to local file
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
     
     try {
       const response = await fetch(zavadyUrl, {
@@ -1051,8 +1093,6 @@ async function loadZavadyData() {
       }
       
       const text = await response.text();
-      console.log('Response text length:', text.length);
-      console.log('Response text preview:', text.substring(0, 500));
       
       if (!text || text.trim().length === 0) {
         console.error('Zavady soubor je prázdný!');
@@ -1060,39 +1100,53 @@ async function loadZavadyData() {
       }
       
       const payload = JSON.parse(text);
-    console.log('Načtená data závad:', payload);
-    console.log('Počet závad:', Array.isArray(payload) ? payload.length : 'Není pole');
-    
-    if (!Array.isArray(payload)) {
-      console.warn('Zavady data nejsou pole, používáme prázdné pole');
-      dataZavady = [];
-      return [];
-    }
-    
-    if (payload.length === 0) {
-      console.warn('Zavady data jsou prázdné pole!');
-    }
-    
-    dataZavady = payload;
-    console.log('Data závad uložena, počet:', dataZavady.length);
-    return payload;
+      console.log('Načtená data závad z API:', payload);
+      
+      // Extract issues from GraphQL response structure
+      let issues = [];
+      if (payload?.data?.myIssues?.data && Array.isArray(payload.data.myIssues.data)) {
+        issues = payload.data.myIssues.data;
+      } else if (Array.isArray(payload)) {
+        // Fallback: if payload is already an array (old format)
+        issues = payload;
+      } else {
+        console.warn('Zavady data nemají očekávanou strukturu');
+        throw new Error('Neplatná struktura dat');
+      }
+      
+      // Transform issues to application format
+      const transformedZavady = issues.map(issue => {
+        // If already in old format, return as is
+        if (issue.lat !== undefined && issue.lng !== undefined) {
+          return issue;
+        }
+        // Otherwise transform from new format
+        return transformIssueToZavada(issue);
+      }).filter(zavada => zavada.lat !== null && zavada.lng !== null); // Filter out items without coordinates
+      
+      console.log('Transformované závady, počet:', transformedZavady.length);
+      
+      dataZavady = transformedZavady;
+      return transformedZavady;
+      
     } catch (error) {
       clearTimeout(timeoutId);
       
       if (error.name === 'AbortError') {
-        console.warn('Timeout při načítání dat závad');
+        console.warn('Timeout při načítání dat závad z API');
       } else if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.warn('Síťová chyba při načítání dat závad');
+        console.warn('Síťová chyba při načítání dat závad z API');
       } else {
-        console.warn('Chyba při načítání dat závad:', error.message);
+        console.warn('Chyba při načítání dat závad z API:', error.message);
       }
       
-      // Try fallback
+      // Try fallback to local file
       try {
+        console.log('Pokus o načtení z lokálního souboru...');
         const fallbackController = new AbortController();
         const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
         
-        const fallbackResponse = await fetch(zavadyFallbackUrl, {
+        const fallbackResponse = await fetch(fallbackUrl, {
           cache: "no-store",
           signal: fallbackController.signal
         });
@@ -1100,37 +1154,15 @@ async function loadZavadyData() {
         
         if (fallbackResponse.ok) {
           const fallbackText = await fallbackResponse.text();
-          console.log('Fallback response text length:', fallbackText.length);
           
-          if (!fallbackText || fallbackText.trim().length === 0) {
-            console.warn('Fallback soubor z S3 je prázdný, používám lokální data');
-            // Try to load from local file directly
-            try {
-              const localResponse = await fetch(`${dataBaseUrl}/zavady.json`, { cache: "no-store" });
-              if (localResponse.ok) {
-                const localText = await localResponse.text();
-                if (localText && localText.trim().length > 0) {
-                  const localPayload = JSON.parse(localText);
-                  if (Array.isArray(localPayload)) {
-                    dataZavady = localPayload;
-                    console.log('Načtena lokální data závad, počet:', localPayload.length);
-                    return localPayload;
-                  }
-                }
-              }
-            } catch (localError) {
-              console.warn('Lokální soubor se nepodařilo načíst:', localError);
+          if (fallbackText && fallbackText.trim().length > 0) {
+            const fallbackPayload = JSON.parse(fallbackText);
+            
+            if (Array.isArray(fallbackPayload)) {
+              dataZavady = fallbackPayload;
+              console.log('Načtena lokální data závad, počet:', fallbackPayload.length);
+              return fallbackPayload;
             }
-            throw new Error('Fallback soubor je prázdný');
-          }
-          
-          const payload = JSON.parse(fallbackText);
-          console.log('Fallback payload:', payload);
-          console.log('Fallback počet závad:', Array.isArray(payload) ? payload.length : 'Není pole');
-          
-          if (Array.isArray(payload)) {
-            dataZavady = payload;
-            return payload;
           }
         }
       } catch (fallbackError) {

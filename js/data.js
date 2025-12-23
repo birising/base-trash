@@ -1029,16 +1029,8 @@ async function loadKriminalitaDataAsync() {
 
 // Transform API issue format to application format
 function transformIssueToZavada(issue) {
-  // Map category names to application categories
-  const categoryMap = {
-    'Veřejná prostranství, parky': 'udrzba zelene',
-    'Odpady, nepořádek': 'ostatni',
-    'Zeleň': 'zelen',
-    'Údržba zeleně': 'udrzba zelene'
-  };
-  
-  const categoryName = issue.issueCategory?.name || '';
-  const category = categoryMap[categoryName] || 'ostatni';
+  // Use category name directly from API
+  const category = issue.issueCategory?.name || 'Ostatní';
   
   // Convert date from "2025-12-22 11:46:27" to ISO format
   const convertDate = (dateStr) => {
@@ -1073,107 +1065,60 @@ async function loadZavadyData() {
   try {
     // Load from new API endpoint
     const zavadyUrl = "https://trash-beloky.s3.eu-central-1.amazonaws.com/sensors/issues.json";
-    const fallbackUrl = `${dataBaseUrl}/zavady.json`; // Fallback to local file
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
     
-    try {
-      const response = await fetch(zavadyUrl, {
-        cache: "no-store",
-        signal: controller.signal,
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const response = await fetch(zavadyUrl, {
+      cache: "no-store",
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json'
       }
-      
-      const text = await response.text();
-      
-      if (!text || text.trim().length === 0) {
-        console.error('Zavady soubor je prázdný!');
-        throw new Error('Soubor je prázdný');
-      }
-      
-      const payload = JSON.parse(text);
-      console.log('Načtená data závad z API:', payload);
-      
-      // Extract issues from GraphQL response structure
-      let issues = [];
-      if (payload?.data?.myIssues?.data && Array.isArray(payload.data.myIssues.data)) {
-        issues = payload.data.myIssues.data;
-      } else if (Array.isArray(payload)) {
-        // Fallback: if payload is already an array (old format)
-        issues = payload;
-      } else {
-        console.warn('Zavady data nemají očekávanou strukturu');
-        throw new Error('Neplatná struktura dat');
-      }
-      
-      // Transform issues to application format
-      const transformedZavady = issues.map(issue => {
-        // If already in old format, return as is
-        if (issue.lat !== undefined && issue.lng !== undefined) {
-          return issue;
-        }
-        // Otherwise transform from new format
-        return transformIssueToZavada(issue);
-      }).filter(zavada => zavada.lat !== null && zavada.lng !== null); // Filter out items without coordinates
-      
-      console.log('Transformované závady, počet:', transformedZavady.length);
-      
-      dataZavady = transformedZavady;
-      return transformedZavady;
-      
-    } catch (error) {
-      clearTimeout(timeoutId);
-      
-      if (error.name === 'AbortError') {
-        console.warn('Timeout při načítání dat závad z API');
-      } else if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.warn('Síťová chyba při načítání dat závad z API');
-      } else {
-        console.warn('Chyba při načítání dat závad z API:', error.message);
-      }
-      
-      // Try fallback to local file
-      try {
-        console.log('Pokus o načtení z lokálního souboru...');
-        const fallbackController = new AbortController();
-        const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
-        
-        const fallbackResponse = await fetch(fallbackUrl, {
-          cache: "no-store",
-          signal: fallbackController.signal
-        });
-        clearTimeout(fallbackTimeout);
-        
-        if (fallbackResponse.ok) {
-          const fallbackText = await fallbackResponse.text();
-          
-          if (fallbackText && fallbackText.trim().length > 0) {
-            const fallbackPayload = JSON.parse(fallbackText);
-            
-            if (Array.isArray(fallbackPayload)) {
-              dataZavady = fallbackPayload;
-              console.log('Načtena lokální data závad, počet:', fallbackPayload.length);
-              return fallbackPayload;
-            }
-          }
-        }
-      } catch (fallbackError) {
-        console.warn('Fallback také selhal:', fallbackError);
-      }
-      
-      dataZavady = [];
-      return [];
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+    
+    const text = await response.text();
+    
+    if (!text || text.trim().length === 0) {
+      console.error('Zavady soubor je prázdný!');
+      throw new Error('Soubor je prázdný');
+    }
+    
+    const payload = JSON.parse(text);
+    console.log('Načtená data závad z API:', payload);
+    
+    // Extract issues from GraphQL response structure
+    let issues = [];
+    if (payload?.data?.myIssues?.data && Array.isArray(payload.data.myIssues.data)) {
+      issues = payload.data.myIssues.data;
+    } else {
+      console.warn('Zavady data nemají očekávanou strukturu');
+      throw new Error('Neplatná struktura dat');
+    }
+    
+    // Transform issues to application format
+    const transformedZavady = issues.map(issue => transformIssueToZavada(issue))
+      .filter(zavada => zavada.lat !== null && zavada.lng !== null); // Filter out items without coordinates
+    
+    console.log('Transformované závady, počet:', transformedZavady.length);
+    
+    dataZavady = transformedZavady;
+    return transformedZavady;
+    
   } catch (error) {
-    console.error('Kritická chyba při načítání dat závad:', error);
+    if (error.name === 'AbortError') {
+      console.error('Timeout při načítání dat závad z API');
+    } else if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('Síťová chyba při načítání dat závad z API');
+    } else {
+      console.error('Chyba při načítání dat závad z API:', error.message);
+    }
+    
     dataZavady = [];
     return [];
   }

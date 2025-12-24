@@ -3385,23 +3385,49 @@ Odkaz do aplikace: ${appUrl}`;
     if (!date) return '';
     const now = new Date();
     const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
     
-    if (diffMins < 1) return 'právě teď';
-    if (diffMins < 60) return `před ${diffMins} ${diffMins === 1 ? 'minutou' : diffMins < 5 ? 'minutami' : 'minutami'}`;
-    if (diffHours < 24) return `před ${diffHours} ${diffHours === 1 ? 'hodinou' : diffHours < 5 ? 'hodinami' : 'hodinami'}`;
-    return `před ${diffDays} ${diffDays === 1 ? 'dnem' : diffDays < 5 ? 'dny' : 'dny'}`;
+    // Calculate total seconds
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    
+    // Format as MM:SS or M:SS
+    const formattedSeconds = seconds.toString().padStart(2, '0');
+    return `${minutes}:${formattedSeconds}`;
   };
   
   const updateZavadyTimestamp = () => {
     if (!zavadyLastUpdated) return;
     
+    const now = new Date();
+    const diffMs = now - zavadyLastUpdated;
+    const diffMins = Math.floor(diffMs / 60000);
     const timeAgo = formatTimeAgo(zavadyLastUpdated);
+    
     const headerSubtitle = document.querySelector('#zavadyView .view-header .subtitle');
     if (headerSubtitle) {
-      headerSubtitle.innerHTML = `Závady nahlášené zastupitelem Janem Řečínským skrze Munopolis <span style="opacity: 0.7; font-size: 0.9em;">• Aktualizováno: ${timeAgo}</span>`;
+      let refreshButton = '';
+      if (diffMins >= 5) {
+        refreshButton = ` <button id="refreshZavadyBtn" class="refresh-zavady-btn" title="Obnovit data" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-left: 8px;">🔄 Obnovit</button>`;
+      }
+      headerSubtitle.innerHTML = `Závady nahlášené zastupitelem Janem Řečínským skrze Munopolis <span style="opacity: 0.7; font-size: 0.9em;">• Aktualizováno: ${timeAgo}</span>${refreshButton}`;
+      
+      // Add click handler for refresh button if it exists
+      const refreshBtn = document.getElementById('refreshZavadyBtn');
+      if (refreshBtn && !refreshBtn.dataset.listenerAdded) {
+        refreshBtn.dataset.listenerAdded = 'true';
+        refreshBtn.addEventListener('click', async () => {
+          refreshBtn.disabled = true;
+          refreshBtn.textContent = '⏳ Načítám...';
+          try {
+            await loadZavadyDataView();
+          } catch (error) {
+            console.error('Chyba při obnovování dat:', error);
+            refreshBtn.textContent = '🔄 Obnovit';
+            refreshBtn.disabled = false;
+          }
+        });
+      }
     }
   };
 
@@ -3426,10 +3452,10 @@ Odkaz do aplikace: ${appUrl}`;
         zavadyLastUpdated = result.lastUpdated;
         updateZavadyTimestamp();
         
-        // Update every minute
+        // Update every second for live countdown
         zavadyUpdateInterval = setInterval(() => {
           updateZavadyTimestamp();
-        }, 60000); // Update every 60 seconds
+        }, 1000); // Update every 1 second
       }
       
       renderZavady(zavady);

@@ -1106,21 +1106,11 @@ async function loadZavadyData() {
     const transformedZavady = issues.map(issue => transformIssueToZavada(issue))
       .filter(zavada => zavada.lat !== null && zavada.lng !== null); // Filter out items without coordinates
     
-    // Get last updated time from meta.generated_at (preferred) or find most recent updated_at from issues
+    // Get last updated time from meta.generated_at
     let lastUpdated = null;
     if (payload?.meta?.generated_at) {
       // Use meta.generated_at as the source of truth for when the file was generated
       lastUpdated = new Date(payload.meta.generated_at);
-    } else {
-      // Fallback: find the most recent updated_at from all issues
-      issues.forEach(issue => {
-        if (issue.updated_at) {
-          const updatedDate = new Date(issue.updated_at.replace(' ', 'T') + 'Z');
-          if (!lastUpdated || updatedDate > lastUpdated) {
-            lastUpdated = updatedDate;
-          }
-        }
-      });
     }
     
     console.log('Transformované závady, počet:', transformedZavady.length);

@@ -3399,7 +3399,7 @@ Odkaz do aplikace: ${appUrl}`;
   // Track if auto-refresh is in progress to avoid multiple simultaneous refreshes
   let zavadyAutoRefreshInProgress = false;
   
-  const updateZavadyTimestamp = () => {
+  const updateZavadyTimestampDisplay = (skipAutoRefresh = false) => {
     if (!zavadyLastUpdated) return;
     
     const now = new Date();
@@ -3416,7 +3416,7 @@ Odkaz do aplikace: ${appUrl}`;
     }
     
     // Auto-refresh in background if more than 5 minutes old and not already refreshing
-    if (diffMins >= 5 && !zavadyAutoRefreshInProgress) {
+    if (!skipAutoRefresh && diffMins >= 5 && !zavadyAutoRefreshInProgress) {
       zavadyAutoRefreshInProgress = true;
       // Refresh data in background without showing loading state
       loadZavadyData().then(result => {
@@ -3425,8 +3425,10 @@ Odkaz do aplikace: ${appUrl}`;
         if (result.lastUpdated) {
           zavadyLastUpdated = result.lastUpdated;
         }
-        // Re-render zavady list silently
+        // Re-render zavady list silently (this updates the table)
         renderZavady(zavady);
+        // Update timestamp display after refresh (skip auto-refresh to avoid recursion)
+        updateZavadyTimestampDisplay(true);
         zavadyAutoRefreshInProgress = false;
       }).catch(error => {
         console.error('Chyba při automatickém obnovování dat:', error);
@@ -3434,6 +3436,9 @@ Odkaz do aplikace: ${appUrl}`;
       });
     }
   };
+  
+  // Alias for backward compatibility
+  const updateZavadyTimestamp = updateZavadyTimestampDisplay;
 
   async function loadZavadyDataView() {
     if (!zavadyList) return;

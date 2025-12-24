@@ -1234,7 +1234,7 @@ Odkaz do aplikace: ${appUrl}`;
       const marker = L.marker([lat, lng], {
         icon: L.divIcon({
           className: 'zavady-map-marker',
-          html: '<div style="background: #f97316; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6);">!</div>',
+          html: '<div style="background: #f97316; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; border: 3px solid white; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6);">🦄</div>',
           iconSize: [32, 32],
           iconAnchor: [16, 16]
         })
@@ -4081,7 +4081,7 @@ Odkaz do aplikace: ${appUrl}`;
         const markerHtml = `
           <div class="print-marker-container">
             <img src="${thumbnailPath}" alt="${description}" class="print-marker-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="print-marker-fallback" style="display: none; background: #f97316; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid white;">!</div>
+            <div class="print-marker-fallback" style="display: none; background: #f97316; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid white; font-size: 20px;">🦄</div>
             <div class="print-marker-line"></div>
             <div class="print-marker-label">${description}</div>
             <div class="print-marker-category">${categoryLabel}</div>
@@ -4103,7 +4103,7 @@ Odkaz do aplikace: ${appUrl}`;
         // Fallback marker without photo
         const markerHtml = `
           <div class="print-marker-container">
-            <div class="print-marker-fallback" style="background: #f97316; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid white;">!</div>
+            <div class="print-marker-fallback" style="background: #f97316; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid white; font-size: 20px;">🦄</div>
             <div class="print-marker-line"></div>
             <div class="print-marker-label">${description}</div>
             <div class="print-marker-category">${categoryLabel}</div>

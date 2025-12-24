@@ -176,7 +176,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Load zavady data for dashboard counter
   try {
-    await loadZavadyData();
+    const result = await loadZavadyData();
+    dataZavady = result.zavady || result; // Support both old and new format
     updateCounters();
   } catch (error) {
     console.warn('Nepodařilo se načíst data závad pro dashboard:', error);
@@ -2739,7 +2740,9 @@ Odkaz do aplikace: ${appUrl}`;
         activeData = [];
       } else if (category === "zavady-mapa") {
         // Load and display zavady on map
-        loadZavadyData().then(zavady => {
+        loadZavadyData().then(result => {
+          const zavady = result.zavady || result; // Support both old and new format
+          dataZavady = zavady;
           populateZavadyMapLayer(zavady);
         }).catch(error => {
           console.error('Chyba při načítání závad pro mapu:', error);
@@ -2748,7 +2751,9 @@ Odkaz do aplikace: ${appUrl}`;
       } else if (category === "udrzba-mapa") {
         // Load and display udrzba zelene on map
         console.log('setActiveCategory: načítám závady pro mapu údržby');
-        loadZavadyData().then(zavady => {
+        loadZavadyData().then(result => {
+          const zavady = result.zavady || result; // Support both old and new format
+          dataZavady = zavady;
           console.log('setActiveCategory: závady načteny, volám populateUdrzbaMapLayer s', zavady.length, 'závadami');
           populateUdrzbaMapLayer(zavady);
         }).catch(error => {
@@ -2916,6 +2921,11 @@ Odkaz do aplikace: ${appUrl}`;
         loadZavadyDataView();
       } else {
         zavadyView.classList.add("hidden");
+        // Clear update interval when leaving zavady view
+        if (zavadyUpdateInterval) {
+          clearInterval(zavadyUpdateInterval);
+          zavadyUpdateInterval = null;
+        }
       }
     }
 
@@ -3367,13 +3377,61 @@ Odkaz do aplikace: ${appUrl}`;
     }).join('');
   }
 
+  // Store last updated time and interval for auto-refresh
+  let zavadyLastUpdated = null;
+  let zavadyUpdateInterval = null;
+  
+  const formatTimeAgo = (date) => {
+    if (!date) return '';
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'právě teď';
+    if (diffMins < 60) return `před ${diffMins} ${diffMins === 1 ? 'minutou' : diffMins < 5 ? 'minutami' : 'minutami'}`;
+    if (diffHours < 24) return `před ${diffHours} ${diffHours === 1 ? 'hodinou' : diffHours < 5 ? 'hodinami' : 'hodinami'}`;
+    return `před ${diffDays} ${diffDays === 1 ? 'dnem' : diffDays < 5 ? 'dny' : 'dny'}`;
+  };
+  
+  const updateZavadyTimestamp = () => {
+    if (!zavadyLastUpdated) return;
+    
+    const timeAgo = formatTimeAgo(zavadyLastUpdated);
+    const headerSubtitle = document.querySelector('#zavadyView .view-header .subtitle');
+    if (headerSubtitle) {
+      headerSubtitle.innerHTML = `Závady nahlášené zastupitelem Janem Řečínským skrze Munopolis <span style="opacity: 0.7; font-size: 0.9em;">• Aktualizováno: ${timeAgo}</span>`;
+    }
+  };
+
   async function loadZavadyDataView() {
     if (!zavadyList) return;
+    
+    // Clear existing interval if any
+    if (zavadyUpdateInterval) {
+      clearInterval(zavadyUpdateInterval);
+      zavadyUpdateInterval = null;
+    }
     
     zavadyList.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>Načítám hlášené závady…</span></div>';
     
     try {
-      const zavady = await loadZavadyData();
+      const result = await loadZavadyData();
+      const zavady = result.zavady || result; // Support both old and new format
+      dataZavady = zavady;
+      
+      // Store last updated time and start auto-refresh
+      if (result.lastUpdated) {
+        zavadyLastUpdated = result.lastUpdated;
+        updateZavadyTimestamp();
+        
+        // Update every minute
+        zavadyUpdateInterval = setInterval(() => {
+          updateZavadyTimestamp();
+        }, 60000); // Update every 60 seconds
+      }
+      
       renderZavady(zavady);
     } catch (error) {
       console.error('Chyba při načítání dat závad:', error);
@@ -4479,7 +4537,14 @@ Odkaz do aplikace: ${appUrl}`;
     if (wasteView) wasteView.classList.add("hidden");
     if (hasiciView) hasiciView.classList.add("hidden");
     if (kriminalitaView) kriminalitaView.classList.add("hidden");
-    if (zavadyView) zavadyView.classList.add("hidden");
+    if (zavadyView) {
+      zavadyView.classList.add("hidden");
+      // Clear update interval when hiding zavady view
+      if (zavadyUpdateInterval) {
+        clearInterval(zavadyUpdateInterval);
+        zavadyUpdateInterval = null;
+      }
+    }
     if (mapOverlay) mapOverlay.classList.add("hidden");
     
     // Remove active state from all cards and nav items

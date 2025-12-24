@@ -1106,10 +1106,25 @@ async function loadZavadyData() {
     const transformedZavady = issues.map(issue => transformIssueToZavada(issue))
       .filter(zavada => zavada.lat !== null && zavada.lng !== null); // Filter out items without coordinates
     
+    // Find the most recent updated_at from all issues
+    let lastUpdated = null;
+    issues.forEach(issue => {
+      if (issue.updated_at) {
+        const updatedDate = new Date(issue.updated_at.replace(' ', 'T') + 'Z');
+        if (!lastUpdated || updatedDate > lastUpdated) {
+          lastUpdated = updatedDate;
+        }
+      }
+    });
+    
     console.log('Transformované závady, počet:', transformedZavady.length);
+    console.log('Poslední aktualizace:', lastUpdated);
     
     dataZavady = transformedZavady;
-    return transformedZavady;
+    return {
+      zavady: transformedZavady,
+      lastUpdated: lastUpdated
+    };
     
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1121,7 +1136,10 @@ async function loadZavadyData() {
     }
     
     dataZavady = [];
-    return [];
+    return {
+      zavady: [],
+      lastUpdated: null
+    };
   }
 }
 

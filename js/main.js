@@ -3396,6 +3396,9 @@ Odkaz do aplikace: ${appUrl}`;
     return `${minutes}:${formattedSeconds}`;
   };
   
+  // Track if auto-refresh is in progress to avoid multiple simultaneous refreshes
+  let zavadyAutoRefreshInProgress = false;
+  
   const updateZavadyTimestamp = () => {
     if (!zavadyLastUpdated) return;
     
@@ -3404,30 +3407,31 @@ Odkaz do aplikace: ${appUrl}`;
     const diffMins = Math.floor(diffMs / 60000);
     const timeAgo = formatTimeAgo(zavadyLastUpdated);
     
+    // Determine color based on time difference
+    const timeColor = diffMins >= 10 ? '#ef4444' : '#22c55e'; // Red if >= 10 min, green otherwise
+    
     const headerSubtitle = document.querySelector('#zavadyView .view-header .subtitle');
     if (headerSubtitle) {
-      let refreshButton = '';
-      if (diffMins >= 5) {
-        refreshButton = ` <button id="refreshZavadyBtn" class="refresh-zavady-btn" title="Obnovit data" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.85em; margin-left: 8px;">🔄 Obnovit</button>`;
-      }
-      headerSubtitle.innerHTML = `Závady nahlášené zastupitelem Janem Řečínským skrze Munopolis <span style="opacity: 0.7; font-size: 0.9em;">• Aktualizováno: ${timeAgo}</span>${refreshButton}`;
-      
-      // Add click handler for refresh button if it exists
-      const refreshBtn = document.getElementById('refreshZavadyBtn');
-      if (refreshBtn && !refreshBtn.dataset.listenerAdded) {
-        refreshBtn.dataset.listenerAdded = 'true';
-        refreshBtn.addEventListener('click', async () => {
-          refreshBtn.disabled = true;
-          refreshBtn.textContent = '⏳ Načítám...';
-          try {
-            await loadZavadyDataView();
-          } catch (error) {
-            console.error('Chyba při obnovování dat:', error);
-            refreshBtn.textContent = '🔄 Obnovit';
-            refreshBtn.disabled = false;
-          }
-        });
-      }
+      headerSubtitle.innerHTML = `Závady nahlášené zastupitelem Janem Řečínským skrze Munopolis <span style="opacity: 0.7; font-size: 0.9em;">• Aktualizováno před <span style="color: ${timeColor}; font-weight: 600;">${timeAgo}</span></span>`;
+    }
+    
+    // Auto-refresh in background if more than 5 minutes old and not already refreshing
+    if (diffMins >= 5 && !zavadyAutoRefreshInProgress) {
+      zavadyAutoRefreshInProgress = true;
+      // Refresh data in background without showing loading state
+      loadZavadyData().then(result => {
+        const zavady = result.zavady || result;
+        dataZavady = zavady;
+        if (result.lastUpdated) {
+          zavadyLastUpdated = result.lastUpdated;
+        }
+        // Re-render zavady list silently
+        renderZavady(zavady);
+        zavadyAutoRefreshInProgress = false;
+      }).catch(error => {
+        console.error('Chyba při automatickém obnovování dat:', error);
+        zavadyAutoRefreshInProgress = false;
+      });
     }
   };
 

@@ -530,7 +530,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const greenspaceVisibility = { trava: true, zahony: true };
   const mapLayersVisibility = { lampy: false, kose: true, zavady: true, zelen: false };
   let currentCategory = null;
-  const DEFAULT_CATEGORY = "hladina";
+  const DEFAULT_CATEGORY = "zavady-mapa";
   let mapClickHandler = null;
 
   const backButton = document.getElementById("backButton");
@@ -2579,6 +2579,16 @@ Odkaz do aplikace: ${appUrl}`;
       // Force immediate DOM update
       mapView.offsetHeight; // Trigger reflow
       
+      // Show/hide zavady-mapa header based on category
+      const zavadyMapaHeader = document.getElementById('zavadyMapaHeader');
+      if (zavadyMapaHeader) {
+        if (category === "zavady-mapa") {
+          zavadyMapaHeader.classList.remove("hidden");
+        } else {
+          zavadyMapaHeader.classList.add("hidden");
+        }
+      }
+      
       // Immediately invalidate size - map must be visible for this to work
       setTimeout(() => {
         if (map) {
@@ -2737,10 +2747,33 @@ Odkaz do aplikace: ${appUrl}`;
         }
         activeData = [];
       } else if (category === "zavady-mapa") {
+        // Show header for zavady-mapa
+        const zavadyMapaHeader = document.getElementById('zavadyMapaHeader');
+        if (zavadyMapaHeader) {
+          zavadyMapaHeader.classList.remove('hidden');
+        }
+        
         // Load and display zavady on map
         loadZavadyData().then(result => {
           const zavady = result.zavady || result; // Support both old and new format
           dataZavady = zavady;
+          
+          // Store last updated time and start auto-refresh
+          if (result.lastUpdated) {
+            zavadyLastUpdated = result.lastUpdated;
+            updateZavadyTimestampDisplay();
+            
+            // Clear existing interval if any
+            if (zavadyUpdateInterval) {
+              clearInterval(zavadyUpdateInterval);
+            }
+            
+            // Update every second for live countdown
+            zavadyUpdateInterval = setInterval(() => {
+              updateZavadyTimestampDisplay();
+            }, 1000); // Update every 1 second
+          }
+          
           populateZavadyMapLayer(zavady);
         }).catch(error => {
           console.error('Chyba při načítání závad pro mapu:', error);
@@ -2880,6 +2913,16 @@ Odkaz do aplikace: ${appUrl}`;
         });
       } else {
         mapView.classList.add("hidden");
+        // Hide zavady-mapa header when leaving map view
+        const zavadyMapaHeader = document.getElementById('zavadyMapaHeader');
+        if (zavadyMapaHeader) {
+          zavadyMapaHeader.classList.add("hidden");
+        }
+        // Clear update interval when leaving zavady-mapa view
+        if (category !== "zavady-mapa" && zavadyUpdateInterval) {
+          clearInterval(zavadyUpdateInterval);
+          zavadyUpdateInterval = null;
+        }
       }
     }
     if (streamView) {
@@ -3408,9 +3451,18 @@ Odkaz do aplikace: ${appUrl}`;
     // Determine color based on time difference
     const timeColor = diffMins >= 10 ? '#ef4444' : '#22c55e'; // Red if >= 10 min, green otherwise
     
+    const timestampHtml = `<span style="opacity: 0.7; font-size: 0.9em;">• Aktualizováno před <span style="color: ${timeColor}; font-weight: 600;">${timeAgo}</span></span>`;
+    
+    // Update zavady view header
     const headerSubtitle = document.querySelector('#zavadyView .view-header .subtitle');
     if (headerSubtitle) {
-      headerSubtitle.innerHTML = `Závady nahlášené zastupitelem Janem Řečínským skrze Munopolis <span style="opacity: 0.7; font-size: 0.9em;">• Aktualizováno před <span style="color: ${timeColor}; font-weight: 600;">${timeAgo}</span></span>`;
+      headerSubtitle.innerHTML = `Závady nahlášené zastupitelem Janem Řečínským skrze Munopolis ${timestampHtml}`;
+    }
+    
+    // Update zavady-mapa view header
+    const zavadyMapaSubtitle = document.getElementById('zavadyMapaSubtitle');
+    if (zavadyMapaSubtitle) {
+      zavadyMapaSubtitle.innerHTML = `Závady nahlášené zastupitelem Janem Řečínským skrze Munopolis ${timestampHtml}`;
     }
     
     // Auto-refresh in background if more than 5 minutes old and not already refreshing
@@ -3425,6 +3477,12 @@ Odkaz do aplikace: ${appUrl}`;
         }
         // Re-render zavady list silently (this updates the table)
         renderZavady(zavady);
+        
+        // Update map if zavady-mapa is active
+        if (currentCategory === "zavady-mapa") {
+          populateZavadyMapLayer(zavady);
+        }
+        
         // Update timestamp display after refresh (skip auto-refresh to avoid recursion)
         updateZavadyTimestampDisplay(true);
         zavadyAutoRefreshInProgress = false;
@@ -4975,7 +5033,7 @@ Odkaz do aplikace: ${appUrl}`;
       // If layer params are present, switch to unified map
       setActiveCategory("mapa");
     } else if (!window.location.hash || !window.location.hash.match(/^#\w+\//)) {
-      setActiveCategory("hladina");
+      setActiveCategory("zavady-mapa");
     }
   }, 200);
   setupSidebarToggle();

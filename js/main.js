@@ -1303,7 +1303,6 @@ Odkaz do aplikace: ${appUrl}`;
             <button class="popup-link-icon copy-deep-link-btn" data-deep-link="${deepLinkUrl}" title="Kopírovat odkaz">
               🔗
             </button>
-            ${!zavada.resolved ? `<button class="popup-button popup-button-resolved mark-zavada-resolved-btn" data-zavada-id="${zavada.id}" data-zavada-description="${description}" data-zavada-category="${zavada.category || 'unknown'}" data-zavada-lat="${lat}" data-zavada-lng="${lng}" data-zavada-reported-date="${zavada.reported_date}">Nahlásit odstranění</button>` : ''}
             <form class="lamp-report-form hidden" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
               <input type="hidden" name="form_type" value="zavada_report">
               <input type="hidden" name="zavada_id" value="${zavada.id || 'N/A'}">
@@ -1494,7 +1493,7 @@ Odkaz do aplikace: ${appUrl}`;
       }, 100);
     } else if (zavadyWithCoords.length > 0 && currentCategory === "mapa" && mapLayersVisibility.zavady) {
       // For unified map, update bounds to include zavady
-      setTimeout(() => {
+            setTimeout(() => {
         if (map) {
           const allCoords = [];
           if (mapLayersVisibility.lampy && dataLampy) {
@@ -1731,7 +1730,7 @@ Odkaz do aplikace: ${appUrl}`;
           
           pointMarker.addTo(layers.udrzbaMapa);
           window.udrzbaPointMarkers.set(pointMarkerKey, pointMarker);
-        } else {
+              } else {
           pointMarker = window.udrzbaPointMarkers.get(pointMarkerKey);
         }
         
@@ -1824,7 +1823,6 @@ Odkaz do aplikace: ${appUrl}`;
               <button class="popup-link-icon copy-deep-link-btn" data-deep-link="${deepLinkUrl}" title="Kopírovat odkaz">
                 🔗
               </button>
-              ${!zavada.resolved ? `<button class="popup-button popup-button-resolved mark-zavada-resolved-btn" data-zavada-id="${zavada.id}" data-zavada-description="${description}" data-zavada-category="${zavada.category || 'unknown'}" data-zavada-lat="${lat}" data-zavada-lng="${lng}" data-zavada-reported-date="${zavada.reported_date}">Nahlásit odstranění</button>` : ''}
               <form class="lamp-report-form hidden" action="https://formspree.io/f/xkgdbplk" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="form_type" value="zavada_report">
                 <input type="hidden" name="zavada_id" value="${zavada.id || 'N/A'}">
@@ -2253,7 +2251,7 @@ Odkaz do aplikace: ${appUrl}`;
     // Distribute labels after a short delay to ensure map is rendered
     if (allMarkers.length > 0 && currentCategory === "udrzba-mapa") {
       const redistributeOnMapChange = () => {
-        setTimeout(() => {
+      setTimeout(() => {
           distributeLabels();
           // Update lines after distribution
           allMarkers.forEach(marker => {
@@ -2263,7 +2261,7 @@ Odkaz do aplikace: ${appUrl}`;
               marker._polyline.setLatLngs([currentPos, originalPos]);
             }
           });
-        }, 100);
+      }, 100);
       };
       
       setTimeout(() => {
@@ -2307,7 +2305,7 @@ Odkaz do aplikace: ${appUrl}`;
             map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
           }
         });
-      }
+        }
     }
   }
 
@@ -3852,9 +3850,6 @@ Odkaz do aplikace: ${appUrl}`;
                         ${resolvedInfo}
                         ${mapHtml}
                         ${galleryHtml}
-                        ${!item.resolved ? `<div class="zavady-detail-actions">
-                          <button class="zavada-resolved-button mark-zavada-resolved-btn" data-zavada-id="${item.id}" data-zavada-description="${description}" data-zavada-category="${category}" data-zavada-lat="${item.lat}" data-zavada-lng="${item.lng}" data-zavada-reported-date="${item.reported_date}">Nahlásit odstranění</button>
-                        </div>` : ''}
                       </div>
                     </td>
                   </tr>
@@ -5222,231 +5217,4 @@ Odkaz do aplikace: ${appUrl}`;
   
   // Report zavada modal functionality removed
   
-  // Handle "Závada odstraněna" button clicks
-  function openResolveZavadaModal(zavadaData) {
-    const modal = document.getElementById('resolveZavadaModal');
-    if (!modal) return;
-    
-    // Fill in form fields
-    document.getElementById('resolveZavadaId').value = zavadaData.id || '';
-    document.getElementById('resolveZavadaCategory').value = zavadaData.category || '';
-    document.getElementById('resolveZavadaLat').value = zavadaData.lat || '';
-    document.getElementById('resolveZavadaLng').value = zavadaData.lng || '';
-    document.getElementById('resolveZavadaReportedDate').value = zavadaData.reportedDate || '';
-    
-    // Fill in display fields (read-only)
-    document.getElementById('resolveZavadaDescription').textContent = zavadaData.description || 'Bez popisu';
-    
-    const categoryLabels = {
-      'zelen': 'Zelen',
-      'udrzba zelene': 'Údržba zeleně',
-      'kose': 'Koš',
-      'lampy': 'Lampa',
-      'ostatni': 'Ostatní'
-    };
-    document.getElementById('resolveZavadaCategoryLabel').textContent = categoryLabels[zavadaData.category] || zavadaData.category || 'Neznámá';
-    
-    const gpsText = zavadaData.lat && zavadaData.lng 
-      ? `${zavadaData.lat}, ${zavadaData.lng}`
-      : 'Není k dispozici';
-    document.getElementById('resolveZavadaGPS').textContent = gpsText;
-    
-    let reportedDateLabel = 'Neznámé';
-    if (zavadaData.reportedDate) {
-      try {
-        const date = new Date(zavadaData.reportedDate);
-        if (!isNaN(date.getTime())) {
-          reportedDateLabel = formatDateShort(date);
-        }
-      } catch (e) {
-        reportedDateLabel = zavadaData.reportedDate;
-      }
-    }
-    document.getElementById('resolveZavadaReportedDateLabel').textContent = reportedDateLabel;
-    
-    // Show modal
-    modal.classList.remove('hidden');
-  }
-  
-  function closeResolveZavadaModal() {
-    const modal = document.getElementById('resolveZavadaModal');
-    if (modal) {
-      modal.classList.add('hidden');
-      // Reset form
-      const form = document.getElementById('resolveZavadaForm');
-      if (form) {
-        form.reset();
-      }
-    }
-  }
-  
-  // Add event listeners for "Závada odstraněna" buttons
-  document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('mark-zavada-resolved-btn')) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      const button = e.target;
-      const zavadaData = {
-        id: button.dataset.zavadaId,
-        description: button.dataset.zavadaDescription || '',
-        category: button.dataset.zavadaCategory || '',
-        lat: button.dataset.zavadaLat || '',
-        lng: button.dataset.zavadaLng || '',
-        reportedDate: button.dataset.zavadaReportedDate || ''
-      };
-      
-      openResolveZavadaModal(zavadaData);
-    }
-  });
-  
-  // Modal close handlers
-  const resolveZavadaModal = document.getElementById('resolveZavadaModal');
-  const resolveZavadaModalClose = resolveZavadaModal?.querySelector('.report-zavada-modal-close');
-  const resolveZavadaModalCancel = resolveZavadaModal?.querySelector('.report-zavada-form-cancel');
-  const resolveZavadaModalBackdrop = resolveZavadaModal?.querySelector('.report-zavada-modal-backdrop');
-  
-  if (resolveZavadaModalClose) {
-    resolveZavadaModalClose.addEventListener('click', closeResolveZavadaModal);
-  }
-  
-  if (resolveZavadaModalCancel) {
-    resolveZavadaModalCancel.addEventListener('click', closeResolveZavadaModal);
-  }
-  
-  if (resolveZavadaModalBackdrop) {
-    resolveZavadaModalBackdrop.addEventListener('click', closeResolveZavadaModal);
-  }
-  
-  // Handle form submission
-  const resolveZavadaForm = document.getElementById('resolveZavadaForm');
-  if (resolveZavadaForm) {
-    resolveZavadaForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const submitButton = resolveZavadaForm.querySelector('.report-zavada-form-submit');
-      const originalText = submitButton?.textContent;
-      
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Odesílám...';
-      }
-      
-      try {
-        const formData = new FormData(resolveZavadaForm);
-        
-        let response;
-        try {
-          response = await fetch(resolveZavadaForm.action, {
-            method: 'POST',
-            body: formData
-          });
-        } catch (networkError) {
-          // CORS errors can occur even when form is successfully submitted
-          // Check if it's a CORS error - if so, assume success (Formspree redirects)
-          if (networkError.message && (networkError.message.includes('CORS') || networkError.message.includes('Failed to fetch') || networkError.message.includes('Load failed'))) {
-            console.log('CORS error detected, but form may have been submitted successfully');
-            // Treat as success - Formspree often redirects which causes CORS errors
-            // Create a synthetic response object that mimics Response but without .json() method
-            response = { 
-              ok: true, 
-              status: 200,
-              statusText: 'OK',
-              json: undefined,
-              text: undefined
-            };
-          } else {
-            // Network error - likely connection issue
-            console.error('Network error:', networkError);
-            throw new Error('Chyba připojení. Zkontrolujte připojení k internetu a zkuste to znovu.');
-          }
-        }
-        
-        // Check if response is a real Response object or our synthetic object
-        const isSyntheticResponse = !response.json || typeof response.json !== 'function';
-        
-        // Formspree returns 200 OK for successful submissions
-        // HTTP 422 = Unprocessable Entity (validation errors)
-        // HTTP 400 = Bad Request
-        // HTTP >= 500 = Server errors
-        const isError = response.status === 400 || response.status === 422 || response.status >= 500;
-        
-        if (response.ok && !isError) {
-          // Only try to parse JSON if it's a real Response object
-          if (!isSyntheticResponse) {
-            try {
-              const result = await response.json();
-              // Check if JSON response indicates an error
-              if (result.error) {
-                const errorMsg = typeof result.error === 'string' 
-                  ? result.error 
-                  : (result.error.message || result.error.code || 'Neznámá chyba');
-                throw new Error(errorMsg);
-              }
-            } catch (e) {
-              // If response is not JSON (e.g., HTML redirect page), that's OK for Formspree
-              if (e.message && !e.message.includes('JSON') && !e.message.includes('Neznámá chyba')) {
-                throw e; // Re-throw if it's a real error, not JSON parse error
-              }
-              if (!e.message || e.message.includes('JSON') || e.message.includes('Neznámá chyba')) {
-                console.log('Formspree response is not JSON (likely redirect page), but submission was successful');
-              }
-            }
-          } else {
-            console.log('Form submitted successfully (CORS handled)');
-          }
-          
-          closeResolveZavadaModal();
-          showToastNotification(
-            'Závada označena jako odstraněna!',
-            'Děkujeme za nahlášení. Informace byla odeslána.',
-            'success'
-          );
-        } else {
-          // Try to get error message from response
-          let errorMsg = `HTTP ${response.status}: ${response.statusText || 'Chyba'}`;
-          
-          // Only try to parse response if it's a real Response object
-          if (!isSyntheticResponse) {
-            try {
-              const errorText = await response.text();
-              try {
-                const errorDetails = JSON.parse(errorText);
-                if (errorDetails.error) {
-                  if (typeof errorDetails.error === 'string') {
-                    errorMsg = errorDetails.error;
-                  } else if (errorDetails.error.message) {
-                    errorMsg = errorDetails.error.message;
-                  }
-                }
-              } catch (e) {
-                // Not JSON, use text response if short
-                if (errorText && errorText.length < 200) {
-                  errorMsg = errorText;
-                }
-              }
-            } catch (e) {
-              console.error('Error reading response:', e);
-            }
-          }
-          
-          throw new Error(errorMsg);
-        }
-      } catch (error) {
-        console.error('Chyba při odesílání formuláře:', error);
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = originalText || 'Odeslat';
-        }
-        
-        showToastNotification(
-          'Chyba při odesílání',
-          error.message && !error.message.includes('HTTP') 
-            ? error.message 
-            : 'Nepodařilo se odeslat formulář. Zkuste to prosím znovu.',
-          'error'
-        );
-      }
-    });
-  }
 });

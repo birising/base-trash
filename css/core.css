@@ -639,6 +639,7 @@ body {
 
 .map-view {
   display: flex;
+  flex-direction: column;
   min-height: clamp(540px, 68vh, 880px);
 }
 

@@ -377,6 +377,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   };
 
   let baseLayer;
+  let baseLayerDark;
   try {
     // Use CartoDB Positron for a clean, light, modern map style
     baseLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
@@ -385,11 +386,22 @@ window.addEventListener("DOMContentLoaded", async () => {
       subdomains: 'abcd',
       errorTileUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='256' height='256' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3ENačítám...%3C/text%3E%3C/svg%3E",
     });
+    
+    // Darker map style for zavady-mapa (standard OSM)
+    baseLayerDark = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      errorTileUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='256' height='256' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3ENačítám...%3C/text%3E%3C/svg%3E",
+    });
+    
     baseLayer.addTo(map);
     
     // Handle tile loading errors silently - errorTileUrl already provides fallback
     // Don't spam console with tile errors as they're common and handled gracefully
     baseLayer.on('tileerror', () => {
+      // Silently handle - errorTileUrl will show fallback image
+    });
+    baseLayerDark.on('tileerror', () => {
       // Silently handle - errorTileUrl will show fallback image
     });
   } catch (error) {
@@ -1177,8 +1189,12 @@ Odkaz do aplikace: ${appUrl}`;
   }
 
   // Populate zavady on map
-  async function populateZavadyMapLayer(zavady) {
+  async function populateZavadyMapLayer(zavady, skipResize = false) {
     if (!map || !zavady || !Array.isArray(zavady)) return;
+    
+    // Check if we already have markers (for refresh scenario)
+    const hasExistingMarkers = layers.zavadyMapa.getLayers().length > 0;
+    const isRefresh = hasExistingMarkers && skipResize;
     
     // Clear existing zavady markers
     layers.zavadyMapa.clearLayers();
@@ -1483,7 +1499,8 @@ Odkaz do aplikace: ${appUrl}`;
     });
     
     // Fit map to bounds if we have markers and we're in zavady-mapa view (not unified mapa)
-    if (zavadyWithCoords.length > 0 && currentCategory === "zavady-mapa") {
+    // Skip resize during refresh to avoid user disruption
+    if (zavadyWithCoords.length > 0 && currentCategory === "zavady-mapa" && !isRefresh) {
       const bounds = L.latLngBounds(zavadyWithCoords.map(z => [parseFloat(z.lat), parseFloat(z.lng)]));
       setTimeout(() => {
         if (map) {
@@ -2681,6 +2698,16 @@ Odkaz do aplikace: ${appUrl}`;
       let activeData;
       
       if (category === "mapa") {
+        // Switch back to light map style for unified map
+        if (map && baseLayer && baseLayerDark) {
+          if (map.hasLayer(baseLayerDark)) {
+            map.removeLayer(baseLayerDark);
+          }
+          if (!map.hasLayer(baseLayer)) {
+            baseLayer.addTo(map);
+          }
+        }
+        
         // Unified map - load zavady and prepare all data
         loadZavadyData().then(zavady => {
           populateZavadyMapLayer(zavady);
@@ -2747,6 +2774,16 @@ Odkaz do aplikace: ${appUrl}`;
         }
         activeData = [];
       } else if (category === "zavady-mapa") {
+        // Switch to darker map style for zavady-mapa
+        if (map && baseLayer && baseLayerDark) {
+          if (map.hasLayer(baseLayer)) {
+            map.removeLayer(baseLayer);
+          }
+          if (!map.hasLayer(baseLayerDark)) {
+            baseLayerDark.addTo(map);
+          }
+        }
+        
         // Show header for zavady-mapa
         const zavadyMapaHeader = document.getElementById('zavadyMapaHeader');
         if (zavadyMapaHeader) {
@@ -2792,6 +2829,16 @@ Odkaz do aplikace: ${appUrl}`;
         });
         activeData = [];
       } else {
+        // Switch back to light map style for other categories (not zavady-mapa)
+        if (category !== "zavady-mapa" && map && baseLayer && baseLayerDark) {
+          if (map.hasLayer(baseLayerDark)) {
+            map.removeLayer(baseLayerDark);
+          }
+          if (!map.hasLayer(baseLayer)) {
+            baseLayer.addTo(map);
+          }
+        }
+        
         activeData =
           category === "kose"
             ? dataKose
@@ -3478,9 +3525,9 @@ Odkaz do aplikace: ${appUrl}`;
         // Re-render zavady list silently (this updates the table)
         renderZavady(zavady);
         
-        // Update map if zavady-mapa is active
+        // Update map if zavady-mapa is active (skip resize during refresh)
         if (currentCategory === "zavady-mapa") {
-          populateZavadyMapLayer(zavady);
+          populateZavadyMapLayer(zavady, true); // true = skip resize
         }
         
         // Update timestamp display after refresh (skip auto-refresh to avoid recursion)

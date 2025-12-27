@@ -1067,7 +1067,7 @@
   }
 
   #map {
-    height: 70vh;
+    height: 100%;
     min-height: 520px;
   }
 }
@@ -1079,7 +1079,7 @@
   }
 
   #map {
-    height: 68vh;
+    height: 100%;
     min-height: 420px;
   }
 }

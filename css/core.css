@@ -640,12 +640,13 @@ body {
 .map-view {
   display: flex;
   flex-direction: column;
-  min-height: clamp(540px, 68vh, 880px);
+  height: 100%;
+  min-height: 480px;
 }
 
 #map {
   width: 100%;
-  height: clamp(560px, 70vh, 900px);
+  height: 100%;
   min-height: 480px;
   flex: 1;
   background: #f5f5f5;
@@ -1195,7 +1196,7 @@ body {
   /* Better map viewport */
   #map {
     min-height: 60vh;
-    height: calc(100vh - 64px);
+    height: 100%;
   }
 
   /* Dashboard cards - better mobile layout */

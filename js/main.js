@@ -2866,13 +2866,29 @@ Odkaz do aplikace: ${appUrl}`;
         category === "zavady-mapa" || category === "mapa" ? [] : 
         activeData.map((item) => [item.lat, item.lng]);
 
-      if (coords.length && category !== "mapa") {
+      if (coords.length && category !== "mapa" && category !== "zimni-udrzba") {
         const bounds = L.latLngBounds(coords);
         // Ensure map is visible and sized before flying to bounds
         requestAnimationFrame(() => {
           if (map) {
             map.invalidateSize();
             map.flyToBounds(bounds, { padding: [28, 28], duration: 0.6, easeLinearity: 0.25 });
+          }
+        });
+      } else if (category === "zavady-mapa") {
+        // Set default view for zavady map
+        requestAnimationFrame(() => {
+          if (map) {
+            map.invalidateSize();
+            map.setView([50.1322, 14.222], 14);
+          }
+        });
+      } else if (category === "zimni-udrzba") {
+        // Set default view for zimni udrzba map
+        requestAnimationFrame(() => {
+          if (map) {
+            map.invalidateSize();
+            map.setView([50.1322, 14.222], 14);
           }
         });
       } else if (category === "zavady-mapa") {

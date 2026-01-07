@@ -3068,6 +3068,53 @@ Odkaz do aplikace: ${appUrl}`;
           // Set initial view to Běloky
           window.zimniUdrzbaMap.setView([50.1322, 14.222], 14);
           
+          // Add area polygon for Běloky (approximate boundaries)
+          const belokyArea = L.polygon([
+            [50.128, 14.215],
+            [50.128, 14.230],
+            [50.137, 14.230],
+            [50.137, 14.215],
+            [50.128, 14.215]
+          ], {
+            color: '#3b82f6',
+            fillColor: '#3b82f6',
+            fillOpacity: 0.1,
+            weight: 2,
+            dashArray: '5, 5'
+          }).addTo(window.zimniUdrzbaMap);
+          
+          // Add label for Běloky area
+          L.marker([50.1325, 14.2225], {
+            icon: L.divIcon({
+              className: 'beloky-label',
+              html: '<div style="background: rgba(59, 130, 246, 0.9); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; white-space: nowrap;">Běloky</div>',
+              iconSize: [60, 20],
+              iconAnchor: [30, 10]
+            })
+          }).addTo(window.zimniUdrzbaMap);
+          
+          // Add main roads in Běloky area (approximate coordinates)
+          const mainRoads = [
+            // Main road through village
+            [[50.1285, 14.218], [50.1285, 14.225], [50.130, 14.225], [50.132, 14.224], [50.134, 14.223], [50.136, 14.222]],
+            // Cross road
+            [[50.130, 14.220], [50.132, 14.220], [50.134, 14.220]],
+            // Road to north
+            [[50.132, 14.222], [50.133, 14.225], [50.134, 14.228]],
+            // Road to south
+            [[50.130, 14.220], [50.129, 14.217], [50.128, 14.215]]
+          ];
+          
+          mainRoads.forEach((road, index) => {
+            L.polyline(road, {
+              color: '#f59e0b',
+              weight: 4,
+              opacity: 0.8,
+              lineCap: 'round',
+              lineJoin: 'round'
+            }).addTo(window.zimniUdrzbaMap);
+          });
+          
           // Invalidate size after a short delay to ensure container is visible
           setTimeout(() => {
             if (window.zimniUdrzbaMap) {

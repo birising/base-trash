@@ -2863,7 +2863,7 @@ Odkaz do aplikace: ${appUrl}`;
 
       const coords =
         category === "zelen" ? activeData.flatMap((area) => area.coords) : 
-        category === "zavady-mapa" || category === "mapa" ? [] : 
+        category === "zavady-mapa" || category === "mapa" || category === "zimni-udrzba" ? [] : 
         activeData.map((item) => [item.lat, item.lng]);
 
       if (coords.length && category !== "mapa" && category !== "zimni-udrzba") {

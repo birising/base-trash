@@ -538,7 +538,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const zavadyList = document.getElementById("zavadyList");
   const zimniUdrzbaView = document.getElementById("zimniUdrzbaView");
 
-  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "mapa", "zavady-mapa"];
+  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "mapa", "zavady-mapa", "zimni-udrzba"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
   const mapLayersVisibility = { lampy: false, kose: true, zavady: true, zelen: false };
@@ -2605,6 +2605,16 @@ Odkaz do aplikace: ${appUrl}`;
           zavadyMapaHeader.classList.remove("hidden");
         } else {
           zavadyMapaHeader.classList.add("hidden");
+        }
+      }
+      
+      // Show/hide zimni-udrzba header based on category
+      const zimniUdrzbaMapaHeader = document.getElementById('zimniUdrzbaMapaHeader');
+      if (zimniUdrzbaMapaHeader) {
+        if (category === "zimni-udrzba") {
+          zimniUdrzbaMapaHeader.classList.remove("hidden");
+        } else {
+          zimniUdrzbaMapaHeader.classList.add("hidden");
         }
       }
       

@@ -3047,7 +3047,8 @@ Odkaz do aplikace: ${appUrl}`;
       }
     }
     if (zimniUdrzbaView) {
-      if (isZimniUdrzbaView) {
+      // Hide the view content when showing map (map is in mapView)
+      if (isZimniUdrzbaView && !isMapCategory) {
         zimniUdrzbaView.classList.remove("hidden");
       } else {
         zimniUdrzbaView.classList.add("hidden");

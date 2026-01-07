@@ -92,3 +92,4 @@ Tato aplikace je součástí projektu Údržba obce Běloky a je open-source.
 
 
 
+

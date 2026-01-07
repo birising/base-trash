@@ -536,6 +536,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const kriminalitaList = document.getElementById("kriminalitaList");
   const zavadyView = document.getElementById("zavadyView");
   const zavadyList = document.getElementById("zavadyList");
+  const zimniUdrzbaView = document.getElementById("zimniUdrzbaView");
 
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "mapa", "zavady-mapa"];
 
@@ -2581,6 +2582,7 @@ Odkaz do aplikace: ${appUrl}`;
     const isHasiciView = category === "hasici";
     const isKriminalitaView = category === "kriminalita";
     const isZavadyView = category === "zavady";
+    const isZimniUdrzbaView = category === "zimni-udrzba";
     const isMapCategory = mapCategories.includes(category) && category !== "kriminalita";
     const isGreenspace = category === "zelen";
     
@@ -2908,7 +2910,9 @@ Odkaz do aplikace: ${appUrl}`;
                     : "Údržba zeleně · záhony"
                 : category === "hladina"
                   ? "Hladina potoka"
-                  : "Komunální odpad";
+                  : category === "zimni-udrzba"
+                    ? "Zimní údržba Bělok"
+                    : "Komunální odpad";
       categoryLabel.textContent = `${labelText}`;
     }
 
@@ -3014,6 +3018,13 @@ Odkaz do aplikace: ${appUrl}`;
           clearInterval(zavadyUpdateInterval);
           zavadyUpdateInterval = null;
         }
+      }
+    }
+    if (zimniUdrzbaView) {
+      if (isZimniUdrzbaView) {
+        zimniUdrzbaView.classList.remove("hidden");
+      } else {
+        zimniUdrzbaView.classList.add("hidden");
       }
     }
 
@@ -4680,6 +4691,7 @@ Odkaz do aplikace: ${appUrl}`;
         zavadyUpdateInterval = null;
       }
     }
+    if (zimniUdrzbaView) zimniUdrzbaView.classList.add("hidden");
     if (mapOverlay) mapOverlay.classList.add("hidden");
     
     // Remove active state from all cards and nav items

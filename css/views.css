@@ -329,7 +329,8 @@
   .stream-view,
   .waste-view,
   .hasici-view,
-  .kriminalita-view {
+  .kriminalita-view,
+  .zimni-udrzba-view {
     padding: 14px;
   }
 
@@ -1258,8 +1259,13 @@
 }
 
 @media (max-width: 960px) {
-  .hasici-view {
+  .hasici-view,
+  .zimni-udrzba-view {
     padding: 12px;
+  }
+  
+  .zimni-udrzba-card {
+    padding: 18px;
   }
   
   .hasici-item {
@@ -1396,6 +1402,48 @@
 }
 
 /* Zavady (Reported Issues) */
+.zimni-udrzba-view {
+  padding: 18px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.zimni-udrzba-content {
+  margin-top: 20px;
+}
+
+.zimni-udrzba-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  background: linear-gradient(145deg, rgba(24, 38, 61, 0.92), rgba(12, 23, 41, 0.88));
+  box-shadow: var(--glow);
+}
+
+.zimni-udrzba-card .info-text {
+  margin-top: 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.zimni-udrzba-card .source-link {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.zimni-udrzba-card .source-link a {
+  color: var(--accent);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.zimni-udrzba-card .source-link a:hover {
+  color: var(--accent-hover);
+}
+
 .zavady-view {
   padding: 20px;
   overflow-y: auto;
@@ -2998,8 +3046,13 @@ body .leaflet-popup.zavady-popup .leaflet-popup-content-wrapper {
 }
 
 @media (max-width: 960px) {
-  .kriminalita-view {
+  .kriminalita-view,
+  .zimni-udrzba-view {
     padding: 12px;
+  }
+  
+  .zimni-udrzba-card {
+    padding: 18px;
   }
   
   .kriminalita-item {

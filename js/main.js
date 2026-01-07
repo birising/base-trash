@@ -539,7 +539,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const zimniUdrzbaView = document.getElementById("zimniUdrzbaView");
   const zimniUdrzbaMapContainer = document.getElementById("zimniUdrzbaMap");
 
-  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "mapa", "zavady-mapa", "zimni-udrzba"];
+  const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "mapa", "zavady-mapa"];
 
   const greenspaceVisibility = { trava: true, zahony: true };
   const mapLayersVisibility = { lampy: false, kose: true, zavady: true, zelen: false };

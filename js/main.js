@@ -537,6 +537,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const zavadyView = document.getElementById("zavadyView");
   const zavadyList = document.getElementById("zavadyList");
   const zimniUdrzbaView = document.getElementById("zimniUdrzbaView");
+  const zimniUdrzbaMapContainer = document.getElementById("zimniUdrzbaMap");
 
   const mapCategories = ["kose", "lampy", "kontejnery", "zelen", "mapa", "zavady-mapa", "zimni-udrzba"];
 
@@ -3047,9 +3048,40 @@ Odkaz do aplikace: ${appUrl}`;
       }
     }
     if (zimniUdrzbaView) {
-      // Hide the view content when showing map (map is in mapView)
-      if (isZimniUdrzbaView && !isMapCategory) {
+      if (isZimniUdrzbaView) {
         zimniUdrzbaView.classList.remove("hidden");
+        // Initialize map for zimni udrzba if not already initialized
+        if (zimniUdrzbaMapContainer && !window.zimniUdrzbaMap) {
+          window.zimniUdrzbaMap = L.map("zimniUdrzbaMap", {
+            zoomControl: true,
+            attributionControl: true,
+          });
+          
+          // Add base layer
+          const zimniBaseLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: "abcd",
+            maxZoom: 19,
+          });
+          zimniBaseLayer.addTo(window.zimniUdrzbaMap);
+          
+          // Set initial view to Běloky
+          window.zimniUdrzbaMap.setView([50.1322, 14.222], 14);
+          
+          // Invalidate size after a short delay to ensure container is visible
+          setTimeout(() => {
+            if (window.zimniUdrzbaMap) {
+              window.zimniUdrzbaMap.invalidateSize();
+            }
+          }, 100);
+        } else if (window.zimniUdrzbaMap) {
+          // Map already exists, just invalidate size
+          setTimeout(() => {
+            if (window.zimniUdrzbaMap) {
+              window.zimniUdrzbaMap.invalidateSize();
+            }
+          }, 100);
+        }
       } else {
         zimniUdrzbaView.classList.add("hidden");
       }

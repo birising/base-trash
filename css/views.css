@@ -1268,6 +1268,11 @@
     padding: 18px;
   }
   
+  #zimniUdrzbaMap {
+    height: 400px;
+    min-height: 300px;
+  }
+  
   .hasici-item {
     padding: 14px;
   }

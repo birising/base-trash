@@ -1,0 +1,259 @@
+{
+  "location": "Broky",
+  "center": [50.1322, 14.222],
+  "zoom": 15,
+  "chodniky": [
+    {
+      "id": "ch1",
+      "type": "chodnik",
+      "coordinates": [
+        [50.1285, 14.218],
+        [50.1285, 14.225],
+        [50.130, 14.225],
+        [50.132, 14.224],
+        [50.134, 14.223],
+        [50.136, 14.222]
+      ]
+    },
+    {
+      "id": "ch2",
+      "type": "chodnik",
+      "coordinates": [
+        [50.130, 14.220],
+        [50.132, 14.220],
+        [50.134, 14.220]
+      ]
+    },
+    {
+      "id": "ch3",
+      "type": "chodnik",
+      "coordinates": [
+        [50.132, 14.222],
+        [50.133, 14.225],
+        [50.134, 14.228]
+      ]
+    },
+    {
+      "id": "ch4",
+      "type": "chodnik",
+      "coordinates": [
+        [50.130, 14.220],
+        [50.129, 14.217],
+        [50.128, 14.215]
+      ]
+    },
+    {
+      "id": "ch5",
+      "type": "chodnik",
+      "coordinates": [
+        [50.131, 14.219],
+        [50.1315, 14.221],
+        [50.1325, 14.222],
+        [50.1335, 14.223]
+      ]
+    },
+    {
+      "id": "ch6",
+      "type": "chodnik",
+      "coordinates": [
+        [50.129, 14.222],
+        [50.1305, 14.223],
+        [50.132, 14.224]
+      ]
+    },
+    {
+      "id": "ch7",
+      "type": "chodnik",
+      "coordinates": [
+        [50.133, 14.220],
+        [50.1335, 14.222],
+        [50.134, 14.224]
+      ]
+    },
+    {
+      "id": "ch8",
+      "type": "chodnik",
+      "coordinates": [
+        [50.1305, 14.218],
+        [50.131, 14.219],
+        [50.1315, 14.220]
+      ]
+    }
+  ],
+  "silnice": [
+    {
+      "id": "s1",
+      "type": "silnice",
+      "coordinates": [
+        [50.1285, 14.218],
+        [50.1285, 14.225],
+        [50.130, 14.225],
+        [50.132, 14.224],
+        [50.134, 14.223],
+        [50.136, 14.222]
+      ]
+    },
+    {
+      "id": "s2",
+      "type": "silnice",
+      "coordinates": [
+        [50.130, 14.220],
+        [50.132, 14.220],
+        [50.134, 14.220]
+      ]
+    },
+    {
+      "id": "s3",
+      "type": "silnice",
+      "coordinates": [
+        [50.132, 14.222],
+        [50.133, 14.225],
+        [50.134, 14.228]
+      ]
+    },
+    {
+      "id": "s4",
+      "type": "silnice",
+      "coordinates": [
+        [50.130, 14.220],
+        [50.129, 14.217],
+        [50.128, 14.215]
+      ]
+    },
+    {
+      "id": "s5",
+      "type": "silnice",
+      "coordinates": [
+        [50.131, 14.223],
+        [50.132, 14.224],
+        [50.133, 14.225]
+      ]
+    },
+    {
+      "id": "s6",
+      "type": "silnice",
+      "coordinates": [
+        [50.1315, 14.221],
+        [50.1325, 14.222],
+        [50.1335, 14.223]
+      ]
+    }
+  ],
+  "zabosnikove_nadoby": [
+    {
+      "id": "zn1",
+      "type": "zabosnikova_nadoba",
+      "lat": 50.1315,
+      "lng": 14.222,
+      "name": "Zásobníková nádoba 1"
+    },
+    {
+      "id": "zn2",
+      "type": "zabosnikova_nadoba",
+      "lat": 50.1325,
+      "lng": 14.2225,
+      "name": "Zásobníková nádoba 2"
+    },
+    {
+      "id": "zn3",
+      "type": "zabosnikova_nadoba",
+      "lat": 50.1335,
+      "lng": 14.223,
+      "name": "Zásobníková nádoba 3"
+    },
+    {
+      "id": "zn4",
+      "type": "zabosnikova_nadoba",
+      "lat": 50.1305,
+      "lng": 14.2205,
+      "name": "Zásobníková nádoba 4"
+    },
+    {
+      "id": "zn5",
+      "type": "zabosnikova_nadoba",
+      "lat": 50.134,
+      "lng": 14.225,
+      "name": "Zásobníková nádoba 5"
+    },
+    {
+      "id": "zn6",
+      "type": "zabosnikova_nadoba",
+      "lat": 50.135,
+      "lng": 14.227,
+      "name": "Zásobníková nádoba 6"
+    }
+  ],
+  "nadoby_na_posyp": [
+    {
+      "id": "np1",
+      "type": "nadoba_na_posyp",
+      "lat": 50.1305,
+      "lng": 14.221,
+      "name": "Nádoba na posyp 1"
+    },
+    {
+      "id": "np2",
+      "type": "nadoba_na_posyp",
+      "lat": 50.131,
+      "lng": 14.222,
+      "name": "Nádoba na posyp 2"
+    },
+    {
+      "id": "np3",
+      "type": "nadoba_na_posyp",
+      "lat": 50.1315,
+      "lng": 14.223,
+      "name": "Nádoba na posyp 3"
+    },
+    {
+      "id": "np4",
+      "type": "nadoba_na_posyp",
+      "lat": 50.132,
+      "lng": 14.224,
+      "name": "Nádoba na posyp 4"
+    },
+    {
+      "id": "np5",
+      "type": "nadoba_na_posyp",
+      "lat": 50.1325,
+      "lng": 14.225,
+      "name": "Nádoba na posyp 5"
+    },
+    {
+      "id": "np6",
+      "type": "nadoba_na_posyp",
+      "lat": 50.133,
+      "lng": 14.226,
+      "name": "Nádoba na posyp 6"
+    },
+    {
+      "id": "np7",
+      "type": "nadoba_na_posyp",
+      "lat": 50.130,
+      "lng": 14.219,
+      "name": "Nádoba na posyp 7"
+    },
+    {
+      "id": "np8",
+      "type": "nadoba_na_posyp",
+      "lat": 50.1335,
+      "lng": 14.224,
+      "name": "Nádoba na posyp 8"
+    },
+    {
+      "id": "np9",
+      "type": "nadoba_na_posyp",
+      "lat": 50.134,
+      "lng": 14.223,
+      "name": "Nádoba na posyp 9"
+    },
+    {
+      "id": "np10",
+      "type": "nadoba_na_posyp",
+      "lat": 50.1315,
+      "lng": 14.220,
+      "name": "Nádoba na posyp 10"
+    }
+  ]
+}
+

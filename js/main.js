@@ -3065,55 +3065,40 @@ Odkaz do aplikace: ${appUrl}`;
           });
           zimniBaseLayer.addTo(window.zimniUdrzbaMap);
           
-          // Set initial view to Běloky
+          // Set initial view (will be updated when data loads)
           window.zimniUdrzbaMap.setView([50.1322, 14.222], 14);
           
-          // Add area polygon for Běloky (approximate boundaries)
-          const belokyArea = L.polygon([
-            [50.128, 14.215],
-            [50.128, 14.230],
-            [50.137, 14.230],
-            [50.137, 14.215],
-            [50.128, 14.215]
-          ], {
-            color: '#3b82f6',
-            fillColor: '#3b82f6',
-            fillOpacity: 0.1,
-            weight: 2,
-            dashArray: '5, 5'
-          }).addTo(window.zimniUdrzbaMap);
+          // Load and display winter maintenance data for Broky
+          loadBrokyZimniUdrzbaData();
           
-          // Add label for Běloky area
-          L.marker([50.1325, 14.2225], {
-            icon: L.divIcon({
-              className: 'beloky-label',
-              html: '<div style="background: rgba(59, 130, 246, 0.9); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; white-space: nowrap;">Běloky</div>',
-              iconSize: [60, 20],
-              iconAnchor: [30, 10]
-            })
-          }).addTo(window.zimniUdrzbaMap);
-          
-          // Add main roads in Běloky area (approximate coordinates)
-          const mainRoads = [
-            // Main road through village
-            [[50.1285, 14.218], [50.1285, 14.225], [50.130, 14.225], [50.132, 14.224], [50.134, 14.223], [50.136, 14.222]],
-            // Cross road
-            [[50.130, 14.220], [50.132, 14.220], [50.134, 14.220]],
-            // Road to north
-            [[50.132, 14.222], [50.133, 14.225], [50.134, 14.228]],
-            // Road to south
-            [[50.130, 14.220], [50.129, 14.217], [50.128, 14.215]]
-          ];
-          
-          mainRoads.forEach((road, index) => {
-            L.polyline(road, {
-              color: '#f59e0b',
-              weight: 4,
-              opacity: 0.8,
-              lineCap: 'round',
-              lineJoin: 'round'
-            }).addTo(window.zimniUdrzbaMap);
-          });
+          // Add legend
+          const legend = L.control({ position: 'topright' });
+          legend.onAdd = function() {
+            const div = L.DomUtil.create('div', 'zimni-udrzba-legend');
+            div.innerHTML = `
+              <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 12px;">
+                <div style="font-weight: bold; margin-bottom: 8px; font-size: 13px;">Zimní údržba Broky</div>
+                <div style="margin-bottom: 6px;">
+                  <div style="display: inline-block; width: 20px; height: 4px; background: #dc2626; margin-right: 8px; vertical-align: middle;"></div>
+                  <span>CHODNÍKY</span>
+                </div>
+                <div style="margin-bottom: 6px;">
+                  <div style="display: inline-block; width: 20px; height: 4px; background: #fbbf24; margin-right: 8px; vertical-align: middle;"></div>
+                  <span>Silnice</span>
+                </div>
+                <div style="margin-bottom: 6px;">
+                  <div style="display: inline-block; width: 12px; height: 12px; background: #ec4899; border: 2px solid #000; border-radius: 50%; margin-right: 8px; vertical-align: middle;"></div>
+                  <span>Zásobníková nádoba na posyp</span>
+                </div>
+                <div>
+                  <div style="display: inline-block; width: 12px; height: 12px; background: #3b82f6; border: 2px solid #000; border-radius: 50%; margin-right: 8px; vertical-align: middle;"></div>
+                  <span>Nádoba na posyp</span>
+                </div>
+              </div>
+            `;
+            return div;
+          };
+          legend.addTo(window.zimniUdrzbaMap);
           
           // Invalidate size after a short delay to ensure container is visible
           setTimeout(() => {
@@ -3122,7 +3107,10 @@ Odkaz do aplikace: ${appUrl}`;
             }
           }, 100);
         } else if (window.zimniUdrzbaMap) {
-          // Map already exists, just invalidate size
+          // Map already exists, ensure data is loaded and invalidate size
+          if (!window.zimniUdrzbaLayers) {
+            loadBrokyZimniUdrzbaData();
+          }
           setTimeout(() => {
             if (window.zimniUdrzbaMap) {
               window.zimniUdrzbaMap.invalidateSize();
@@ -3184,6 +3172,112 @@ Odkaz do aplikace: ${appUrl}`;
       backButton.classList.remove("hidden");
     } else {
       backButton.classList.add("hidden");
+    }
+  }
+
+  async function loadBrokyZimniUdrzbaData() {
+    if (!window.zimniUdrzbaMap) return;
+    
+    try {
+      const response = await fetch('data/broky_zimni_udrzba.json');
+      if (!response.ok) throw new Error('Failed to load winter maintenance data');
+      const data = await response.json();
+      
+      // Clear existing layers if any
+      if (window.zimniUdrzbaLayers) {
+        Object.values(window.zimniUdrzbaLayers).forEach(layer => {
+          if (layer && layer.clearLayers) layer.clearLayers();
+        });
+      }
+      
+      window.zimniUdrzbaLayers = {
+        chodniky: L.layerGroup(),
+        silnice: L.layerGroup(),
+        zabosnikoveNadoby: L.layerGroup(),
+        nadobyNaPosyp: L.layerGroup()
+      };
+      
+      // Add chodníky (red lines)
+      if (data.chodniky) {
+        data.chodniky.forEach(chodnik => {
+          const polyline = L.polyline(chodnik.coordinates, {
+            color: '#dc2626',
+            weight: 4,
+            opacity: 0.9,
+            lineCap: 'round',
+            lineJoin: 'round'
+          });
+          polyline.addTo(window.zimniUdrzbaLayers.chodniky);
+        });
+        window.zimniUdrzbaLayers.chodniky.addTo(window.zimniUdrzbaMap);
+      }
+      
+      // Add silnice (yellow lines)
+      if (data.silnice) {
+        data.silnice.forEach(silnice => {
+          const polyline = L.polyline(silnice.coordinates, {
+            color: '#fbbf24',
+            weight: 4,
+            opacity: 0.9,
+            lineCap: 'round',
+            lineJoin: 'round'
+          });
+          polyline.addTo(window.zimniUdrzbaLayers.silnice);
+        });
+        window.zimniUdrzbaLayers.silnice.addTo(window.zimniUdrzbaMap);
+      }
+      
+      // Add zásobníkové nádoby (pink circles)
+      if (data.zabosnikove_nadoby) {
+        data.zabosnikove_nadoby.forEach(nadoba => {
+          const circle = L.circleMarker([nadoba.lat, nadoba.lng], {
+            radius: 8,
+            fillColor: '#ec4899',
+            color: '#000000',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+          });
+          circle.bindPopup(`<strong>${nadoba.name}</strong><br>Zásobníková nádoba na posyp`);
+          circle.addTo(window.zimniUdrzbaLayers.zabosnikoveNadoby);
+        });
+        window.zimniUdrzbaLayers.zabosnikoveNadoby.addTo(window.zimniUdrzbaMap);
+      }
+      
+      // Add nádoby na posyp (blue circles)
+      if (data.nadoby_na_posyp) {
+        data.nadoby_na_posyp.forEach(nadoba => {
+          const circle = L.circleMarker([nadoba.lat, nadoba.lng], {
+            radius: 8,
+            fillColor: '#3b82f6',
+            color: '#000000',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+          });
+          circle.bindPopup(`<strong>${nadoba.name}</strong><br>Nádoba na posyp`);
+          circle.addTo(window.zimniUdrzbaLayers.nadobyNaPosyp);
+        });
+        window.zimniUdrzbaLayers.nadobyNaPosyp.addTo(window.zimniUdrzbaMap);
+      }
+      
+      // Update map view if center and zoom are specified
+      if (data.center && data.zoom) {
+        window.zimniUdrzbaMap.setView(data.center, data.zoom);
+      }
+      
+      // Add label for Broky
+      L.marker([data.center[0] + 0.0003, data.center[1] + 0.0003], {
+        icon: L.divIcon({
+          className: 'broky-label',
+          html: `<div style="background: rgba(59, 130, 246, 0.9); color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; white-space: nowrap;">${data.location}</div>`,
+          iconSize: [60, 20],
+          iconAnchor: [30, 10]
+        })
+      }).addTo(window.zimniUdrzbaMap);
+      
+    } catch (error) {
+      console.error('Error loading winter maintenance data:', error);
     }
   }
 

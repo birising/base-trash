@@ -1469,6 +1469,21 @@
   border: none !important;
 }
 
+.broky-label {
+  background: transparent !important;
+  border: none !important;
+}
+
+.zimni-udrzba-legend {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.zimni-udrzba-legend .leaflet-control {
+  margin: 10px !important;
+}
+
 .zavady-view {
   padding: 20px;
   overflow-y: auto;

@@ -818,10 +818,11 @@ async function loadKriminalitaData() {
             }
 
             const text = await proxyResponse.text();
-            if (text && text.length > 100) { // Basic validation
+            const trimmed = text ? text.trim() : '';
+            if (trimmed) { // Basic validation
               try {
                 // Try to parse as JSON
-                const parsed = JSON.parse(text);
+                const parsed = JSON.parse(trimmed);
                 // Validate it's actually GeoJSON
                 if (parsed && (parsed.type === 'FeatureCollection' || parsed.features)) {
                   console.log(`Proxy ${i + 1} úspěšný! Načteno ${parsed.features?.length || 0} záznamů`);
@@ -833,7 +834,7 @@ async function loadKriminalitaData() {
                 }
               } catch (parseError) {
                 // If parsing fails, try to extract JSON from HTML response (some proxies wrap it)
-                const jsonMatch = text.match(/\{[\s\S]*"type"\s*:\s*"FeatureCollection"[\s\S]*\}/);
+                const jsonMatch = trimmed.match(/\{[\s\S]*"type"\s*:\s*"FeatureCollection"[\s\S]*\}/);
                 if (jsonMatch) {
                   try {
                     const extracted = JSON.parse(jsonMatch[0]);
@@ -853,7 +854,7 @@ async function loadKriminalitaData() {
                 continue;
               }
             } else {
-              console.warn(`Proxy ${i + 1} vrátil příliš krátkou odpověď (${text?.length || 0} znaků)`);
+              console.warn(`Proxy ${i + 1} vrátil prázdnou odpověď`);
             }
           } catch (proxyError) {
             console.warn(`Proxy ${i + 1} selhal:`, proxyError.message);

@@ -174,11 +174,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     console.error('loadAllData function is not available');
   }
   
-  // Load zavady data for dashboard counter
+  // Load zavady data for dashboard counter (UI update happens later)
   try {
     const result = await loadZavadyData();
     dataZavady = result.zavady || result; // Support both old and new format
-    updateCounters();
   } catch (error) {
     console.warn('Nepodařilo se načíst data závad pro dashboard:', error);
   }

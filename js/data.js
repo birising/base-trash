@@ -775,117 +775,132 @@ async function loadKoseTelemetry() {
 
 async function loadKriminalitaData() {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-    
-    const feedUrl = 'https://kriminalita.policie.gov.cz/api/v2/downloads/2025_532070.geojson';
-    
-    // Use CORS proxies directly - skip direct fetch to avoid CORS errors
-    const proxyServices = [
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`,
-      `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`,
-      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feedUrl)}`
-    ];
-    
-    let geojson = null;
-    let error = null;
-    
-    // Try CORS proxies directly
-    for (let i = 0; i < proxyServices.length; i++) {
-        const proxyUrl = proxyServices[i];
-        try {
-          console.log(`Zkouším proxy ${i + 1}/${proxyServices.length}: ${proxyUrl.substring(0, 50)}...`);
-          const proxyController = new AbortController();
-          const proxyTimeoutId = setTimeout(() => proxyController.abort(), 20000);
-          
-          const proxyResponse = await fetch(proxyUrl, {
-            signal: proxyController.signal,
-            headers: {
-              'Accept': 'application/geo+json, application/json, text/plain'
-            }
-          });
-          
-          clearTimeout(proxyTimeoutId);
-          
-          if (!proxyResponse.ok) {
-            console.warn(`Proxy ${i + 1} vrátil HTTP ${proxyResponse.status}`);
-            continue;
-          }
-          
-          const text = await proxyResponse.text();
-          if (text && text.length > 100) { // Basic validation
-            try {
-              // Try to parse as JSON
-              const parsed = JSON.parse(text);
-              // Validate it's actually GeoJSON
-              if (parsed && (parsed.type === 'FeatureCollection' || parsed.features)) {
-                console.log(`Proxy ${i + 1} úspěšný! Načteno ${parsed.features?.length || 0} záznamů`);
-                geojson = parsed;
-                error = null;
-                break;
-              } else {
-                console.warn(`Proxy ${i + 1} vrátil data, ale není to GeoJSON`);
+    const years = [2026, 2025];
+    const aggregatedFeatures = [];
+    let lastError = null;
+
+    for (const year of years) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      const feedUrl = `https://kriminalita.policie.gov.cz/api/v2/downloads/${year}_532070.geojson`;
+
+      // Use CORS proxies directly - skip direct fetch to avoid CORS errors
+      const proxyServices = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`,
+        `https://corsproxy.io/?${encodeURIComponent(feedUrl)}`,
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feedUrl)}`
+      ];
+
+      let geojson = null;
+      let error = null;
+
+      // Try CORS proxies directly
+      for (let i = 0; i < proxyServices.length; i++) {
+          const proxyUrl = proxyServices[i];
+          try {
+            console.log(`Zkouším proxy ${i + 1}/${proxyServices.length}: ${proxyUrl.substring(0, 50)}...`);
+            const proxyController = new AbortController();
+            const proxyTimeoutId = setTimeout(() => proxyController.abort(), 20000);
+
+            const proxyResponse = await fetch(proxyUrl, {
+              signal: proxyController.signal,
+              headers: {
+                'Accept': 'application/geo+json, application/json, text/plain'
               }
-            } catch (parseError) {
-              // If parsing fails, try to extract JSON from HTML response (some proxies wrap it)
-              const jsonMatch = text.match(/\{[\s\S]*"type"\s*:\s*"FeatureCollection"[\s\S]*\}/);
-              if (jsonMatch) {
-                try {
-                  const extracted = JSON.parse(jsonMatch[0]);
-                  if (extracted && (extracted.type === 'FeatureCollection' || extracted.features)) {
-                    console.log(`Proxy ${i + 1} úspěšný (extrahováno z HTML)! Načteno ${extracted.features?.length || 0} záznamů`);
-                    geojson = extracted;
-                    error = null;
-                    break;
-                  }
-                } catch (e) {
-                  console.warn(`Proxy ${i + 1} - chyba při parsování extrahovaného JSON:`, e);
-                  continue;
-                }
-              } else {
-                console.warn(`Proxy ${i + 1} - nelze extrahovat JSON z odpovědi`);
-              }
+            });
+
+            clearTimeout(proxyTimeoutId);
+
+            if (!proxyResponse.ok) {
+              console.warn(`Proxy ${i + 1} vrátil HTTP ${proxyResponse.status}`);
               continue;
             }
-          } else {
-            console.warn(`Proxy ${i + 1} vrátil příliš krátkou odpověď (${text?.length || 0} znaků)`);
+
+            const text = await proxyResponse.text();
+            if (text && text.length > 100) { // Basic validation
+              try {
+                // Try to parse as JSON
+                const parsed = JSON.parse(text);
+                // Validate it's actually GeoJSON
+                if (parsed && (parsed.type === 'FeatureCollection' || parsed.features)) {
+                  console.log(`Proxy ${i + 1} úspěšný! Načteno ${parsed.features?.length || 0} záznamů`);
+                  geojson = parsed;
+                  error = null;
+                  break;
+                } else {
+                  console.warn(`Proxy ${i + 1} vrátil data, ale není to GeoJSON`);
+                }
+              } catch (parseError) {
+                // If parsing fails, try to extract JSON from HTML response (some proxies wrap it)
+                const jsonMatch = text.match(/\{[\s\S]*"type"\s*:\s*"FeatureCollection"[\s\S]*\}/);
+                if (jsonMatch) {
+                  try {
+                    const extracted = JSON.parse(jsonMatch[0]);
+                    if (extracted && (extracted.type === 'FeatureCollection' || extracted.features)) {
+                      console.log(`Proxy ${i + 1} úspěšný (extrahováno z HTML)! Načteno ${extracted.features?.length || 0} záznamů`);
+                      geojson = extracted;
+                      error = null;
+                      break;
+                    }
+                  } catch (e) {
+                    console.warn(`Proxy ${i + 1} - chyba při parsování extrahovaného JSON:`, e);
+                    continue;
+                  }
+                } else {
+                  console.warn(`Proxy ${i + 1} - nelze extrahovat JSON z odpovědi`);
+                }
+                continue;
+              }
+            } else {
+              console.warn(`Proxy ${i + 1} vrátil příliš krátkou odpověď (${text?.length || 0} znaků)`);
+            }
+          } catch (proxyError) {
+            console.warn(`Proxy ${i + 1} selhal:`, proxyError.message);
+            continue;
           }
-        } catch (proxyError) {
-          console.warn(`Proxy ${i + 1} selhal:`, proxyError.message);
-          continue;
-        }
+      }
+
+      clearTimeout(timeoutId);
+
+      if (!geojson) {
+        lastError = error;
+        continue;
+      }
+
+      if (geojson && geojson.features) {
+        aggregatedFeatures.push(...geojson.features);
+      }
     }
-    
-    if (!geojson) {
-      const errorMsg = error?.message || 'Neznámá chyba';
-      
+
+    if (!aggregatedFeatures.length) {
+      const errorMsg = lastError?.message || 'Neznámá chyba';
+
       // Log detailed error for debugging
       console.error('Kriminalita data loading failed:', {
         error: errorMsg,
-        triedProxies: proxyServices.length
+        triedYears: years.length
       });
-      
+
       throw new Error(`Nepodařilo se načíst data kriminality přes proxy: ${errorMsg}`);
     }
-    
-    if (geojson && geojson.features) {
-      dataKriminalita = geojson.features.map(feature => {
-        const props = feature.properties || {};
-        const coords = feature.geometry?.coordinates || [];
-        return {
-          id: props.id,
-          lat: coords[1],
-          lng: coords[0],
-          date: props.date ? new Date(props.date) : null,
-          state: props.state,
-          relevance: props.relevance,
-          types: props.types || [],
-          mp: props.mp || false,
-          category: 'kriminalita'
-        };
-      });
-    }
-    
+
+    dataKriminalita = aggregatedFeatures.map(feature => {
+      const props = feature.properties || {};
+      const coords = feature.geometry?.coordinates || [];
+      return {
+        id: props.id,
+        lat: coords[1],
+        lng: coords[0],
+        date: props.date ? new Date(props.date) : null,
+        state: props.state,
+        relevance: props.relevance,
+        types: props.types || [],
+        mp: props.mp || false,
+        category: 'kriminalita'
+      };
+    });
+
     return dataKriminalita;
   } catch (error) {
     if (error.name === 'AbortError') {

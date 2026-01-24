@@ -2461,15 +2461,7 @@ Odkaz do aplikace: ${appUrl}`;
         nextPickupDay.setHours(0, 0, 0, 0);
       }
       
-      const isToday = nextPickupDay.getTime() === today.getTime();
-      const displayDate = isToday 
-        ? (() => {
-            const nextAfterToday = new Date(nextPickupDate);
-            nextAfterToday.setDate(nextAfterToday.getDate() + wasteSchedule.intervalDays);
-            return nextAfterToday;
-          })()
-        : nextPickupDate;
-      
+      const displayDate = nextPickupDate;
       counters.odpad.textContent = displayDate.toLocaleDateString("cs-CZ");
     }
     
@@ -2542,17 +2534,8 @@ Odkaz do aplikace: ${appUrl}`;
     }
     
     const isToday = nextPickupDay.getTime() === today.getTime();
-    
-    // If today is pickup day, show the next one after today
-    const displayDate = isToday 
-      ? (() => {
-          const nextAfterToday = new Date(nextPickupDate);
-          nextAfterToday.setDate(nextAfterToday.getDate() + wasteSchedule.intervalDays);
-          return nextAfterToday;
-        })()
-      : nextPickupDate;
-    
-    const countdown = formatCountdown(displayDate);
+    const displayDate = nextPickupDate;
+    const countdown = isToday ? "Dnes" : formatCountdown(displayDate);
 
     nextPickupDateEl.textContent = formatDate(displayDate);
     if (nextPickupDateLabelEl) {

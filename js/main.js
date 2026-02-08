@@ -3186,9 +3186,15 @@ Odkaz do aplikace: ${appUrl}`;
   // Load winter maintenance data using ArcGIS Graphics API
   async function loadBrokyZimniUdrzbaDataArcGIS() {
     if (!window.zimniUdrzbaMapView || !window.zimniUdrzbaGraphicsLayer) {
-      console.warn('ArcGIS map or graphics layer not initialized');
+      console.warn('ArcGIS map or graphics layer not initialized', {
+        view: !!window.zimniUdrzbaMapView,
+        layer: !!window.zimniUdrzbaGraphicsLayer
+      });
       return;
     }
+    
+    console.log('Graphics layer before loading:', window.zimniUdrzbaGraphicsLayer);
+    console.log('Graphics count before:', window.zimniUdrzbaGraphicsLayer.graphics.length);
     
     try {
       console.log('Fetching winter maintenance data...');
@@ -3411,22 +3417,39 @@ Odkaz do aplikace: ${appUrl}`;
         console.log('Test polygon added');
         
         console.log(`Adding ${graphics.length} graphics to layer...`);
+        console.log('Graphics layer:', window.zimniUdrzbaGraphicsLayer);
+        console.log('Graphics samples:', graphics.slice(0, 2));
         
         // Add all graphics to the layer
         if (graphics.length > 0) {
-          window.zimniUdrzbaGraphicsLayer.addMany(graphics);
-          console.log('Graphics added successfully');
-          
-          // Fit view to graphics extent
-          window.zimniUdrzbaMapView.whenLayerView(window.zimniUdrzbaGraphicsLayer).then((layerView) => {
-            if (graphics.length > 0) {
-              const extent = graphics[0].geometry.extent;
-              graphics.slice(1).forEach(g => {
-                extent.union(g.geometry.extent);
-              });
-              window.zimniUdrzbaMapView.goTo(extent.expand(1.2));
-            }
-          });
+          try {
+            window.zimniUdrzbaGraphicsLayer.addMany(graphics);
+            console.log('Graphics added successfully. Total graphics:', window.zimniUdrzbaGraphicsLayer.graphics.length);
+            
+            // Force map refresh
+            window.zimniUdrzbaMapView.whenLayerView(window.zimniUdrzbaGraphicsLayer).then((layerView) => {
+              console.log('Layer view ready');
+              if (graphics.length > 0) {
+                try {
+                  const extent = graphics[0].geometry.extent;
+                  graphics.slice(1).forEach(g => {
+                    if (g.geometry && g.geometry.extent) {
+                      extent.union(g.geometry.extent);
+                    }
+                  });
+                  window.zimniUdrzbaMapView.goTo(extent.expand(1.2)).then(() => {
+                    console.log('Map view updated to show graphics');
+                  });
+                } catch (extentError) {
+                  console.warn('Error calculating extent:', extentError);
+                }
+              }
+            }).catch(err => {
+              console.error('Error getting layer view:', err);
+            });
+          } catch (addError) {
+            console.error('Error adding graphics:', addError);
+          }
         } else {
           console.warn('No graphics to add');
         }

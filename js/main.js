@@ -3169,14 +3169,13 @@ Odkaz do aplikace: ${appUrl}`;
         };
         
         // Add a simple test point immediately to verify graphics work
+        // Wait for modules to be available
         const testPoint = new Graphic({
-          geometry: {
-            type: "point",
+          geometry: new Point({
             longitude: 14.222,
             latitude: 50.1322
-          },
-          symbol: {
-            type: "simple-marker",
+          }),
+          symbol: new SimpleMarkerSymbol({
             style: "circle",
             color: [255, 0, 0], // Red
             size: 20,
@@ -3184,7 +3183,7 @@ Odkaz do aplikace: ${appUrl}`;
               color: [255, 255, 255],
               width: 2
             }
-          },
+          }),
           attributes: {
             Name: "Test Point"
           },
@@ -3254,8 +3253,16 @@ Odkaz do aplikace: ${appUrl}`;
       ], (Graphic, Polyline, Point, Polygon, SimpleLineSymbol, SimpleMarkerSymbol, SimpleFillSymbol, PopupTemplate) => {
         console.log('ArcGIS modules loaded for graphics');
         
-        // Clear existing graphics
-        window.zimniUdrzbaGraphicsLayer.removeAll();
+        // Clear existing graphics (but keep test point)
+        const existingCount = window.zimniUdrzbaGraphicsLayer.graphics.length;
+        if (existingCount > 1) {
+          // Remove all except first (test point)
+          const testPoint = window.zimniUdrzbaGraphicsLayer.graphics.getItemAt(0);
+          window.zimniUdrzbaGraphicsLayer.removeAll();
+          if (testPoint) {
+            window.zimniUdrzbaGraphicsLayer.add(testPoint);
+          }
+        }
         
         const graphics = [];
         
@@ -3266,17 +3273,17 @@ Odkaz do aplikace: ${appUrl}`;
             // Convert coordinates from [lat, lng] to [lng, lat] for ArcGIS
             const paths = chodnik.coordinates.map(coord => [coord[1], coord[0]]);
             
-            const polylineGeometry = {
-              type: "polyline",
+            // Use Polyline class instance
+            const polylineGeometry = new Polyline({
               paths: paths
-            };
+            });
             
-            const lineSymbol = {
-              type: "simple-line",
+            // Use SimpleLineSymbol class instance
+            const lineSymbol = new SimpleLineSymbol({
               color: [220, 38, 38], // #dc2626
               width: 4,
               style: "solid"
-            };
+            });
             
             const graphic = new Graphic({
               geometry: polylineGeometry,
@@ -3302,17 +3309,17 @@ Odkaz do aplikace: ${appUrl}`;
             // Convert coordinates from [lat, lng] to [lng, lat] for ArcGIS
             const paths = silnice.coordinates.map(coord => [coord[1], coord[0]]);
             
-            const polylineGeometry = {
-              type: "polyline",
+            // Use Polyline class instance
+            const polylineGeometry = new Polyline({
               paths: paths
-            };
+            });
             
-            const lineSymbol = {
-              type: "simple-line",
+            // Use SimpleLineSymbol class instance
+            const lineSymbol = new SimpleLineSymbol({
               color: [251, 191, 36], // #fbbf24
               width: 4,
               style: "solid"
-            };
+            });
             
             const graphic = new Graphic({
               geometry: polylineGeometry,
@@ -3335,14 +3342,14 @@ Odkaz do aplikace: ${appUrl}`;
         if (data.zabosnikove_nadoby && Array.isArray(data.zabosnikove_nadoby)) {
           console.log(`Adding ${data.zabosnikove_nadoby.length} zásobníkové nádoby...`);
           data.zabosnikove_nadoby.forEach(nadoba => {
-            const pointGeometry = {
-              type: "point",
+            // Use Point class instance
+            const pointGeometry = new Point({
               longitude: nadoba.lng,
               latitude: nadoba.lat
-            };
+            });
             
-            const markerSymbol = {
-              type: "simple-marker",
+            // Use SimpleMarkerSymbol class instance
+            const markerSymbol = new SimpleMarkerSymbol({
               style: "circle",
               color: [236, 72, 153], // #ec4899
               size: 16,
@@ -3350,7 +3357,7 @@ Odkaz do aplikace: ${appUrl}`;
                 color: [0, 0, 0],
                 width: 2
               }
-            };
+            });
             
             const graphic = new Graphic({
               geometry: pointGeometry,
@@ -3373,14 +3380,14 @@ Odkaz do aplikace: ${appUrl}`;
         if (data.nadoby_na_posyp && Array.isArray(data.nadoby_na_posyp)) {
           console.log(`Adding ${data.nadoby_na_posyp.length} nádoby na posyp...`);
           data.nadoby_na_posyp.forEach(nadoba => {
-            const pointGeometry = {
-              type: "point",
+            // Use Point class instance
+            const pointGeometry = new Point({
               longitude: nadoba.lng,
               latitude: nadoba.lat
-            };
+            });
             
-            const markerSymbol = {
-              type: "simple-marker",
+            // Use SimpleMarkerSymbol class instance
+            const markerSymbol = new SimpleMarkerSymbol({
               style: "circle",
               color: [59, 130, 246], // #3b82f6
               size: 16,
@@ -3388,7 +3395,7 @@ Odkaz do aplikace: ${appUrl}`;
                 color: [0, 0, 0],
                 width: 2
               }
-            };
+            });
             
             const graphic = new Graphic({
               geometry: pointGeometry,
@@ -3408,8 +3415,7 @@ Odkaz do aplikace: ${appUrl}`;
         }
         
         // Add test polygon (area around Broky)
-        const testPolygonGeometry = {
-          type: "polygon",
+        const testPolygonGeometry = new Polygon({
           rings: [
             [
               [14.215, 50.128], // [lng, lat]
@@ -3419,17 +3425,16 @@ Odkaz do aplikace: ${appUrl}`;
               [14.215, 50.128] // Close the ring
             ]
           ]
-        };
+        });
         
-        const polygonSymbol = {
-          type: "simple-fill",
+        const polygonSymbol = new SimpleFillSymbol({
           color: [59, 130, 246, 0.3], // Blue with transparency
           outline: {
             color: [59, 130, 246],
             width: 2,
             style: "dash"
           }
-        };
+        });
         
         const testPolygonGraphic = new Graphic({
           geometry: testPolygonGeometry,

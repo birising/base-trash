@@ -512,6 +512,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const nextPickupDateLabelEl = document.getElementById("nextPickupDateLabel");
   const nextPickupCountdownEl = document.getElementById("nextPickupCountdown");
   const lastPickupLabelEl = document.getElementById("lastPickupLabel");
+  const wasteCountdownEl = document.getElementById("wasteCountdown");
   const upcomingPickupsEl = document.getElementById("upcomingPickups");
 
   const categoryLabel = document.getElementById("activeCategoryLabel");
@@ -2462,6 +2463,9 @@ Odkaz do aplikace: ${appUrl}`;
       
       const displayDate = nextPickupDate;
       counters.odpad.textContent = displayDate.toLocaleDateString("cs-CZ");
+      if (wasteCountdownEl) {
+        wasteCountdownEl.textContent = formatCountdown(displayDate);
+      }
     }
     
     // Update sběrný dvůr status (will be handled by interval, but update here too)
@@ -3032,70 +3036,17 @@ Odkaz do aplikace: ${appUrl}`;
     if (zimniUdrzbaView) {
       if (isZimniUdrzbaView) {
         zimniUdrzbaView.classList.remove("hidden");
-        // Initialize map for zimni udrzba if not already initialized
-        if (zimniUdrzbaMapContainer && !window.zimniUdrzbaMap) {
-          window.zimniUdrzbaMap = L.map("zimniUdrzbaMap", {
-            zoomControl: true,
-            attributionControl: true,
-          });
-          
-          // Add base layer
-          const zimniBaseLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: "abcd",
-            maxZoom: 19,
-          });
-          zimniBaseLayer.addTo(window.zimniUdrzbaMap);
-          
-          // Set initial view (will be updated when data loads)
-          window.zimniUdrzbaMap.setView([50.1322, 14.222], 14);
-          
-          // Load and display winter maintenance data for Broky
-          loadBrokyZimniUdrzbaData();
-          
-          // Add legend
-          const legend = L.control({ position: 'topright' });
-          legend.onAdd = function() {
-            const div = L.DomUtil.create('div', 'zimni-udrzba-legend');
-            div.innerHTML = `
-              <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 12px;">
-                <div style="font-weight: bold; margin-bottom: 8px; font-size: 13px;">Zimní údržba Broky</div>
-                <div style="margin-bottom: 6px;">
-                  <div style="display: inline-block; width: 20px; height: 4px; background: #dc2626; margin-right: 8px; vertical-align: middle;"></div>
-                  <span>CHODNÍKY</span>
-                </div>
-                <div style="margin-bottom: 6px;">
-                  <div style="display: inline-block; width: 20px; height: 4px; background: #fbbf24; margin-right: 8px; vertical-align: middle;"></div>
-                  <span>Silnice</span>
-                </div>
-                <div style="margin-bottom: 6px;">
-                  <div style="display: inline-block; width: 12px; height: 12px; background: #ec4899; border: 2px solid #000; border-radius: 50%; margin-right: 8px; vertical-align: middle;"></div>
-                  <span>Zásobníková nádoba na posyp</span>
-                </div>
-                <div>
-                  <div style="display: inline-block; width: 12px; height: 12px; background: #3b82f6; border: 2px solid #000; border-radius: 50%; margin-right: 8px; vertical-align: middle;"></div>
-                  <span>Nádoba na posyp</span>
-                </div>
-              </div>
-            `;
-            return div;
-          };
-          legend.addTo(window.zimniUdrzbaMap);
-          
-          // Invalidate size after a short delay to ensure container is visible
-          setTimeout(() => {
-            if (window.zimniUdrzbaMap) {
-              window.zimniUdrzbaMap.invalidateSize();
-            }
-          }, 100);
-        } else if (window.zimniUdrzbaMap) {
-          // Map already exists, ensure data is loaded and invalidate size
-          if (!window.zimniUdrzbaLayers) {
-            loadBrokyZimniUdrzbaData();
+        // Initialize ArcGIS map for zimni udrzba if not already initialized
+        if (zimniUdrzbaMapContainer && !window.zimniUdrzbaMapView) {
+          initializeArcGISZimniUdrzbaMap();
+        } else if (window.zimniUdrzbaMapView) {
+          // Map already exists, ensure data is loaded and resize
+          if (!window.zimniUdrzbaGraphicsLoaded) {
+            loadBrokyZimniUdrzbaDataArcGIS();
           }
           setTimeout(() => {
-            if (window.zimniUdrzbaMap) {
-              window.zimniUdrzbaMap.invalidateSize();
+            if (window.zimniUdrzbaMapView) {
+              window.zimniUdrzbaMapView.resize();
             }
           }, 100);
         }
@@ -3157,6 +3108,241 @@ Odkaz do aplikace: ${appUrl}`;
     }
   }
 
+  // Initialize ArcGIS map for winter maintenance
+  async function initializeArcGISZimniUdrzbaMap() {
+    // Check if ArcGIS is loaded
+    if (typeof window.require === 'undefined' && typeof require === 'undefined') {
+      // Wait for ArcGIS to load
+      setTimeout(initializeArcGISZimniUdrzbaMap, 100);
+      return;
+    }
+    
+    const arcgisRequire = window.require || require;
+    
+    arcgisRequire([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/GraphicsLayer",
+      "esri/Graphic",
+      "esri/geometry/Polyline",
+      "esri/geometry/Point",
+      "esri/symbols/SimpleLineSymbol",
+      "esri/symbols/SimpleMarkerSymbol",
+      "esri/PopupTemplate"
+    ], (Map, MapView, GraphicsLayer, Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate) => {
+      const map = new Map({
+        basemap: "hybrid" // Satellite with labels
+      });
+      
+      const view = new MapView({
+        container: "zimniUdrzbaMap",
+        map: map,
+        center: [14.222, 50.1322], // [longitude, latitude]
+        zoom: 15
+      });
+      
+      window.zimniUdrzbaMapView = view;
+      window.zimniUdrzbaGraphicsLayer = new GraphicsLayer();
+      map.add(window.zimniUdrzbaGraphicsLayer);
+      
+      // Store ArcGIS modules for later use
+      window.arcgisModules = {
+        Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate
+      };
+      
+      // Load data after map is ready
+      view.when(() => {
+        loadBrokyZimniUdrzbaDataArcGIS();
+      });
+    });
+  }
+  
+  // Load winter maintenance data using ArcGIS Graphics API
+  async function loadBrokyZimniUdrzbaDataArcGIS() {
+    if (!window.zimniUdrzbaMapView || !window.zimniUdrzbaGraphicsLayer) return;
+    
+    try {
+      const response = await fetch('data/broky_zimni_udrzba.json');
+      if (!response.ok) throw new Error('Failed to load winter maintenance data');
+      const data = await response.json();
+      
+      // Use stored modules or require them
+      const arcgisRequire = window.require || require;
+      
+      arcgisRequire([
+        "esri/Graphic",
+        "esri/geometry/Polyline",
+        "esri/geometry/Point",
+        "esri/symbols/SimpleLineSymbol",
+        "esri/symbols/SimpleMarkerSymbol",
+        "esri/PopupTemplate"
+      ], (Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate) => {
+        // Clear existing graphics
+        window.zimniUdrzbaGraphicsLayer.removeAll();
+        
+        const graphics = [];
+        
+        // Add chodníky (red lines)
+        if (data.chodniky) {
+          data.chodniky.forEach(chodnik => {
+            // Convert coordinates from [lat, lng] to [lng, lat] for ArcGIS
+            const paths = chodnik.coordinates.map(coord => [coord[1], coord[0]]);
+            
+            const polylineGeometry = {
+              type: "polyline",
+              paths: paths
+            };
+            
+            const lineSymbol = {
+              type: "simple-line",
+              color: [220, 38, 38], // #dc2626
+              width: 4,
+              style: "solid"
+            };
+            
+            const graphic = new Graphic({
+              geometry: polylineGeometry,
+              symbol: lineSymbol,
+              attributes: {
+                Name: chodnik.id || "Chodník",
+                Type: "CHODNÍKY"
+              },
+              popupTemplate: {
+                title: "{Name}",
+                content: "Chodník pro zimní údržbu"
+              }
+            });
+            
+            graphics.push(graphic);
+          });
+        }
+        
+        // Add silnice (yellow lines)
+        if (data.silnice) {
+          data.silnice.forEach(silnice => {
+            // Convert coordinates from [lat, lng] to [lng, lat] for ArcGIS
+            const paths = silnice.coordinates.map(coord => [coord[1], coord[0]]);
+            
+            const polylineGeometry = {
+              type: "polyline",
+              paths: paths
+            };
+            
+            const lineSymbol = {
+              type: "simple-line",
+              color: [251, 191, 36], // #fbbf24
+              width: 4,
+              style: "solid"
+            };
+            
+            const graphic = new Graphic({
+              geometry: polylineGeometry,
+              symbol: lineSymbol,
+              attributes: {
+                Name: silnice.id || "Silnice",
+                Type: "Silnice"
+              },
+              popupTemplate: {
+                title: "{Name}",
+                content: "Silnice pro zimní údržbu"
+              }
+            });
+            
+            graphics.push(graphic);
+          });
+        }
+        
+        // Add zásobníkové nádoby (pink circles)
+        if (data.zabosnikove_nadoby) {
+          data.zabosnikove_nadoby.forEach(nadoba => {
+            const pointGeometry = {
+              type: "point",
+              longitude: nadoba.lng,
+              latitude: nadoba.lat
+            };
+            
+            const markerSymbol = {
+              type: "simple-marker",
+              style: "circle",
+              color: [236, 72, 153], // #ec4899
+              size: 16,
+              outline: {
+                color: [0, 0, 0],
+                width: 2
+              }
+            };
+            
+            const graphic = new Graphic({
+              geometry: pointGeometry,
+              symbol: markerSymbol,
+              attributes: {
+                Name: nadoba.name,
+                Type: "Zásobníková nádoba na posyp"
+              },
+              popupTemplate: {
+                title: "{Name}",
+                content: "Zásobníková nádoba na posyp"
+              }
+            });
+            
+            graphics.push(graphic);
+          });
+        }
+        
+        // Add nádoby na posyp (blue circles)
+        if (data.nadoby_na_posyp) {
+          data.nadoby_na_posyp.forEach(nadoba => {
+            const pointGeometry = {
+              type: "point",
+              longitude: nadoba.lng,
+              latitude: nadoba.lat
+            };
+            
+            const markerSymbol = {
+              type: "simple-marker",
+              style: "circle",
+              color: [59, 130, 246], // #3b82f6
+              size: 16,
+              outline: {
+                color: [0, 0, 0],
+                width: 2
+              }
+            };
+            
+            const graphic = new Graphic({
+              geometry: pointGeometry,
+              symbol: markerSymbol,
+              attributes: {
+                Name: nadoba.name,
+                Type: "Nádoba na posyp"
+              },
+              popupTemplate: {
+                title: "{Name}",
+                content: "Nádoba na posyp"
+              }
+            });
+            
+            graphics.push(graphic);
+          });
+        }
+        
+        // Add all graphics to the layer
+        window.zimniUdrzbaGraphicsLayer.addMany(graphics);
+        window.zimniUdrzbaGraphicsLoaded = true;
+        
+        // Update map view if center and zoom are specified
+        if (data.center && data.zoom) {
+          window.zimniUdrzbaMapView.center = [data.center[1], data.center[0]]; // [lng, lat]
+          window.zimniUdrzbaMapView.zoom = data.zoom;
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error loading winter maintenance data:', error);
+    }
+  }
+  
+  // Legacy Leaflet function (kept for backward compatibility)
   async function loadBrokyZimniUdrzbaData() {
     if (!window.zimniUdrzbaMap) return;
     

@@ -3209,10 +3209,12 @@ Odkaz do aplikace: ${appUrl}`;
         "esri/Graphic",
         "esri/geometry/Polyline",
         "esri/geometry/Point",
+        "esri/geometry/Polygon",
         "esri/symbols/SimpleLineSymbol",
         "esri/symbols/SimpleMarkerSymbol",
+        "esri/symbols/SimpleFillSymbol",
         "esri/PopupTemplate"
-      ], (Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate) => {
+      ], (Graphic, Polyline, Point, Polygon, SimpleLineSymbol, SimpleMarkerSymbol, SimpleFillSymbol, PopupTemplate) => {
         console.log('ArcGIS modules loaded for graphics');
         
         // Clear existing graphics
@@ -3367,6 +3369,46 @@ Odkaz do aplikace: ${appUrl}`;
             graphics.push(graphic);
           });
         }
+        
+        // Add test polygon (area around Broky)
+        const testPolygonGeometry = {
+          type: "polygon",
+          rings: [
+            [
+              [14.215, 50.128], // [lng, lat]
+              [14.230, 50.128],
+              [14.230, 50.137],
+              [14.215, 50.137],
+              [14.215, 50.128] // Close the ring
+            ]
+          ]
+        };
+        
+        const polygonSymbol = {
+          type: "simple-fill",
+          color: [59, 130, 246, 0.3], // Blue with transparency
+          outline: {
+            color: [59, 130, 246],
+            width: 2,
+            style: "dash"
+          }
+        };
+        
+        const testPolygonGraphic = new Graphic({
+          geometry: testPolygonGeometry,
+          symbol: polygonSymbol,
+          attributes: {
+            Name: "Testovací polygon - Oblast Bělok",
+            Type: "Test"
+          },
+          popupTemplate: {
+            title: "{Name}",
+            content: "Testovací polygon pro ověření funkčnosti mapy"
+          }
+        });
+        
+        graphics.push(testPolygonGraphic);
+        console.log('Test polygon added');
         
         console.log(`Adding ${graphics.length} graphics to layer...`);
         

@@ -3110,64 +3110,98 @@ Odkaz do aplikace: ${appUrl}`;
 
   // Initialize ArcGIS map for winter maintenance
   async function initializeArcGISZimniUdrzbaMap() {
-    // Check if ArcGIS is loaded
-    if (typeof window.require === 'undefined' && typeof require === 'undefined') {
-      // Wait for ArcGIS to load
-      setTimeout(initializeArcGISZimniUdrzbaMap, 100);
-      return;
-    }
+    // Check if ArcGIS is loaded - wait for it
+    let retries = 0;
+    const maxRetries = 50; // 5 seconds max wait
     
-    const arcgisRequire = window.require || require;
+    const tryInit = () => {
+      // ArcGIS SDK exposes require on window after loading
+      if (typeof window.require === 'undefined') {
+        retries++;
+        if (retries < maxRetries) {
+          setTimeout(tryInit, 100);
+          return;
+        } else {
+          console.error('ArcGIS SDK failed to load after 5 seconds');
+          return;
+        }
+      }
+      
+      const arcgisRequire = window.require;
+      
+      console.log('Initializing ArcGIS map for winter maintenance...');
+      
+      arcgisRequire([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/GraphicsLayer",
+        "esri/Graphic",
+        "esri/geometry/Polyline",
+        "esri/geometry/Point",
+        "esri/symbols/SimpleLineSymbol",
+        "esri/symbols/SimpleMarkerSymbol",
+        "esri/PopupTemplate"
+      ], (Map, MapView, GraphicsLayer, Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate) => {
+        console.log('ArcGIS modules loaded, creating map...');
+        
+        const map = new Map({
+          basemap: "hybrid" // Satellite with labels
+        });
+        
+        const view = new MapView({
+          container: "zimniUdrzbaMap",
+          map: map,
+          center: [14.222, 50.1322], // [longitude, latitude]
+          zoom: 15
+        });
+        
+        window.zimniUdrzbaMapView = view;
+        window.zimniUdrzbaGraphicsLayer = new GraphicsLayer();
+        map.add(window.zimniUdrzbaGraphicsLayer);
+        
+        console.log('ArcGIS map created, graphics layer added');
+        
+        // Store ArcGIS modules for later use
+        window.arcgisModules = {
+          Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate
+        };
+        
+        // Load data after map is ready
+        view.when(() => {
+          console.log('Map view ready, loading data...');
+          loadBrokyZimniUdrzbaDataArcGIS();
+        }).catch(err => {
+          console.error('Error initializing map view:', err);
+        });
+      }, (error) => {
+        console.error('Error loading ArcGIS modules:', error);
+      });
+    };
     
-    arcgisRequire([
-      "esri/Map",
-      "esri/views/MapView",
-      "esri/layers/GraphicsLayer",
-      "esri/Graphic",
-      "esri/geometry/Polyline",
-      "esri/geometry/Point",
-      "esri/symbols/SimpleLineSymbol",
-      "esri/symbols/SimpleMarkerSymbol",
-      "esri/PopupTemplate"
-    ], (Map, MapView, GraphicsLayer, Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate) => {
-      const map = new Map({
-        basemap: "hybrid" // Satellite with labels
-      });
-      
-      const view = new MapView({
-        container: "zimniUdrzbaMap",
-        map: map,
-        center: [14.222, 50.1322], // [longitude, latitude]
-        zoom: 15
-      });
-      
-      window.zimniUdrzbaMapView = view;
-      window.zimniUdrzbaGraphicsLayer = new GraphicsLayer();
-      map.add(window.zimniUdrzbaGraphicsLayer);
-      
-      // Store ArcGIS modules for later use
-      window.arcgisModules = {
-        Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate
-      };
-      
-      // Load data after map is ready
-      view.when(() => {
-        loadBrokyZimniUdrzbaDataArcGIS();
-      });
-    });
+    tryInit();
   }
   
   // Load winter maintenance data using ArcGIS Graphics API
   async function loadBrokyZimniUdrzbaDataArcGIS() {
-    if (!window.zimniUdrzbaMapView || !window.zimniUdrzbaGraphicsLayer) return;
+    if (!window.zimniUdrzbaMapView || !window.zimniUdrzbaGraphicsLayer) {
+      console.warn('ArcGIS map or graphics layer not initialized');
+      return;
+    }
     
     try {
+      console.log('Fetching winter maintenance data...');
       const response = await fetch('data/broky_zimni_udrzba.json');
-      if (!response.ok) throw new Error('Failed to load winter maintenance data');
+      if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to load winter maintenance data`);
       const data = await response.json();
+      console.log('Data loaded:', data);
       
       // Use stored modules or require them
-      const arcgisRequire = window.require || require;
+      if (!window.require) {
+        console.error('ArcGIS require not available');
+        return;
+      }
+      
+      const arcgisRequire = window.require;
       
       arcgisRequire([
         "esri/Graphic",
@@ -3177,13 +3211,16 @@ Odkaz do aplikace: ${appUrl}`;
         "esri/symbols/SimpleMarkerSymbol",
         "esri/PopupTemplate"
       ], (Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate) => {
+        console.log('ArcGIS modules loaded for graphics');
+        
         // Clear existing graphics
         window.zimniUdrzbaGraphicsLayer.removeAll();
         
         const graphics = [];
         
         // Add chodníky (red lines)
-        if (data.chodniky) {
+        if (data.chodniky && Array.isArray(data.chodniky)) {
+          console.log(`Adding ${data.chodniky.length} chodníky...`);
           data.chodniky.forEach(chodnik => {
             // Convert coordinates from [lat, lng] to [lng, lat] for ArcGIS
             const paths = chodnik.coordinates.map(coord => [coord[1], coord[0]]);
@@ -3218,7 +3255,8 @@ Odkaz do aplikace: ${appUrl}`;
         }
         
         // Add silnice (yellow lines)
-        if (data.silnice) {
+        if (data.silnice && Array.isArray(data.silnice)) {
+          console.log(`Adding ${data.silnice.length} silnice...`);
           data.silnice.forEach(silnice => {
             // Convert coordinates from [lat, lng] to [lng, lat] for ArcGIS
             const paths = silnice.coordinates.map(coord => [coord[1], coord[0]]);
@@ -3253,7 +3291,8 @@ Odkaz do aplikace: ${appUrl}`;
         }
         
         // Add zásobníkové nádoby (pink circles)
-        if (data.zabosnikove_nadoby) {
+        if (data.zabosnikove_nadoby && Array.isArray(data.zabosnikove_nadoby)) {
+          console.log(`Adding ${data.zabosnikove_nadoby.length} zásobníkové nádoby...`);
           data.zabosnikove_nadoby.forEach(nadoba => {
             const pointGeometry = {
               type: "point",
@@ -3290,7 +3329,8 @@ Odkaz do aplikace: ${appUrl}`;
         }
         
         // Add nádoby na posyp (blue circles)
-        if (data.nadoby_na_posyp) {
+        if (data.nadoby_na_posyp && Array.isArray(data.nadoby_na_posyp)) {
+          console.log(`Adding ${data.nadoby_na_posyp.length} nádoby na posyp...`);
           data.nadoby_na_posyp.forEach(nadoba => {
             const pointGeometry = {
               type: "point",
@@ -3326,8 +3366,27 @@ Odkaz do aplikace: ${appUrl}`;
           });
         }
         
+        console.log(`Adding ${graphics.length} graphics to layer...`);
+        
         // Add all graphics to the layer
-        window.zimniUdrzbaGraphicsLayer.addMany(graphics);
+        if (graphics.length > 0) {
+          window.zimniUdrzbaGraphicsLayer.addMany(graphics);
+          console.log('Graphics added successfully');
+          
+          // Fit view to graphics extent
+          window.zimniUdrzbaMapView.whenLayerView(window.zimniUdrzbaGraphicsLayer).then((layerView) => {
+            if (graphics.length > 0) {
+              const extent = graphics[0].geometry.extent;
+              graphics.slice(1).forEach(g => {
+                extent.union(g.geometry.extent);
+              });
+              window.zimniUdrzbaMapView.goTo(extent.expand(1.2));
+            }
+          });
+        } else {
+          console.warn('No graphics to add');
+        }
+        
         window.zimniUdrzbaGraphicsLoaded = true;
         
         // Update map view if center and zoom are specified
@@ -3335,6 +3394,8 @@ Odkaz do aplikace: ${appUrl}`;
           window.zimniUdrzbaMapView.center = [data.center[1], data.center[0]]; // [lng, lat]
           window.zimniUdrzbaMapView.zoom = data.zoom;
         }
+      }, (error) => {
+        console.error('Error loading ArcGIS modules for graphics:', error);
       });
       
     } catch (error) {

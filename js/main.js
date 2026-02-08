@@ -3148,6 +3148,10 @@ Odkaz do aplikace: ${appUrl}`;
           basemap: "hybrid" // Satellite with labels
         });
         
+        // Create graphics layer and add to map
+        window.zimniUdrzbaGraphicsLayer = new GraphicsLayer();
+        map.layers.add(window.zimniUdrzbaGraphicsLayer);
+        
         const view = new MapView({
           container: "zimniUdrzbaMap",
           map: map,
@@ -3156,8 +3160,6 @@ Odkaz do aplikace: ${appUrl}`;
         });
         
         window.zimniUdrzbaMapView = view;
-        window.zimniUdrzbaGraphicsLayer = new GraphicsLayer();
-        map.add(window.zimniUdrzbaGraphicsLayer);
         
         console.log('ArcGIS map created, graphics layer added');
         

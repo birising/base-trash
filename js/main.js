@@ -3168,10 +3168,41 @@ Odkaz do aplikace: ${appUrl}`;
           Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate
         };
         
+        // Add a simple test point immediately to verify graphics work
+        const testPoint = new Graphic({
+          geometry: {
+            type: "point",
+            longitude: 14.222,
+            latitude: 50.1322
+          },
+          symbol: {
+            type: "simple-marker",
+            style: "circle",
+            color: [255, 0, 0], // Red
+            size: 20,
+            outline: {
+              color: [255, 255, 255],
+              width: 2
+            }
+          },
+          attributes: {
+            Name: "Test Point"
+          },
+          popupTemplate: {
+            title: "Test Point",
+            content: "Toto je testovací bod pro ověření funkčnosti"
+          }
+        });
+        window.zimniUdrzbaGraphicsLayer.add(testPoint);
+        console.log('Test point added to map');
+        
         // Load data after map is ready
         view.when(() => {
           console.log('Map view ready, loading data...');
-          loadBrokyZimniUdrzbaDataArcGIS();
+          // Wait a bit for map to fully render
+          setTimeout(() => {
+            loadBrokyZimniUdrzbaDataArcGIS();
+          }, 500);
         }).catch(err => {
           console.error('Error initializing map view:', err);
         });

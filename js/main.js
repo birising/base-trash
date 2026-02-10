@@ -3110,6 +3110,19 @@ Odkaz do aplikace: ${appUrl}`;
 
   // Initialize ArcGIS map for winter maintenance
   async function initializeArcGISZimniUdrzbaMap() {
+    // Prevent multiple initializations
+    if (window.zimniUdrzbaMapInitializing) {
+      console.log('ArcGIS map initialization already in progress');
+      return;
+    }
+    
+    if (window.zimniUdrzbaMapView) {
+      console.log('ArcGIS map already initialized');
+      return;
+    }
+    
+    window.zimniUdrzbaMapInitializing = true;
+    
     // Check if ArcGIS is loaded - wait for it
     let retries = 0;
     const maxRetries = 50; // 5 seconds max wait
@@ -3123,6 +3136,7 @@ Odkaz do aplikace: ${appUrl}`;
           return;
         } else {
           console.error('ArcGIS SDK failed to load after 5 seconds');
+          window.zimniUdrzbaMapInitializing = false;
           return;
         }
       }
@@ -3144,69 +3158,85 @@ Odkaz do aplikace: ${appUrl}`;
       ], (Map, MapView, GraphicsLayer, Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate) => {
         console.log('ArcGIS modules loaded, creating map...');
         
-        const map = new Map({
-          basemap: "hybrid" // Satellite with labels
-        });
-        
-        // Create graphics layer and add to map
-        window.zimniUdrzbaGraphicsLayer = new GraphicsLayer();
-        map.layers.add(window.zimniUdrzbaGraphicsLayer);
-        
-        const view = new MapView({
-          container: "zimniUdrzbaMap",
-          map: map,
-          center: [14.222, 50.1322], // [longitude, latitude]
-          zoom: 15
-        });
-        
-        window.zimniUdrzbaMapView = view;
-        
-        console.log('ArcGIS map created, graphics layer added');
-        
-        // Store ArcGIS modules for later use
-        window.arcgisModules = {
-          Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate
-        };
-        
-        // Add a simple test point immediately to verify graphics work
-        // Wait for modules to be available
-        const testPoint = new Graphic({
-          geometry: new Point({
-            longitude: 14.222,
-            latitude: 50.1322
-          }),
-          symbol: new SimpleMarkerSymbol({
-            style: "circle",
-            color: [255, 0, 0], // Red
-            size: 20,
-            outline: {
-              color: [255, 255, 255],
-              width: 2
-            }
-          }),
-          attributes: {
-            Name: "Test Point"
-          },
-          popupTemplate: {
-            title: "Test Point",
-            content: "Toto je testovací bod pro ověření funkčnosti"
+        try {
+          const map = new Map({
+            basemap: "hybrid" // Satellite with labels
+          });
+          
+          // Create graphics layer and add to map
+          window.zimniUdrzbaGraphicsLayer = new GraphicsLayer();
+          
+          // Check if map.layers exists before adding
+          if (map && map.layers && typeof map.layers.add === 'function') {
+            map.layers.add(window.zimniUdrzbaGraphicsLayer);
+            console.log('Graphics layer added to map');
+          } else {
+            console.error('Map or map.layers is not properly initialized', { map, layers: map?.layers });
+            window.zimniUdrzbaMapInitializing = false;
+            return;
           }
-        });
-        window.zimniUdrzbaGraphicsLayer.add(testPoint);
-        console.log('Test point added to map');
-        
-        // Load data after map is ready
-        view.when(() => {
-          console.log('Map view ready, loading data...');
-          // Wait a bit for map to fully render
-          setTimeout(() => {
-            loadBrokyZimniUdrzbaDataArcGIS();
-          }, 500);
-        }).catch(err => {
-          console.error('Error initializing map view:', err);
-        });
+          
+          const view = new MapView({
+            container: "zimniUdrzbaMap",
+            map: map,
+            center: [14.222, 50.1322], // [longitude, latitude]
+            zoom: 15
+          });
+          
+          window.zimniUdrzbaMapView = view;
+          
+          console.log('ArcGIS map created, graphics layer added');
+          
+          // Store ArcGIS modules for later use
+          window.arcgisModules = {
+            Graphic, Polyline, Point, SimpleLineSymbol, SimpleMarkerSymbol, PopupTemplate, Map, MapView, GraphicsLayer
+          };
+          
+          // Add a simple test point immediately to verify graphics work
+          const testPoint = new Graphic({
+            geometry: new Point({
+              longitude: 14.222,
+              latitude: 50.1322
+            }),
+            symbol: new SimpleMarkerSymbol({
+              style: "circle",
+              color: [255, 0, 0], // Red
+              size: 20,
+              outline: {
+                color: [255, 255, 255],
+                width: 2
+              }
+            }),
+            attributes: {
+              Name: "Test Point"
+            },
+            popupTemplate: {
+              title: "Test Point",
+              content: "Toto je testovací bod pro ověření funkčnosti"
+            }
+          });
+          window.zimniUdrzbaGraphicsLayer.add(testPoint);
+          console.log('Test point added to map');
+          
+          // Load data after map is ready
+          view.when(() => {
+            console.log('Map view ready, loading data...');
+            window.zimniUdrzbaMapInitializing = false;
+            // Wait a bit for map to fully render
+            setTimeout(() => {
+              loadBrokyZimniUdrzbaDataArcGIS();
+            }, 500);
+          }).catch(err => {
+            console.error('Error initializing map view:', err);
+            window.zimniUdrzbaMapInitializing = false;
+          });
+        } catch (error) {
+          console.error('Error creating ArcGIS map:', error);
+          window.zimniUdrzbaMapInitializing = false;
+        }
       }, (error) => {
         console.error('Error loading ArcGIS modules:', error);
+        window.zimniUdrzbaMapInitializing = false;
       });
     };
     

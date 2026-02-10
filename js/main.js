@@ -3354,22 +3354,24 @@ Odkaz do aplikace: ${appUrl}`;
         console.log('ArcGIS modules loaded, creating map...');
         
         try {
-          const map = new Map({
-            basemap: "hybrid" // Satellite with labels
-          });
-          
-          // Create graphics layer and add to map
-          window.zimniUdrzbaGraphicsLayer = new GraphicsLayer();
-          
-          // Check if map.layers exists before adding
-          if (map && map.layers && typeof map.layers.add === 'function') {
-            map.layers.add(window.zimniUdrzbaGraphicsLayer);
-            console.log('Graphics layer added to map');
-          } else {
-            console.error('Map or map.layers is not properly initialized', { map, layers: map?.layers });
+          // Check if container exists and is attached to DOM
+          const container = document.getElementById("zimniUdrzbaMap");
+          if (!container || !container.isConnected) {
+            console.error('Zimni udrzba map container is not attached to DOM');
             window.zimniUdrzbaMapInitializing = false;
             return;
           }
+          
+          // Create graphics layer first
+          window.zimniUdrzbaGraphicsLayer = new GraphicsLayer();
+          
+          // Create map with graphics layer in constructor
+          const map = new Map({
+            basemap: "hybrid", // Satellite with labels
+            layers: [window.zimniUdrzbaGraphicsLayer] // Add layer in constructor
+          });
+          
+          console.log('Map created with graphics layer');
           
           const view = new MapView({
             container: "zimniUdrzbaMap",

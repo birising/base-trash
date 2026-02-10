@@ -3036,17 +3036,17 @@ Odkaz do aplikace: ${appUrl}`;
     if (zimniUdrzbaView) {
       if (isZimniUdrzbaView) {
         zimniUdrzbaView.classList.remove("hidden");
-        // Initialize ArcGIS map for zimni udrzba if not already initialized
-        if (zimniUdrzbaMapContainer && !window.zimniUdrzbaMapView) {
-          initializeArcGISZimniUdrzbaMap();
-        } else if (window.zimniUdrzbaMapView) {
+        // Initialize Leaflet map for zimni udrzba (PoC - simple working version)
+        if (zimniUdrzbaMapContainer && !window.zimniUdrzbaMapLeaflet) {
+          initializeZimniUdrzbaMapLeaflet();
+        } else if (window.zimniUdrzbaMapLeaflet) {
           // Map already exists, ensure data is loaded and resize
-          if (!window.zimniUdrzbaGraphicsLoaded) {
-            loadBrokyZimniUdrzbaDataArcGIS();
+          if (!window.zimniUdrzbaDataLoaded) {
+            loadBrokyZimniUdrzbaDataLeaflet();
           }
           setTimeout(() => {
-            if (window.zimniUdrzbaMapView) {
-              window.zimniUdrzbaMapView.resize();
+            if (window.zimniUdrzbaMapLeaflet) {
+              window.zimniUdrzbaMapLeaflet.invalidateSize();
             }
           }, 100);
         }

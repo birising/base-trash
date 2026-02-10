@@ -8,11 +8,10 @@
       "type": "chodnik",
       "coordinates": [
         [50.1285, 14.218],
-        [50.1285, 14.225],
-        [50.130, 14.225],
-        [50.132, 14.224],
-        [50.134, 14.223],
-        [50.136, 14.222]
+        [50.1285, 14.220],
+        [50.1285, 14.222],
+        [50.1285, 14.224],
+        [50.1285, 14.225]
       ]
     },
     {
@@ -20,7 +19,9 @@
       "type": "chodnik",
       "coordinates": [
         [50.130, 14.220],
+        [50.131, 14.220],
         [50.132, 14.220],
+        [50.133, 14.220],
         [50.134, 14.220]
       ]
     },
@@ -29,7 +30,10 @@
       "type": "chodnik",
       "coordinates": [
         [50.132, 14.222],
+        [50.132, 14.223],
+        [50.132, 14.224],
         [50.133, 14.225],
+        [50.134, 14.226],
         [50.134, 14.228]
       ]
     },
@@ -38,7 +42,10 @@
       "type": "chodnik",
       "coordinates": [
         [50.130, 14.220],
-        [50.129, 14.217],
+        [50.1295, 14.219],
+        [50.129, 14.218],
+        [50.1285, 14.217],
+        [50.128, 14.216],
         [50.128, 14.215]
       ]
     },
@@ -47,9 +54,11 @@
       "type": "chodnik",
       "coordinates": [
         [50.131, 14.219],
-        [50.1315, 14.221],
+        [50.1315, 14.220],
+        [50.132, 14.221],
         [50.1325, 14.222],
-        [50.1335, 14.223]
+        [50.133, 14.223],
+        [50.1335, 14.224]
       ]
     },
     {
@@ -57,7 +66,9 @@
       "type": "chodnik",
       "coordinates": [
         [50.129, 14.222],
-        [50.1305, 14.223],
+        [50.130, 14.2225],
+        [50.131, 14.223],
+        [50.1315, 14.2235],
         [50.132, 14.224]
       ]
     },
@@ -66,8 +77,10 @@
       "type": "chodnik",
       "coordinates": [
         [50.133, 14.220],
-        [50.1335, 14.222],
-        [50.134, 14.224]
+        [50.1335, 14.221],
+        [50.134, 14.222],
+        [50.1345, 14.223],
+        [50.135, 14.224]
       ]
     },
     {
@@ -75,8 +88,50 @@
       "type": "chodnik",
       "coordinates": [
         [50.1305, 14.218],
-        [50.131, 14.219],
-        [50.1315, 14.220]
+        [50.131, 14.2185],
+        [50.1315, 14.219],
+        [50.132, 14.2195],
+        [50.1325, 14.220]
+      ]
+    },
+    {
+      "id": "ch9",
+      "type": "chodnik",
+      "coordinates": [
+        [50.131, 14.221],
+        [50.1315, 14.222],
+        [50.132, 14.223],
+        [50.1325, 14.224]
+      ]
+    },
+    {
+      "id": "ch10",
+      "type": "chodnik",
+      "coordinates": [
+        [50.1295, 14.221],
+        [50.130, 14.2215],
+        [50.1305, 14.222],
+        [50.131, 14.2225]
+      ]
+    },
+    {
+      "id": "ch11",
+      "type": "chodnik",
+      "coordinates": [
+        [50.133, 14.223],
+        [50.1335, 14.224],
+        [50.134, 14.225],
+        [50.1345, 14.226]
+      ]
+    },
+    {
+      "id": "ch12",
+      "type": "chodnik",
+      "coordinates": [
+        [50.130, 14.223],
+        [50.1305, 14.224],
+        [50.131, 14.225],
+        [50.1315, 14.226]
       ]
     }
   ],
@@ -86,10 +141,17 @@
       "type": "silnice",
       "coordinates": [
         [50.1285, 14.218],
+        [50.1285, 14.220],
+        [50.1285, 14.222],
+        [50.1285, 14.224],
         [50.1285, 14.225],
+        [50.129, 14.225],
         [50.130, 14.225],
+        [50.131, 14.2245],
         [50.132, 14.224],
+        [50.133, 14.2235],
         [50.134, 14.223],
+        [50.135, 14.2225],
         [50.136, 14.222]
       ]
     },
@@ -98,8 +160,11 @@
       "type": "silnice",
       "coordinates": [
         [50.130, 14.220],
+        [50.131, 14.220],
         [50.132, 14.220],
-        [50.134, 14.220]
+        [50.133, 14.220],
+        [50.134, 14.220],
+        [50.135, 14.220]
       ]
     },
     {
@@ -107,8 +172,12 @@
       "type": "silnice",
       "coordinates": [
         [50.132, 14.222],
-        [50.133, 14.225],
-        [50.134, 14.228]
+        [50.1325, 14.223],
+        [50.133, 14.224],
+        [50.1335, 14.225],
+        [50.134, 14.226],
+        [50.1345, 14.227],
+        [50.135, 14.228]
       ]
     },
     {
@@ -116,8 +185,11 @@
       "type": "silnice",
       "coordinates": [
         [50.130, 14.220],
-        [50.129, 14.217],
-        [50.128, 14.215]
+        [50.1295, 14.219],
+        [50.129, 14.218],
+        [50.1285, 14.217],
+        [50.128, 14.216],
+        [50.1275, 14.215]
       ]
     },
     {
@@ -125,8 +197,10 @@
       "type": "silnice",
       "coordinates": [
         [50.131, 14.223],
-        [50.132, 14.224],
-        [50.133, 14.225]
+        [50.1315, 14.224],
+        [50.132, 14.225],
+        [50.1325, 14.226],
+        [50.133, 14.227]
       ]
     },
     {
@@ -134,8 +208,52 @@
       "type": "silnice",
       "coordinates": [
         [50.1315, 14.221],
+        [50.132, 14.2215],
         [50.1325, 14.222],
-        [50.1335, 14.223]
+        [50.133, 14.2225],
+        [50.1335, 14.223],
+        [50.134, 14.2235]
+      ]
+    },
+    {
+      "id": "s7",
+      "type": "silnice",
+      "coordinates": [
+        [50.129, 14.221],
+        [50.1295, 14.222],
+        [50.130, 14.223],
+        [50.1305, 14.224]
+      ]
+    },
+    {
+      "id": "s8",
+      "type": "silnice",
+      "coordinates": [
+        [50.133, 14.221],
+        [50.1335, 14.222],
+        [50.134, 14.223],
+        [50.1345, 14.224]
+      ]
+    },
+    {
+      "id": "s9",
+      "type": "silnice",
+      "coordinates": [
+        [50.1305, 14.218],
+        [50.131, 14.2185],
+        [50.1315, 14.219],
+        [50.132, 14.2195],
+        [50.1325, 14.220]
+      ]
+    },
+    {
+      "id": "s10",
+      "type": "silnice",
+      "coordinates": [
+        [50.131, 14.224],
+        [50.1315, 14.225],
+        [50.132, 14.226],
+        [50.1325, 14.227]
       ]
     }
   ],
@@ -145,42 +263,56 @@
       "type": "zabosnikova_nadoba",
       "lat": 50.1315,
       "lng": 14.222,
-      "name": "Zásobníková nádoba 1"
+      "name": "Zásobníková nádoba - Centrum"
     },
     {
       "id": "zn2",
       "type": "zabosnikova_nadoba",
       "lat": 50.1325,
       "lng": 14.2225,
-      "name": "Zásobníková nádoba 2"
+      "name": "Zásobníková nádoba - Sever"
     },
     {
       "id": "zn3",
       "type": "zabosnikova_nadoba",
       "lat": 50.1335,
       "lng": 14.223,
-      "name": "Zásobníková nádoba 3"
+      "name": "Zásobníková nádoba - Východ"
     },
     {
       "id": "zn4",
       "type": "zabosnikova_nadoba",
       "lat": 50.1305,
       "lng": 14.2205,
-      "name": "Zásobníková nádoba 4"
+      "name": "Zásobníková nádoba - Západ"
     },
     {
       "id": "zn5",
       "type": "zabosnikova_nadoba",
       "lat": 50.134,
       "lng": 14.225,
-      "name": "Zásobníková nádoba 5"
+      "name": "Zásobníková nádoba - Severovýchod"
     },
     {
       "id": "zn6",
       "type": "zabosnikova_nadoba",
       "lat": 50.135,
       "lng": 14.227,
-      "name": "Zásobníková nádoba 6"
+      "name": "Zásobníková nádoba - Východní okraj"
+    },
+    {
+      "id": "zn7",
+      "type": "zabosnikova_nadoba",
+      "lat": 50.129,
+      "lng": 14.218,
+      "name": "Zásobníková nádoba - Jihozápad"
+    },
+    {
+      "id": "zn8",
+      "type": "zabosnikova_nadoba",
+      "lat": 50.1285,
+      "lng": 14.222,
+      "name": "Zásobníková nádoba - Jižní okraj"
     }
   ],
   "nadoby_na_posyp": [
@@ -189,71 +321,84 @@
       "type": "nadoba_na_posyp",
       "lat": 50.1305,
       "lng": 14.221,
-      "name": "Nádoba na posyp 1"
+      "name": "Nádoba na posyp - Křižovatka 1"
     },
     {
       "id": "np2",
       "type": "nadoba_na_posyp",
       "lat": 50.131,
       "lng": 14.222,
-      "name": "Nádoba na posyp 2"
+      "name": "Nádoba na posyp - Centrum"
     },
     {
       "id": "np3",
       "type": "nadoba_na_posyp",
       "lat": 50.1315,
       "lng": 14.223,
-      "name": "Nádoba na posyp 3"
+      "name": "Nádoba na posyp - Křižovatka 2"
     },
     {
       "id": "np4",
       "type": "nadoba_na_posyp",
       "lat": 50.132,
       "lng": 14.224,
-      "name": "Nádoba na posyp 4"
+      "name": "Nádoba na posyp - Sever"
     },
     {
       "id": "np5",
       "type": "nadoba_na_posyp",
       "lat": 50.1325,
       "lng": 14.225,
-      "name": "Nádoba na posyp 5"
+      "name": "Nádoba na posyp - Severovýchod"
     },
     {
       "id": "np6",
       "type": "nadoba_na_posyp",
       "lat": 50.133,
       "lng": 14.226,
-      "name": "Nádoba na posyp 6"
+      "name": "Nádoba na posyp - Východ"
     },
     {
       "id": "np7",
       "type": "nadoba_na_posyp",
       "lat": 50.130,
       "lng": 14.219,
-      "name": "Nádoba na posyp 7"
+      "name": "Nádoba na posyp - Jihozápad"
     },
     {
       "id": "np8",
       "type": "nadoba_na_posyp",
       "lat": 50.1335,
       "lng": 14.224,
-      "name": "Nádoba na posyp 8"
+      "name": "Nádoba na posyp - Východní okraj"
     },
     {
       "id": "np9",
       "type": "nadoba_na_posyp",
       "lat": 50.134,
       "lng": 14.223,
-      "name": "Nádoba na posyp 9"
+      "name": "Nádoba na posyp - Sever"
     },
     {
       "id": "np10",
       "type": "nadoba_na_posyp",
       "lat": 50.1315,
       "lng": 14.220,
-      "name": "Nádoba na posyp 10"
+      "name": "Nádoba na posyp - Západ"
+    },
+    {
+      "id": "np11",
+      "type": "nadoba_na_posyp",
+      "lat": 50.1295,
+      "lng": 14.221,
+      "name": "Nádoba na posyp - Jižní okraj"
+    },
+    {
+      "id": "np12",
+      "type": "nadoba_na_posyp",
+      "lat": 50.132,
+      "lng": 14.221,
+      "name": "Nádoba na posyp - Střed"
     }
   ]
 }
-
